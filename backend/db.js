@@ -1,11 +1,15 @@
 const mysql = require('mysql2');
+const dotenv = require('dotenv');
 
-// Create a connection pool (better than single connection for multiple queries)
+// Load environment variables from .env file
+dotenv.config();
+
+// Create a connection pool using environment variables
 const pool = mysql.createPool({
-  host: 'localhost',      // or your server IP
-  user: 'backend_user',  // the user you created
-  password: 'Pulses@123', // the password you set
-  database: 'circular_management',
+  host: process.env.DB_HOST,      // from .env
+  user: process.env.DB_USER,      // from .env
+  password: process.env.DB_PASSWORD, // from .env
+  database: process.env.DB_NAME,  // from .env
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
