@@ -4,6 +4,8 @@ const initializeDatabase = require("./config/init_db");
 const app = express();
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const headOfficeRoutes = require("./routes/headOfficeRoutes");
+const branchRoutes = require("./routes/branchesRoutes");
 
 // Allow cross-origin requests from your Angular app
 app.use(
@@ -17,7 +19,10 @@ app.use(express.json());
 
 initializeDatabase();
 
-app.use("/api", adminRoutes);
+app.use("/api/admins", adminRoutes);
+app.use("/api/head-office", headOfficeRoutes);
+app.use("/api/branches", branchRoutes);
+
 
 const PORT = 3000;
 app.listen(PORT, () => {
