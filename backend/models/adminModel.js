@@ -1,12 +1,40 @@
 const db = require("../config/db");
-
+const bcrypt = require("bcrypt");
 
 exports.getAllAdmins = () => {
   return db.query("SELECT * FROM admin");
 };
 
+exports.getAllAdminsWithRelations = () => {
+  return db.query(`
+    SELECT 
+      a.id, a.username, a.first_name, a.middle_name, a.last_name, a.email, a.admin_type, a.created_at,
+      h.id AS head_office_id, h.name AS head_office_name, h.address AS head_office_address,
+      b.id AS branch_id, b.name AS branch_name, b.address AS branch_address
+    FROM admin a
+    LEFT JOIN head_office h ON a.head_office_id = h.id
+    LEFT JOIN branches b ON a.branch_id = b.id
+  `);
+};
+
 exports.getAdminById = (id) => {
   return db.query("SELECT * FROM admin WHERE id = ?", [id]);
+};
+
+exports.getAdminByIdWithRelations = (id) => {
+  return db.query(
+    `
+    SELECT 
+      a.id, a.username, a.first_name, a.middle_name, a.last_name, a.email, a.admin_type, a.created_at,
+      h.id AS head_office_id, h.name AS head_office_name, h.address AS head_office_address,
+      b.id AS branch_id, b.name AS branch_name, b.address AS branch_address
+    FROM admin a
+    LEFT JOIN head_office h ON a.head_office_id = h.id
+    LEFT JOIN branches b ON a.branch_id = b.id
+    WHERE a.id = ?
+  `,
+    [id]
+  );
 };
 
 exports.createAdmin = (adminData) => {
@@ -22,7 +50,7 @@ exports.createAdmin = (adminData) => {
     branch_id,
   } = adminData;
 
-  //   const password_hash = bcrypt.hashSync(password, 10);
+  const password_hash = bcrypt.hashSync(password, 10);
 
   return db.query(
     `INSERT INTO admin 
@@ -30,7 +58,7 @@ exports.createAdmin = (adminData) => {
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       username,
-      password,
+      password_hash,
       first_name || null,
       middle_name || null,
       last_name || null,
