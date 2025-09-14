@@ -1,0 +1,155 @@
+// Form Container
+.form-container {
+  @apply bg-white rounded-2xl shadow-2xl;
+  max-width: 900px; // Increased from typical form width for horizontal layout
+  width: 100%;
+  padding: 2.5rem;
+  
+  @media (max-width: 768px) {
+    max-width: 100%;
+    padding: 1.5rem;
+  }
+}
+
+// Header
+.header {
+  @apply text-center mb-3;
+  
+  .bank-logo {
+    @apply bg-blue-600 w-14 h-14 rounded-lg mx-auto mb-4 flex items-center justify-center shadow-lg;
+  }
+}
+
+// Form Grid - Main horizontal layout
+.form-grid {
+  @apply grid gap-8;
+  grid-template-columns: 1fr 1fr;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+// Form Columns
+.form-column {
+  @apply flex flex-col gap-5;
+  
+  @media (max-width: 768px) {
+    gap: 4;
+  }
+}
+
+// Form Groups
+.form-group {
+  @apply relative;
+  
+  .error-message {
+    @apply text-red-500 text-xs mt-1 flex items-center gap-1;
+    
+    span {
+      @apply block;
+    }
+  }
+}
+// Select/Dropdown Styles
+.form-select {
+  @apply w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-lg text-gray-800;
+  @apply focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200;
+  @apply transition-all duration-200 bg-gray-50 hover:bg-white;
+  @apply appearance-none cursor-pointer;
+  font-size: 0.95rem;
+  
+  // Custom dropdown arrow
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+  
+  &.error {
+    @apply border-red-400 focus:border-red-500 focus:ring-red-200;
+  }
+  
+  &:focus {
+    @apply bg-white;
+  }
+  
+  // Style for disabled state
+  &:disabled {
+    @apply bg-gray-100 cursor-not-allowed text-gray-500;
+  }
+  
+  // Option styling
+  option {
+    @apply py-2 px-4;
+  }
+  
+  option:disabled {
+    @apply text-gray-400;
+  }
+}
+
+// Ensure the select dropdown works well with the icon
+.input-wrapper:has(.form-select) .input-icon {
+  @apply pointer-events-none z-10;
+}
+
+// Input Wrapper
+.input-wrapper {
+  @apply relative;
+  
+  .form-input {
+    @apply w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-lg text-gray-800 placeholder-gray-400;
+    @apply focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200;
+    @apply transition-all duration-200 bg-gray-50 hover:bg-white;
+    font-size: 0.95rem;
+    
+    &.error {
+      @apply border-red-400 focus:border-red-500 focus:ring-red-200;
+    }
+    
+    &:focus {
+      @apply bg-white;
+    }
+  }
+  
+  .input-icon {
+    @apply absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400;
+    pointer-events: none;
+  }
+  
+  .password-toggle {
+    @apply absolute right-4 top-1/2 transform -translate-y-1/2;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-200 rounded p-1;
+    background: none;
+    border: none;
+  }
+}
+
+// Checkbox Wrapper
+.checkbox-wrapper {
+  @apply flex items-center mt-3;
+  
+  label {
+    @apply select-none;
+  }
+}
+
+// Submit Section - Full width button
+.submit-section {
+  @apply mt-8 pt-6 border-t border-gray-100;
+  
+  .submit-btn {
+    @apply w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold;
+    @apply hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300;
+    @apply transition-all duration-200 transform hover:scale-105;
+    @apply disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none;
+    @apply shadow-lg hover:shadow-xl;
+  }
+}
+
+// Security Note
+.security-note {
+  @apply flex items-start bg-amber-50 border border-amber-200 rounded-lg p-4 mt-6;
+}

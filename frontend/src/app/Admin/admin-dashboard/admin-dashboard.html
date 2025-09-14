@@ -1,0 +1,51 @@
+<div class="min-h-screen p-6 bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-4xl font-bold text-gray-800">Admin Dashboard</h1>
+      <p class="text-gray-600 mt-2">Overview of your organization's structure and employees</p>
+    </div>
+
+    <!-- Dashboard Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Departments Card -->
+      <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
+        <div class="flex items-center space-x-4">
+          <div class="bg-blue-100 p-3 rounded-full">
+            <mat-icon class="text-blue-600 text-3xl">domain</mat-icon>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-700">Total Departments</h3>
+            <p class="text-2xl font-bold text-gray-900">{{ totalDepartments }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Branches Card (only for HO Admin) -->
+      <div *ngIf="isHoAdmin" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
+        <div class="flex items-center space-x-4">
+          <div class="bg-blue-100 p-3 rounded-full">
+            <mat-icon class="text-blue-600 text-3xl">account_tree</mat-icon>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-700">Total Branches</h3>
+            <p class="text-2xl font-bold text-gray-900">{{ totalBranches }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employees Card -->
+      <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
+        <div class="flex items-center space-x-4">
+          <div class="bg-blue-100 p-3 rounded-full">
+            <mat-icon class="text-blue-600 text-3xl">people</mat-icon>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-700">Total Employees</h3>
+            <p class="text-2xl font-bold text-gray-900">{{ totalEmployees }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
