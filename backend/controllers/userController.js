@@ -1,4 +1,4 @@
-const db = require('../db'); // Add this
+const db = require('../config/db'); // Add this
 const { fetchAllUsers } = require('../models/userModel');
 
 async function getAllUsers(req, res) {
