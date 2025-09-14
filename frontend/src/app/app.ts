@@ -1,12 +1,15 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, RouterModule } from '@angular/router';
 import { User } from './services/user';
 import { FormsModule } from '@angular/forms';   // ✅ For ngModel
-import { CommonModule } from '@angular/common'; 
+import { CommonModule } from '@angular/common';
+import { ToastComponent } from "./toast/toast-component/toast-component";
+
+
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule,CommonModule],
+  imports: [FormsModule, CommonModule, RouterModule, ToastComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
