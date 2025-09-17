@@ -13,5 +13,14 @@
     Test Button
   </button>
 </div> -->
-<router-outlet></router-outlet>
+
+<div class="flex h-screen">
+  <!-- Sidebar -->
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <!-- Main Content (fills remaining space) -->
+  <div class="flex-1 overflow-auto">
+    <router-outlet></router-outlet>
+  </div>
+</div>
 <app-toast-component></app-toast-component>

@@ -23,6 +23,13 @@ exports.createBranch = ({ name, address, head_office_id }) => {
   );
 };
 
+exports.updateBranch = (id, { name, address, head_office_id }) => {
+  return db.query(
+    "UPDATE branches SET name = ?, address = ?, head_office_id = ? WHERE id = ?",
+    [name, address || null, head_office_id, id]
+  );
+};
+
 exports.deleteBranch = (id) => {
   return db.query("DELETE FROM branches WHERE id = ?", [id]);
 };

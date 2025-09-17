@@ -1,27 +1,25 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet, RouterModule } from '@angular/router';
 import { User } from './services/user';
-import { FormsModule } from '@angular/forms';   // ✅ For ngModel
+import { FormsModule } from '@angular/forms'; // ✅ For ngModel
 import { CommonModule } from '@angular/common';
-import { ToastComponent } from "./toast/toast-component/toast-component";
-
-
+import { ToastComponent } from './toast/toast-component/toast-component';
+import { AdminSidebar } from './Admin/admin-sidebar/admin-sidebar';
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule, CommonModule, RouterModule, ToastComponent],
+  imports: [FormsModule, CommonModule, RouterModule, ToastComponent, AdminSidebar],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrl: './app.scss',
 })
 export class App {
   protected readonly title = signal('frontend');
   users = [];
-   username = '';
+  username = '';
   email = '';
 
   constructor(private userService: User) {}
-  ngOnInit() {
-  }
+  ngOnInit() {}
   onSubmit() {
     const user = { username: this.username, email: this.email };
     this.userService.createUser(user).subscribe({
@@ -32,8 +30,7 @@ export class App {
       error: (err) => {
         console.error('Error adding user:', err);
         alert('Failed to add user');
-      }
+      },
     });
   }
 }
-
