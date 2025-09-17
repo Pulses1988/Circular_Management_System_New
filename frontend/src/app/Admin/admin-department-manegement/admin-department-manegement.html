@@ -1,0 +1,89 @@
+<div class="min-h-screen p-6 bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold text-gray-800">Manage Departments</h1>
+    </div>
+    <div class="flex justify-end items-right mb-4">
+
+        <button (click)="toggleForm()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+            <mat-icon class="align-middle">add</mat-icon> Add Department
+        </button>
+    </div>
+
+    <!-- Add Department Form -->
+    <div *ngIf="showForm" class="bg-white p-4 rounded shadow-md mb-6">
+      <div class="flex flex-col sm:flex-row gap-4">
+        <input [(ngModel)]="newDeptName" type="text" placeholder="Department Name"
+               class="border border-gray-300 rounded px-4 py-2 w-full sm:w-auto flex-grow" />
+        <div class="flex gap-2">
+          <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition" (click)="onSubmit(newDeptName)">Create</button>
+          <button (click)="cancel()" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <!--Loader-->
+    <div *ngIf="loading" class="text-center py-4">
+  <mat-icon class="text-blue-600 text-4xl animate-spin">autorenew</mat-icon>
+  <p class="text-gray-600 mt-2">Loading departments...</p>
+</div>
+
+
+    <!-- Department List Card -->
+    <div *ngIf="!loading" class="bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 rounded shadow-md p-4">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-white">
+          <tr>
+            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Department Name</th>
+            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Head Office / Branch</th>
+            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+        <tr *ngFor="let dept of paginatedDepartments; let i = index">
+  <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700">{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
+  
+  <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700">
+    <div *ngIf="editingDeptId !== dept.id">{{ dept.name }}</div>
+    <div *ngIf="editingDeptId === dept.id">
+      <input [(ngModel)]="editingDeptName" class="border border-gray-300 rounded px-2 py-1" />
+    </div>
+  </td>
+  
+  <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700">{{ dept.location }}</td>
+  
+ <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">
+  <div class="flex justify-center items-center gap-2">
+    <button *ngIf="editingDeptId !== dept.id" (click)="startEditing(dept)" class="text-blue-600 hover:text-blue-800">
+      <mat-icon>edit</mat-icon>
+    </button>
+    <div *ngIf="editingDeptId === dept.id" class="flex gap-2">
+      <button (click)="submitEdit()" class="text-green-600 hover:text-green-800">
+        <mat-icon>check</mat-icon>
+      </button>
+      <button (click)="cancelEdit()" class="text-gray-600 hover:text-gray-800">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    <button *ngIf="editingDeptId !== dept.id" class="text-red-600 hover:text-red-800"><mat-icon>delete</mat-icon></button>
+  </div>
+</td>
+</tr>
+
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="flex justify-center mt-4 space-x-2">
+        <button *ngFor="let page of [].constructor(totalPages()); let p = index"
+                (click)="goToPage(p + 1)"
+                [class.bg-blue-600]="currentPage === (p + 1)"
+                [class.text-white]="currentPage === (p + 1)"
+                class="px-3 py-1 rounded border border-gray-300 hover:bg-blue-100 transition">
+          {{ p + 1 }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

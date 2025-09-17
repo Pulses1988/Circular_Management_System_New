@@ -73,3 +73,10 @@ exports.createAdmin = (adminData) => {
 exports.deleteAdmin = (id) => {
   return db.query("DELETE FROM admin WHERE id = ?", [id]);
 };
+
+exports.assignHeadOfficeToHoAdmin = (headOfficeId) => {
+  return db.query(
+    `UPDATE admin SET head_office_id = ? WHERE admin_type = 'HO_ADMIN'`,
+    [headOfficeId]
+  );
+};
