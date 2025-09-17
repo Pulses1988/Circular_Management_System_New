@@ -28,31 +28,27 @@ loginData = {
   }
 
   onSubmit(): void {
-    if (!this.isFormValid()) {
-      alert('Please fill all fields correctly.');
-      return;
-    }
-
-    this.user.fetchAllAdmin().subscribe({
-      next: (admins: any[]) => {
-        const matchedAdmin = admins.find(admin =>
-          admin.username === this.loginData.username &&
-          admin.password === this.loginData.password // NOTE: In real apps, passwords should be hashed!
-        );
-
-        if (matchedAdmin) {
-          this.toast.show('Login successful!','success');
-          // You can store login state here if needed
-          this.router.navigate(['/admin-dashboard']);
-        } else {
-          this.toast.show('Invalid username or password.','error');
-        }
+    if (this.loginData.username && this.loginData.password) {
+    this.user.loginAdmin(this.loginData).subscribe({
+      next: (res: any) => {
+        localStorage.setItem('authToken', res.token);
+        localStorage.setItem('role',res.admin.admin_type);
+        const assignment = {
+  type: res.admin.head_office_id ? 'head_office' : 'branch',
+  id: res.admin.head_office_id || res.admin.branch_id
+};
+localStorage.setItem('userAssignment', JSON.stringify(assignment));
+        this.toast.show('Login successful!', 'success');
+        this.router.navigate(['/admin-dashboard']);
       },
       error: (err) => {
-        console.error('Error fetching admins:', err);
-        alert('Something went wrong. Please try again.');
+        console.error('Login error:', err);
+        this.toast.show('Invalid username or password.', 'error');
       }
     });
+  } else {
+    this.toast.show('Please fill all fields.', 'error');
+  }
   }
 private isFormValid(): boolean {
     return !!(

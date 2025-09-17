@@ -1,4 +1,5 @@
 const headOfficeModel = require("../models/headOfficeModel");
+const adminModel = require('../models/adminModel')
 
 exports.getAllHeadOffice = async (req, res) => {
   try {
@@ -23,10 +24,16 @@ exports.getHeadOfficeById = async (req, res) => {
 };
 
 exports.createHeadOffice = async (req, res) => {
-  const HeadOfficeData = req.body;
+  const { name, address } = req.body;
   try {
-    await headOfficeModel.createHeadOffice(HeadOfficeData);
-    res.status(201).json({ message: "Head office created successfully" });
+    // 1. Create the head office and get its ID
+    const [result] = await headOfficeModel.createHeadOffice({ name, address });
+    const headOfficeId = result.insertId;
+
+    // 2. Assign this head office ID to the HO_ADMIN
+    await adminModel.assignHeadOfficeToHoAdmin(headOfficeId);
+
+    res.status(201).json({ message: "Head office created successfully", headOfficeId });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to create Head office" });

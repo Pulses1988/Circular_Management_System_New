@@ -1,10 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const branchController = require("../controllers/branchesController");
+const authenticateToken = require("../authMiddleware")
 
-router.get("/", branchController.getAllBranchesWithHeadOffice);
-router.get("/:id", branchController.getBranchById);
-router.post("/", branchController.createBranch);
-router.delete("/:id", branchController.deleteBranch);
+router.get("/", authenticateToken, branchController.getAllBranchesWithHeadOffice);
+router.get("/:id",authenticateToken, branchController.getBranchById);
+router.post("/",authenticateToken, branchController.createBranch);
+router.delete("/:id",authenticateToken, branchController.deleteBranch);
 
 module.exports = router;
