@@ -37,11 +37,30 @@ exports.getBranchById = async (req, res) => {
 
 exports.createBranch = async (req, res) => {
   try {
-    await branchModel.createBranch(req.body);
-    res.status(201).json({ message: "Branch created successfully" });
+    const [result] = await branchModel.createBranch(req.body);
+
+    const newBranchId = result.insertId;
+
+    // Fetch the newly created branch record
+    const [rows] = await branchModel.getBranchById(newBranchId);
+
+    res.status(201).json(rows[0]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to create branch" });
+  }
+};
+
+exports.updateBranch = async (req, res) => {
+  const { id } = req.params;
+  const { name, address, head_office_id } = req.body;
+
+  try {
+    await branchModel.updateBranch(id, { name, address, head_office_id });
+    res.json({ message: "Branch updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update branch" });
   }
 };
 

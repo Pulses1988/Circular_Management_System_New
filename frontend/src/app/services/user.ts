@@ -37,9 +37,45 @@ export class User {
   }
 
   fetchAllAdmin(): Observable<any[]> {
+    const token = localStorage.getItem('authToken'); // Ensure this token exists
+    const headers = { Authorization: `Bearer ${token}` };
     return this.http
-      .get<any[]>(`${environment.apiUrl}/api/admins`)
+      .get<any[]>(`${environment.apiUrl}/api/admins`, { headers })
       .pipe(catchError(this.handleError));
+  }
+
+  // --------------Head Office API------------
+
+  fetchAllHeadOffice() {
+    const token = localStorage.getItem('authToken'); // Ensure this token exists
+    const headers = { Authorization: `Bearer ${token}` };
+    return this.http
+      .get(`${environment.apiUrl}/api/head-office/`, { headers })
+      .pipe(catchError(this.handleError));
+  }
+
+  // ---------------branches API-----------------------
+
+  fetchAllBranches() {
+    const token = localStorage.getItem('authToken'); // Ensure this token exists
+    const headers = { Authorization: `Bearer ${token}` };
+    return this.http
+      .get(`${environment.apiUrl}/api/branches/`, { headers })
+      .pipe(catchError(this.handleError));
+  }
+
+  createBranches(data: {}) {
+    const token = localStorage.getItem('authToken'); // Ensure this token exists
+    const headers = { Authorization: `Bearer ${token}` };
+    return this.http
+      .post(`${environment.apiUrl}/api/branches/`, data, { headers })
+      .pipe(catchError(this.handleError));
+  }
+
+  updateBranches(id: number, data: {}) {
+    const token = localStorage.getItem('authToken'); // Ensure this token exists
+    const headers = { Authorization: `Bearer ${token}` };
+    return this.http.put(`${environment.apiUrl}/api/branches/${id}`, data, { headers });
   }
 
   private handleError(error: HttpErrorResponse) {
@@ -49,6 +85,9 @@ export class User {
       errorMessage = `Network error: ${error.error.message}`;
     } else {
       // Backend error response
+      errorMessage = `Server returned code ${error.status}: ${
+        error.error?.message || error.message
+      }`;
       errorMessage = `Server returned code ${error.status}: ${
         error.error?.message || error.message
       }`;
@@ -62,8 +101,10 @@ export class User {
   }
 
   addHeadOffice(data: { name: string; address: string }) {
+    const token = localStorage.getItem('authToken'); // Ensure this token exists
+    const headers = { Authorization: `Bearer ${token}` };
     return this.http
-      .post(`${this.apiUrl}/api/head-office/`, data)
+      .post(`${this.apiUrl}/api/head-office/`, data, { headers })
       .pipe(catchError(this.handleError));
   }
 
@@ -94,17 +135,19 @@ export class User {
   updateDepartment(id: number, data: { name: string }) {
     const token = localStorage.getItem('authToken');
     const headers = { Authorization: `Bearer ${token}` };
-  return this.http.put(`${this.apiUrl}/api/departments/${id}`, data,{headers});
-}
- getDepartmentCountByHeadOffice(headOfficeId: number): Observable<any> {
-  const token = localStorage.getItem('authToken');
+    return this.http.put(`${this.apiUrl}/api/departments/${id}`, data, { headers });
+  }
+  getDepartmentCountByHeadOffice(headOfficeId: number): Observable<any> {
+    const token = localStorage.getItem('authToken');
     const headers = { Authorization: `Bearer ${token}` };
-    return this.http.get(`${this.apiUrl}/departments/head-office/${headOfficeId}/count`,{headers});
+    return this.http.get(`${this.apiUrl}/departments/head-office/${headOfficeId}/count`, {
+      headers,
+    });
   }
 
   getDepartmentCountByBranch(branchId: number): Observable<any> {
     const token = localStorage.getItem('authToken');
     const headers = { Authorization: `Bearer ${token}` };
-    return this.http.get(`${this.apiUrl}/departments/branch/${branchId}/count`,{headers});
+    return this.http.get(`${this.apiUrl}/departments/branch/${branchId}/count`, { headers });
   }
 }
