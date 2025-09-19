@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS branches (
   FOREIGN KEY (head_office_id) REFERENCES head_office(id)
 );
 `;
-const createDepartmentQuery=`
+const createDepartmentQuery = `
   CREATE TABLE IF NOT EXISTS departments (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
@@ -52,7 +52,28 @@ const createDepartmentQuery=`
     )
 );`;
 
-const createRolesQuery=`
+const createEmployeeTableQuery = `CREATE TABLE IF NOT EXISTS employees (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    first_name VARCHAR(255),
+    middle_name VARCHAR(255),
+    last_name VARCHAR(255),
+    phone_no VARCHAR(20),
+    email VARCHAR(255),
+    role_id INT NULL,           
+    department_id INT NULL,     
+    branch_id INT NULL,         
+    permissions JSON,           
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET NULL,
+    FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE SET NULL
+);
+`;
+
+const createRolesQuery = `
 CREATE TABLE IF NOT EXISTS roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -67,7 +88,6 @@ CREATE TABLE IF NOT EXISTS roles (
     CONSTRAINT fk_roles_department FOREIGN KEY (department_id) REFERENCES departments(id)
 );
 `;
-
 async function initializeDatabase() {
   try {
     await db.query(createHeadOfficeTableQuery);
@@ -80,10 +100,13 @@ async function initializeDatabase() {
     console.log("Admin table is ready");
 
     await db.query(createDepartmentQuery);
-    console.log('Departments table is ready');
+    console.log("Departments table is ready");
+
+    await db.query(createEmployeeTableQuery);
+    console.log("Employee table is ready");
 
     await db.query(createRolesQuery);
-    console.log('Roles table is ready');
+    console.log("Roles table is ready");
   } catch (err) {
     console.error("Error initializing database:", err);
   }

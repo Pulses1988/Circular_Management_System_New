@@ -74,3 +74,39 @@ exports.deleteBranch = async (req, res) => {
     res.status(500).json({ error: "Failed to delete branch" });
   }
 };
+
+exports.checkUsernameExists = async (req, res) => {
+  const { username } = req.query;
+
+  try {
+    const [rows] = await branchModel.findByUsername(username);
+
+    return res.json(rows.length > 0);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to check username" });
+  }
+};
+
+exports.checkEmailExists = async (req, res) => {
+  const { email } = req.query;
+
+  try {
+    const [rows] = await branchModel.findByEmail(email);
+
+    return res.json(rows.length > 0);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to check email" });
+  }
+};
+
+exports.getBranchesWithAdminStatus = async (req, res) => {
+  try {
+    const [rows] = await branchModel.getBranchesWithAdminStatus();
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch branches" });
+  }
+};

@@ -29,31 +29,23 @@
     (mouseenter)="expandSidebar()"
     (mouseleave)="collapseSidebar()"
   >
-    <div *ngIf="isSidebarOpen" class="flex items-center justify-center h-16 font-bold text-lg border-b border-gray-200">
-      <span *ngIf="isSidebarOpen">Admin Panel</span>
+    <div
+      class="flex items-center justify-center border-b border-gray-200 overflow-hidden"
+      [style.height.px]="isSidebarOpen ? 64 : 0"
+      [style.opacity]="isSidebarOpen ? 1 : 0"
+      [style.transition]="'height 0.5s ease, opacity 0.5s ease'"
+    >
+      <span class="font-bold text-lg">Admin Panel</span>
     </div>
 
     <nav class="flex flex-col mt-4 space-y-2 px-2">
       <a
-        routerLink="/admin/dashboard"
+        *ngFor="let item of filteredNavItems"
+        [routerLink]="item.route"
         class="flex items-center p-3 rounded hover:bg-blue-100 transition-colors"
       >
-        <mat-icon class="text-blue-600">dashboard</mat-icon>
-        <span *ngIf="isSidebarOpen" class="ml-3">Dashboard</span>
-      </a>
-      <a
-        routerLink="/admin/circulars"
-        class="flex items-center p-3 rounded hover:bg-blue-100 transition-colors"
-      >
-        <mat-icon class="text-blue-600">description</mat-icon>
-        <span *ngIf="isSidebarOpen" class="ml-3">Circulars</span>
-      </a>
-      <a
-        routerLink="/admin/settings"
-        class="flex items-center p-3 rounded hover:bg-blue-100 transition-colors"
-      >
-        <mat-icon class="text-blue-600">settings</mat-icon>
-        <span *ngIf="isSidebarOpen" class="ml-3">Settings</span>
+        <mat-icon class="text-blue-600">{{ item.icon }}</mat-icon>
+        <span *ngIf="isSidebarOpen" class="ml-3">{{ item.label }}</span>
       </a>
     </nav>
 

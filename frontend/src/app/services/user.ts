@@ -110,7 +110,30 @@ export class User {
     return this.http.put(`${environment.apiUrl}/api/branches/${id}`, data, { headers });
   }
 
-  getBranchById(id:number){
+  checkUsernameExists(username: string): Observable<boolean> {
+    const token = localStorage.getItem('authToken'); // Ensure this token exists
+    const headers = { Authorization: `Bearer ${token}` };
+    return this.http.get<boolean>(
+      `${this.apiUrl}/api/branches/check-username?username=${username}`,
+      { headers }
+    );
+  }
+
+  checkEmailExists(email: string): Observable<boolean> {
+    const token = localStorage.getItem('authToken'); // Ensure this token exists
+    const headers = { Authorization: `Bearer ${token}` };
+    return this.http.get<boolean>(`${this.apiUrl}/api/branches/check-email?email=${email}`, {
+      headers,
+    });
+  }
+
+  getBranchesWithAdminStatus() {
+    const token = localStorage.getItem('authToken'); // Ensure this token exists
+    const headers = { Authorization: `Bearer ${token}` };
+    return this.http.get(`${this.apiUrl}/api/branches/getAdminStatus`, { headers });
+  }
+
+    getBranchById(id:number){
     const token = localStorage.getItem('authToken'); // Ensure this token exists
     const headers = { Authorization: `Bearer ${token}` };
     return this.http.get(`${this.apiUrl}/api/branches/${id}`,{headers})

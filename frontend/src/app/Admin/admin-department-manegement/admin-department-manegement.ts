@@ -20,83 +20,86 @@ export class AdminDepartmentManegement {
   loading = false;
   departments: any[] = [];
   editingDeptId: number | null = null;
-editingDeptName: string = '';
+  editingDeptName: string = '';
 
-  constructor(private user: User, private toast:Toast) {}
+  constructor(private user: User, private toast: Toast) {}
 
   ngOnInit() {
-    this.loadDepartments()
+    this.loadDepartments();
   }
-  loadDepartments(){
+  loadDepartments() {
     if (typeof window !== 'undefined') {
-     const assignment = JSON.parse(localStorage.getItem('userAssignment') || '{}');
-    const id = Number(assignment.id);
+      const assignment = JSON.parse(localStorage.getItem('userAssignment') || '{}');
+      const id = Number(assignment.id);
 
-    this.loading = true;
+      this.loading = true;
 
-    if (assignment.type === 'head_office') {
-      this.head_office_id = id;
-      this.user.getDepartmentsByHeadOffice(id).subscribe({
-        next: (res: any[]) => {
-          this.departments = res.map((dept) => ({
-            id: dept.id,
-            name: dept.name,
-            location: dept.head_office_name || 'Head Office',
-          }));
-          this.loading = false;
-        },
-        error: (err: any) => {
-          console.error('Error fetching head office departments:', err);
-          this.toast.show('Failed to load departments','error');
-          this.loading = false;
-        },
-      });
-    } else if (assignment.type === 'branch') {
-      this.branch_id = id;
-      this.user.getDepartmentsByBranch(id).subscribe({
-        next: (res: any[]) => {
-          this.departments = res.map((dept) => ({
-            id: dept.id,
-            name: dept.name,
-            location: dept.branch_name || 'Branch',
-          }));
-          this.loading = false;
-        },
-        error: (err: any) => {
-          console.error('Error fetching branch departments:', err);
-          this.toast.show('Failed to load departments','error');
-          this.loading = false;
-        },
-      });
+      if (assignment.type === 'head_office') {
+        this.head_office_id = id;
+        this.user.getDepartmentsByHeadOffice(id).subscribe({
+          next: (res: any[]) => {
+            this.departments = res.map((dept) => ({
+              id: dept.id,
+              name: dept.name,
+              location: dept.head_office_name || 'Head Office',
+            }));
+            this.loading = false;
+          },
+          error: (err: any) => {
+            console.error('Error fetching head office departments:', err);
+            this.toast.show('Failed to load departments', 'error');
+            this.loading = false;
+          },
+        });
+      } else if (assignment.type === 'branch') {
+        this.branch_id = id;
+        this.user.getDepartmentsByBranch(id).subscribe({
+          next: (res: any[]) => {
+            this.departments = res.map((dept) => ({
+              id: dept.id,
+              name: dept.name,
+              location: dept.branch_name || 'Branch',
+            }));
+            this.loading = false;
+          },
+          error: (err: any) => {
+            console.error('Error fetching branch departments:', err);
+            this.toast.show('Failed to load departments', 'error');
+            this.loading = false;
+          },
+        });
+      }
     }
-  }
   }
   startEditing(dept: any) {
-  this.editingDeptId = dept.id;
-  this.editingDeptName = dept.name;
-}
-submitEdit() {
-  if (!this.editingDeptName.trim()) {
-    alert('Please enter a valid department name');
-    return;
+    this.editingDeptId = dept.id;
+    this.editingDeptName = dept.name;
   }
-
-  this.user.updateDepartment(this.editingDeptId!, { name: this.editingDeptName.trim() }).subscribe({
-    next: () => {
-      alert('Department updated successfully!');
-      this.loadDepartments(); // refresh the list
-      this.cancelEdit();
-    },
-    error: (err) => {
-      console.error('Error updating department:', err);
-      alert('Failed to update department. Please try again.');
+  submitEdit() {
+    if (!this.editingDeptName.trim()) {
+      this.toast.show('Please enter a valid department name', 'error');
+      return;
     }
-  });
-}
-cancelEdit() {
-  this.editingDeptId = null;
-  this.editingDeptName = '';
-}
+
+    this.user
+      .updateDepartment(this.editingDeptId!, { name: this.editingDeptName.trim() })
+      .subscribe({
+        next: () => {
+          this.toast.show('Department updated successfully!', 'success');
+
+          this.loadDepartments(); // refresh the list
+          this.cancelEdit();
+        },
+        error: (err) => {
+          console.error('Error updating department:', err);
+          this.toast.show('Failed to update department. Please try again.', 'error');
+        },
+      });
+  }
+  cancelEdit() {
+    this.editingDeptId = null;
+    this.editingDeptName = '';
+  }
   get paginatedDepartments() {
     const start = (this.currentPage - 1) * this.itemsPerPage;
     return this.departments.slice(start, start + this.itemsPerPage);
@@ -114,7 +117,7 @@ cancelEdit() {
   onSubmit(newDeptName: string) {
     if (!this.newDeptName.trim()) {
       // Optionally show an error message if name is empty
-      this.toast.show('Please enter a department name','error');
+      this.toast.show('Please enter a department name', 'error');
       return;
     }
     const assignment = JSON.parse(localStorage.getItem('userAssignment') || '{}');
@@ -126,14 +129,14 @@ cancelEdit() {
     };
     this.user.createDepartments(data).subscribe({
       next: (res) => {
-        this.toast.show('Department added successfully!','success');
+        this.toast.show('Department added successfully!', 'success');
         //  reload the department list
-       this.loadDepartments()
+        this.loadDepartments();
         this.cancel(); // Reset form and hide it
       },
       error: (err) => {
         console.error('Error adding department:', err);
-        this.toast.show('Failed to add department. Please try again.','error');
+        this.toast.show('Failed to add department. Please try again.', 'error');
       },
     });
   }
