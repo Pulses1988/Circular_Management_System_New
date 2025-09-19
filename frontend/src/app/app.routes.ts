@@ -4,6 +4,7 @@ import { AdminSignup } from './Admin/admin-signup/admin-signup';
 import { AdminDashboard } from './Admin/admin-dashboard/admin-dashboard';
 import { AdminBranchManagement } from './Admin/admin-branch-management/admin-branch-management';
 import { AdminDepartmentManegement } from './Admin/admin-department-manegement/admin-department-manegement';
+import { AdminRolesManegement } from './Admin/admin-roles-manegement/admin-roles-manegement';
 
 export const routes: Routes = [
     {path:'', redirectTo:'admin-login',pathMatch:'full'},
@@ -11,5 +12,6 @@ export const routes: Routes = [
     {path:'admin-login',component:AdminLogin},
     {path:'admin-dashboard',component:AdminDashboard},
       { path: 'admin-branch', component: AdminBranchManagement },
-    {path:'admin-department-manegement',component:AdminDepartmentManegement}
+    {path:'admin-department-manegement',component:AdminDepartmentManegement},
+    {path:'admin-role-manegement', component:AdminRolesManegement}
 ];

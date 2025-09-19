@@ -8,4 +8,6 @@ router.get("/branch/:branchId",authenticateToken, departmentController.getDepart
 router.post("/",authenticateToken, departmentController.createDepartment);
 router.put("/:id",authenticateToken, departmentController.updateDepartment);
 router.delete("/:id",authenticateToken, departmentController.deleteDepartment);
+router.get("/head-office/:headOfficeId/count", authenticateToken, departmentController.getDepartmentCountByHeadOffice);
+router.get("/branch/:branchId/count", authenticateToken, departmentController.getDepartmentCountByBranch);
 module.exports = router;

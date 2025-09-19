@@ -1,8 +1,33 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+
+export interface CreateRoleRequest {
+  name: string;
+  position: number;
+  head_office_id: number;
+  branch_id?: number | null;
+  department_id?: number | null;
+}
+
+export interface CreateRoleResponse {
+  message: string;
+  roleId: number;
+}
+
+export interface Role {
+  id: number;
+  name: string;
+  position: number;
+  head_office_id: number;
+  branch_id?: number | null;
+  department_id?: number | null;
+  timestamp?: string; // Your schema uses 'timestamp' instead of 'created_at'/'updated_at'
+  department_name?: string;
+  branch_name?: string;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -11,6 +36,13 @@ export class User {
   private apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
+  private getHeaders(): HttpHeaders {
+    const token = localStorage.getItem('authToken'); // Adjust based on your auth implementation
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    });
+  }
 
   getUsers(): Observable<any> {
     return this.http.get(`${this.apiUrl}/users`).pipe(catchError(this.handleError));
@@ -78,6 +110,12 @@ export class User {
     return this.http.put(`${environment.apiUrl}/api/branches/${id}`, data, { headers });
   }
 
+  getBranchById(id:number){
+    const token = localStorage.getItem('authToken'); // Ensure this token exists
+    const headers = { Authorization: `Bearer ${token}` };
+    return this.http.get(`${this.apiUrl}/api/branches/${id}`,{headers})
+  }
+
   private handleError(error: HttpErrorResponse) {
     let errorMessage = 'An unknown error occurred!';
     if (error.error instanceof ErrorEvent) {
@@ -140,7 +178,7 @@ export class User {
   getDepartmentCountByHeadOffice(headOfficeId: number): Observable<any> {
     const token = localStorage.getItem('authToken');
     const headers = { Authorization: `Bearer ${token}` };
-    return this.http.get(`${this.apiUrl}/departments/head-office/${headOfficeId}/count`, {
+    return this.http.get(`${this.apiUrl}/api/departments/head-office/${headOfficeId}/count`, {
       headers,
     });
   }
@@ -148,6 +186,87 @@ export class User {
   getDepartmentCountByBranch(branchId: number): Observable<any> {
     const token = localStorage.getItem('authToken');
     const headers = { Authorization: `Bearer ${token}` };
-    return this.http.get(`${this.apiUrl}/departments/branch/${branchId}/count`, { headers });
+    return this.http.get(`${this.apiUrl}/api/departments/branch/${branchId}/count`, { headers });
   }
+
+//  ---------------------------------------------Roles api ---------------------------------------------------
+  createRole(roleData: {
+    name: string;
+    position: number;
+    head_office_id: number;
+    branch_id?: number | null;
+    department_id?: number | null;
+  }): Observable<any> {
+    const token = localStorage.getItem('authToken');
+    const headers = { Authorization: `Bearer ${token}` };
+    return this.http.post(`${this.apiUrl}/api/roles`, roleData,{headers});
+  }
+
+   // Get all roles by head office
+  getRolesByHeadOffice(headOfficeId: number): Observable<Role[]> {
+    return this.http.get<Role[]>(
+      `${this.apiUrl}/api/roles/head-office/${headOfficeId}`, 
+      { headers: this.getHeaders() }
+    );
+  }
+
+  // Get all roles by branch
+  getRolesByBranch(branchId: number): Observable<Role[]> {
+    return this.http.get<Role[]>(
+      `${this.apiUrl}/api/roles/branch/${branchId}`, 
+      { headers: this.getHeaders() }
+    );
+  }
+
+  // Get all roles by department
+  getRolesByDepartment(departmentId: number): Observable<Role[]> {
+    return this.http.get<Role[]>(
+      `${this.apiUrl}/api/roles/department/${departmentId}`, 
+      { headers: this.getHeaders() }
+    );
+  }
+
+  // Update role
+  updateRole(roleId: number, roleData: { name: string; position: number }): Observable<any> {
+    return this.http.put(
+      `${this.apiUrl}/api/roles/${roleId}`, 
+      roleData, 
+      { headers: this.getHeaders() }
+    );
+  }
+
+  // Update role position only
+  updateRolePosition(roleId: number, position: number): Observable<any> {
+    return this.http.put(
+      `${this.apiUrl}/api/roles/${roleId}/position`, 
+      { position }, 
+      { headers: this.getHeaders() }
+    );
+  }
+
+  // Delete role
+  deleteRole(roleId: number): Observable<any> {
+    return this.http.delete(
+      `${this.apiUrl}/api/roles/${roleId}`, 
+      { headers: this.getHeaders() }
+    );
+  }
+
+  // Get single role by ID
+  getRoleById(roleId: number): Observable<Role> {
+    return this.http.get<Role>(
+      `${this.apiUrl}/api/roles/${roleId}`, 
+      { headers: this.getHeaders() }
+    );
+  }
+
+  // Bulk update role positions (for reordering)
+  updateRolePositions(roleUpdates: { id: number; position: number }[]): Observable<any> {
+    return this.http.put(
+      `${this.apiUrl}/api/roles/bulk-position-update`, 
+      { roleUpdates }, 
+      { headers: this.getHeaders() }
+    );
+  }
+
 }

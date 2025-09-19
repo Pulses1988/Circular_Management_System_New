@@ -52,6 +52,22 @@ const createDepartmentQuery=`
     )
 );`;
 
+const createRolesQuery=`
+CREATE TABLE IF NOT EXISTS roles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    position INT NOT NULL,
+    head_office_id INT NOT NULL,
+    branch_id INT DEFAULT NULL,
+    department_id INT DEFAULT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_roles_head_office FOREIGN KEY (head_office_id) REFERENCES head_office(id),
+    CONSTRAINT fk_roles_branch FOREIGN KEY (branch_id) REFERENCES branches(id),
+    CONSTRAINT fk_roles_department FOREIGN KEY (department_id) REFERENCES departments(id)
+);
+`;
+
 async function initializeDatabase() {
   try {
     await db.query(createHeadOfficeTableQuery);
@@ -64,7 +80,10 @@ async function initializeDatabase() {
     console.log("Admin table is ready");
 
     await db.query(createDepartmentQuery);
-    console.log('Departments table is ready')
+    console.log('Departments table is ready');
+
+    await db.query(createRolesQuery);
+    console.log('Roles table is ready');
   } catch (err) {
     console.error("Error initializing database:", err);
   }

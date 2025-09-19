@@ -33,6 +33,7 @@ export class AdminDashboard {
     this.showHeadOfficeForm = !this.showHeadOfficeForm;
   }
   fetchCounts() {
+    if (typeof window !== 'undefined' && window.localStorage) {
     const assignment = JSON.parse(localStorage.getItem('userAssignment') || '{}');
     const id = Number(assignment.id);
 
@@ -69,6 +70,7 @@ export class AdminDashboard {
     //     this.totalEmployees = res.count;
     //   }
     // });
+  }
   }
  addHeadOffice() {
     if (!this.headOffice.name.trim() || !this.headOffice.address.trim()) {
