@@ -51,10 +51,10 @@ exports.createDepartment = async (req, res) => {
   
   try {
     // Check if department name already exists
-    const [existing] = await departmentModel.checkDepartmentNameExists(name.trim());
-    if (existing.length > 0) {
-      return res.status(400).json({ error: "Department name already exists" });
-    }
+    // const [existing] = await departmentModel.checkDepartmentNameExists(name.trim());
+    // if (existing.length > 0) {
+    //   return res.status(400).json({ error: "Department name already exists" });
+    // }
     
     const departmentData = {
       name: name.trim(),
@@ -151,5 +151,27 @@ exports.deleteDepartment = async (req, res) => {
     }
     
     res.status(500).json({ error: "Failed to delete department" });
+  }
+};
+
+exports.getDepartmentCountByHeadOffice = async (req, res) => {
+  const { headOfficeId } = req.params;
+  try {
+    const [result] = await departmentModel.getDepartmentCountByHeadOffice(headOfficeId);
+    res.json(result[0]); // return { count: number }
+  } catch (err) {
+    console.error("Error fetching department count by head office:", err);
+    res.status(500).json({ error: "Failed to fetch department count" });
+  }
+};
+
+exports.getDepartmentCountByBranch = async (req, res) => {
+  const { branchId } = req.params;
+  try {
+    const [result] = await departmentModel.getDepartmentCountByBranch(branchId);
+    res.json(result[0]); // return { count: number }
+  } catch (err) {
+    console.error("Error fetching department count by branch:", err);
+    res.status(500).json({ error: "Failed to fetch department count" });
   }
 };

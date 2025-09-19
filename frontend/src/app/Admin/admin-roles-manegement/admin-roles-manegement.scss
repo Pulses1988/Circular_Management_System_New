@@ -1,0 +1,33 @@
+.grid {
+  align-items: start; // This prevents cards from stretching to match the tallest card in the row
+}
+.department-card {
+  position: relative;
+}
+
+.expanded-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border-radius: 0 0 24px 24px;
+}
+.expanded-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 999; // Increase this value
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border-radius: 0 0 24px 24px;
+}
+.group {
+  z-index: 1;
+}
+
+.group:hover,
+.group:has(.expanded-content) {
+  z-index: 1000;
+}
