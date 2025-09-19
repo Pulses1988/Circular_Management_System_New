@@ -14,7 +14,7 @@
   </button>
 </div> -->
 
-<div class="flex h-screen">
+<div class="flex h-screen" *ngIf="showSidebar()">
   <!-- Sidebar -->
   <app-admin-sidebar></app-admin-sidebar>
 
@@ -22,5 +22,9 @@
   <div class="flex-1 overflow-auto">
     <router-outlet></router-outlet>
   </div>
+</div>
+
+<div *ngIf="!showSidebar()">
+  <router-outlet></router-outlet>
 </div>
 <app-toast-component></app-toast-component>

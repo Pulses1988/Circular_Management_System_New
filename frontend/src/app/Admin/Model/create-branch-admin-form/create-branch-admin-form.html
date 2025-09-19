@@ -38,6 +38,16 @@
               class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all placeholder-gray-400"
               placeholder="Enter first name"
             />
+            <div
+              *ngIf="adminForm.get('first_name')?.touched && adminForm.get('first_name')?.errors"
+            >
+              <small
+                *ngIf="adminForm.get('first_name')?.errors?.['whitespace']"
+                class="text-red-500"
+              >
+                Only spaces are not allowed.
+              </small>
+            </div>
           </div>
 
           <!-- Middle Name -->
@@ -64,6 +74,14 @@
               class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all placeholder-gray-400"
               placeholder="Enter last name"
             />
+            <div *ngIf="adminForm.get('last_name')?.touched && adminForm.get('last_name')?.errors">
+              <small
+                *ngIf="adminForm.get('last_name')?.errors?.['whitespace']"
+                class="text-red-500"
+              >
+                Only spaces are not allowed.
+              </small>
+            </div>
           </div>
         </div>
 
@@ -79,6 +97,22 @@
               class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all placeholder-gray-400"
               placeholder="Enter username"
             />
+            <div *ngIf="adminForm.get('username')?.touched && adminForm.get('username')?.errors">
+              <small *ngIf="adminForm.get('username')?.errors?.['required']" class="text-red-500"
+                >Username is required.</small
+              >
+              <small *ngIf="adminForm.get('username')?.errors?.['minlength']" class="text-red-500"
+                >Min 3 chars required.</small
+              >
+              <small
+                *ngIf="adminForm.get('username')?.errors?.['usernameTaken']"
+                class="text-red-500"
+                >Username already taken.</small
+              >
+              <small *ngIf="adminForm.get('username')?.errors?.['whitespace']" class="text-red-500"
+                >Only spaces are not allowed.</small
+              >
+            </div>
           </div>
 
           <!-- Password -->
@@ -86,12 +120,33 @@
             <label class="block text-sm font-semibold text-gray-700 flex items-center">
               <i class="fas fa-lock text-gray-400 mr-2 w-4"></i> Password
             </label>
-            <input
-              type="password"
-              formControlName="password"
-              class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all placeholder-gray-400"
-              placeholder="Enter password"
-            />
+            <div class="relative">
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                formControlName="password"
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 pr-12 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all placeholder-gray-400"
+                placeholder="Enter password"
+              />
+              <button
+                type="button"
+                (click)="togglePassword()"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                <mat-icon>{{ showPassword ? 'visibility' : 'visibility_off' }}</mat-icon>
+              </button>
+            </div>
+
+            <div *ngIf="adminForm.get('password')?.touched && adminForm.get('password')?.errors">
+              <small *ngIf="adminForm.get('password')?.errors?.['required']" class="text-red-500"
+                >Password is required.</small
+              >
+              <small *ngIf="adminForm.get('password')?.errors?.['minlength']" class="text-red-500"
+                >Minimum 6 chars required.</small
+              >
+              <small *ngIf="adminForm.get('password')?.errors?.['whitespace']" class="text-red-500"
+                >Only spaces are not allowed.</small
+              >
+            </div>
           </div>
 
           <!-- Email -->
@@ -105,6 +160,20 @@
               class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all placeholder-gray-400"
               placeholder="Enter email address"
             />
+            <div *ngIf="adminForm.get('email')?.touched && adminForm.get('email')?.errors">
+              <small *ngIf="adminForm.get('email')?.errors?.['required']" class="text-red-500"
+                >Email is required.</small
+              >
+              <small *ngIf="adminForm.get('email')?.errors?.['email']" class="text-red-500"
+                >Invalid email format.</small
+              >
+              <small *ngIf="adminForm.get('email')?.errors?.['emailTaken']" class="text-red-500"
+                >Email already taken.</small
+              >
+              <small *ngIf="adminForm.get('email')?.errors?.['whitespace']" class="text-red-500"
+                >Only spaces are not allowed.</small
+              >
+            </div>
           </div>
         </div>
 

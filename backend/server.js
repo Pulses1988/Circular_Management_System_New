@@ -6,8 +6,10 @@ const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const headOfficeRoutes = require("./routes/headOfficeRoutes");
 const branchRoutes = require("./routes/branchesRoutes");
-const departmentRoutes = require("./routes/departmentRoutes")
+const departmentRoutes = require("./routes/departmentRoutes");
+const employeeRoutes = require("./routes/employeesRoutes");
 const roleRoutes = require("./routes/roleRoutes");
+
 
 // Allow cross-origin requests from your Angular app
 app.use(
@@ -24,7 +26,8 @@ initializeDatabase();
 app.use("/api/admins", adminRoutes);
 app.use("/api/head-office", headOfficeRoutes);
 app.use("/api/branches", branchRoutes);
-app.use("/api/departments",departmentRoutes);
+app.use("/api/departments", departmentRoutes);
+app.use("/api/employees", employeeRoutes);
 app.use("/api/roles",roleRoutes);
 
 

@@ -1,12 +1,21 @@
 import { Component, EventEmitter, input, Input, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  AsyncValidatorFn,
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { User } from '../../../services/user';
 import { Toast } from '../../../toast/toast';
 import { NgIf } from '@angular/common';
+import { catchError, map, of, switchMap, timer } from 'rxjs';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-create-branch-admin-form',
-  imports: [ReactiveFormsModule, NgIf],
+  imports: [ReactiveFormsModule, NgIf, MatIconModule],
   templateUrl: './create-branch-admin-form.html',
   styleUrl: './create-branch-admin-form.scss',
 })
@@ -19,15 +28,24 @@ export class CreateBranchAdminForm implements OnInit {
 
   adminForm: FormGroup;
   isEditMode = false;
+  showPassword: boolean = false;
 
   constructor(private fb: FormBuilder, private userService: User, private toast: Toast) {
     this.adminForm = this.fb.group({
-      username: ['', Validators.required],
-      password: ['', Validators.required],
-      first_name: [''],
+      username: [
+        '',
+        [Validators.required, Validators.minLength(3), this.noWhitespaceValidator],
+        [this.usernameDuplicateValidator()],
+      ],
+      password: ['', [Validators.required, this.noWhitespaceValidator]],
+      first_name: ['', this.noWhitespaceValidator],
       middle_name: [''],
-      last_name: [''],
-      email: ['', [Validators.email]],
+      last_name: ['', this.noWhitespaceValidator],
+      email: [
+        '',
+        [Validators.required, Validators.email, this.noWhitespaceValidator],
+        [this.emailDuplicateValidator()],
+      ],
       branch_id: [''],
       admin_type: ['BRANCH_ADMIN'],
     });
@@ -46,10 +64,62 @@ export class CreateBranchAdminForm implements OnInit {
     }
   }
 
-  submitForm() {
-    if (this.adminForm.invalid) return;
+  togglePassword() {
+    this.showPassword = !this.showPassword;
+  }
 
-    const adminData = this.adminForm.value;
+  noWhitespaceValidator(control: AbstractControl) {
+    if (control.value && control.value.trim().length === 0) {
+      return { whitespace: true };
+    }
+    return null;
+  }
+
+  usernameDuplicateValidator(): AsyncValidatorFn {
+    return (control: AbstractControl) => {
+      if (!control.value) return of(null);
+
+      // Skip duplicate check if the value hasn't changed in edit mode
+      if (this.isEditMode && this.editAdminData.username === control.value) {
+        return of(null);
+      }
+
+      return timer(500).pipe(
+        switchMap(() => this.userService.checkUsernameExists(control.value)),
+        map((exists: boolean) => (exists ? { usernameTaken: true } : null)),
+        catchError(() => of(null))
+      );
+    };
+  }
+
+  emailDuplicateValidator(): AsyncValidatorFn {
+    return (control: AbstractControl) => {
+      if (!control.value) return of(null);
+
+      if (this.isEditMode && this.editAdminData.email === control.value) {
+        return of(null);
+      }
+
+      return timer(500).pipe(
+        switchMap(() => this.userService.checkEmailExists(control.value)),
+        map((exists: boolean) => (exists ? { emailTaken: true } : null)),
+        catchError(() => of(null))
+      );
+    };
+  }
+
+  submitForm() {
+    if (this.adminForm.invalid) {
+      this.adminForm.markAllAsTouched();
+      return;
+    }
+
+    const adminData = { ...this.adminForm.value };
+    Object.keys(adminData).forEach((key) => {
+      if (typeof adminData[key] === 'string') {
+        adminData[key] = adminData[key].trim();
+      }
+    });
 
     if (this.isEditMode) {
       // this.userService.updateAdmin(adminData.id, adminData).subscribe(() => {

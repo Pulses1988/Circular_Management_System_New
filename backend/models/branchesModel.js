@@ -33,3 +33,22 @@ exports.updateBranch = (id, { name, address, head_office_id }) => {
 exports.deleteBranch = (id) => {
   return db.query("DELETE FROM branches WHERE id = ?", [id]);
 };
+
+exports.findByUsername = (username) => {
+  return db.query("SELECT id FROM admin WHERE username = ?", [username]);
+};
+
+exports.findByEmail = (email) => {
+  return db.query("SELECT id FROM admin WHERE email = ?", [email]);
+};
+
+exports.getBranchesWithAdminStatus = () => {
+  return db.query(`
+    SELECT b.id, b.name,
+           CASE 
+              WHEN EXISTS (SELECT 1 FROM admin a WHERE a.branch_id = b.id) 
+              THEN 1 ELSE 0 
+           END AS has_admin
+    FROM branches b
+  `);
+};

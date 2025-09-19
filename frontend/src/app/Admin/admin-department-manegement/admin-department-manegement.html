@@ -1,89 +1,109 @@
-<div class="min-h-screen p-6 bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200">
-  <div class="max-w-7xl mx-auto">
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold text-gray-800">Manage Departments</h1>
+<div class="mx-auto bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 min-h-screen p-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between mt-8 mb-6">
+    <h1 class="text-3xl font-bold text-gray-800">Manage Departments</h1>
+    <div class="bg-white px-3 py-1 rounded-lg shadow-sm text-sm text-gray-600">
+      Total: {{ departments.length || 0 }}
     </div>
-    <div class="flex justify-end items-right mb-4">
+  </div>
 
-        <button (click)="toggleForm()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
-            <mat-icon class="align-middle">add</mat-icon> Add Department
+  <!-- Add Department Button -->
+  <button
+    (click)="toggleForm()"
+    class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors mb-6"
+  >
+    {{ showForm ? 'Close Form' : 'Add Department' }}
+  </button>
+
+  <!-- Add Department Form -->
+  <div *ngIf="showForm" class="bg-white p-6 rounded-lg shadow-md mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+      <div>
+        <label class="block text-sm font-medium mb-2 text-gray-700">Department Name</label>
+        <input
+          [(ngModel)]="newDeptName"
+          type="text"
+          placeholder="Enter department name"
+          class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        />
+      </div>
+      <div class="flex gap-2 mt-2 md:mt-0">
+        <button
+          (click)="onSubmit(newDeptName)"
+          class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Create
         </button>
-    </div>
-
-    <!-- Add Department Form -->
-    <div *ngIf="showForm" class="bg-white p-4 rounded shadow-md mb-6">
-      <div class="flex flex-col sm:flex-row gap-4">
-        <input [(ngModel)]="newDeptName" type="text" placeholder="Department Name"
-               class="border border-gray-300 rounded px-4 py-2 w-full sm:w-auto flex-grow" />
-        <div class="flex gap-2">
-          <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition" (click)="onSubmit(newDeptName)">Create</button>
-          <button (click)="cancel()" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition">Cancel</button>
-        </div>
+        <button
+          (click)="cancel()"
+          class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+        >
+          Cancel
+        </button>
       </div>
     </div>
-    <!--Loader-->
-    <div *ngIf="loading" class="text-center py-4">
-  <mat-icon class="text-blue-600 text-4xl animate-spin">autorenew</mat-icon>
-  <p class="text-gray-600 mt-2">Loading departments...</p>
-</div>
+  </div>
 
+  <!-- Loader -->
+  <div *ngIf="loading" class="text-center py-6">
+    <mat-icon class="text-blue-600 text-4xl animate-spin">autorenew</mat-icon>
+    <p class="text-gray-600 mt-2">Loading departments...</p>
+  </div>
 
-    <!-- Department List Card -->
-    <div *ngIf="!loading" class="bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 rounded shadow-md p-4">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-white">
+  <!-- Department List -->
+  <div *ngIf="!loading" class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full">
+        <thead class="bg-gray-50 border-b">
           <tr>
-            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Department Name</th>
-            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Head Office / Branch</th>
-            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">#</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Department Name</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Head Office / Branch</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100">
-        <tr *ngFor="let dept of paginatedDepartments; let i = index">
-  <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700">{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
-  
-  <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700">
-    <div *ngIf="editingDeptId !== dept.id">{{ dept.name }}</div>
-    <div *ngIf="editingDeptId === dept.id">
-      <input [(ngModel)]="editingDeptName" class="border border-gray-300 rounded px-2 py-1" />
-    </div>
-  </td>
-  
-  <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700">{{ dept.location }}</td>
-  
- <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">
-  <div class="flex justify-center items-center gap-2">
-    <button *ngIf="editingDeptId !== dept.id" (click)="startEditing(dept)" class="text-blue-600 hover:text-blue-800">
-      <mat-icon>edit</mat-icon>
-    </button>
-    <div *ngIf="editingDeptId === dept.id" class="flex gap-2">
-      <button (click)="submitEdit()" class="text-green-600 hover:text-green-800">
-        <mat-icon>check</mat-icon>
-      </button>
-      <button (click)="cancelEdit()" class="text-gray-600 hover:text-gray-800">
-        <mat-icon>close</mat-icon>
-      </button>
-    </div>
-    <button *ngIf="editingDeptId !== dept.id" class="text-red-600 hover:text-red-800"><mat-icon>delete</mat-icon></button>
-  </div>
-</td>
-</tr>
-
+        <tbody class="divide-y divide-gray-200">
+          <tr *ngFor="let dept of paginatedDepartments; let i = index" class="hover:bg-gray-50">
+            <td class="px-6 py-4 text-sm text-gray-900">{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
+            <td class="px-6 py-4 text-sm text-gray-900">
+              <div *ngIf="editingDeptId !== dept.id">{{ dept.name }}</div>
+              <div *ngIf="editingDeptId === dept.id">
+                <input [(ngModel)]="editingDeptName" class="border border-gray-300 rounded-lg p-2 w-full" />
+              </div>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-900">{{ dept.location }}</td>
+            <td class="px-6 py-4 text-sm text-gray-900">
+              <div class="flex gap-2">
+                <button *ngIf="editingDeptId !== dept.id" (click)="startEditing(dept)" class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition-colors text-sm">
+                  Edit
+                </button>
+                <!-- <button *ngIf="editingDeptId !== dept.id" (click)="deleteDept(dept.id)" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors text-sm">
+                  Delete
+                </button> -->
+                <div *ngIf="editingDeptId === dept.id" class="flex gap-2">
+                  <button (click)="submitEdit()" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition-colors text-sm">
+                    Save
+                  </button>
+                  <button (click)="cancelEdit()" class="bg-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-400 transition-colors text-sm">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
         </tbody>
       </table>
-
-      <!-- Pagination -->
-      <div class="flex justify-center mt-4 space-x-2">
-        <button *ngFor="let page of [].constructor(totalPages()); let p = index"
-                (click)="goToPage(p + 1)"
-                [class.bg-blue-600]="currentPage === (p + 1)"
-                [class.text-white]="currentPage === (p + 1)"
-                class="px-3 py-1 rounded border border-gray-300 hover:bg-blue-100 transition">
-          {{ p + 1 }}
-        </button>
-      </div>
     </div>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div class="flex justify-center mt-6 space-x-2">
+    <button *ngFor="let page of [].constructor(totalPages()); let p = index"
+            (click)="goToPage(p + 1)"
+            [class.bg-blue-600]="currentPage === (p + 1)"
+            [class.text-white]="currentPage === (p + 1)"
+            class="px-3 py-1 rounded border border-gray-300 hover:bg-blue-100 transition">
+      {{ p + 1 }}
+    </button>
   </div>
 </div>

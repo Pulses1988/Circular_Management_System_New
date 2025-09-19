@@ -1,6 +1,6 @@
-<div class="mx-auto bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 h-full p-6">
+<div class="mx-auto bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 min-h-screen p-6">
   <!-- Header -->
-  <div class="flex items-center justify-between mb-6">
+  <div class="flex items-center justify-between mt-8 mb-6">
     <h1 class="text-3xl font-bold text-gray-800">Branch Management</h1>
     <div class="bg-white px-3 py-1 rounded-lg shadow-sm text-sm text-gray-600">
       Total: {{ branches?.length || 0 }}
@@ -18,6 +18,7 @@
   <!-- Branch Form -->
   <form
     *ngIf="showForm"
+    #branchFormRef
     [formGroup]="branchForm"
     (ngSubmit)="submitForm()"
     class="bg-white p-6 rounded-lg shadow-md mb-6"
@@ -36,6 +37,9 @@
           class="text-red-500 text-sm mt-1"
         >
           <div *ngIf="branchForm.get('name')?.errors?.['required']">Branch name is required.</div>
+          <div *ngIf="branchForm.get('name')?.errors?.['whitespace']">
+            Branch name cannot be empty spaces.
+          </div>
           <div *ngIf="branchForm.get('name')?.errors?.['minlength']">
             Minimum 3 characters required.
           </div>
@@ -96,24 +100,43 @@
       <table class="min-w-full">
         <thead class="bg-gray-50 border-b">
           <tr>
-            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">ID</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">#</th>
             <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Name</th>
             <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Address</th>
             <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Head Office</th>
             <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Created At</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Admin</th>
             <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
           <tr *ngFor="let branch of paginatedBranches(); let i = index" class="hover:bg-gray-50">
             <td class="px-6 py-4 text-sm text-gray-900">
-              {{ i + 1 }}
+              {{ (currentPage - 1) * itemsPerPage + i + 1 }}
             </td>
             <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ branch.name }}</td>
             <td class="px-6 py-4 text-sm text-gray-600">{{ branch.address }}</td>
             <td class="px-6 py-4 text-sm text-gray-900">{{ branch.head_office_name }}</td>
             <td class="px-6 py-4 text-sm text-gray-500">
-              {{ branch.created_at | date : 'short' }}
+              {{ branch.created_at | date : 'dd/MM/yyyy' }}
+            </td>
+            <td class="px-6 py-4">
+              <div *ngIf="branch.has_admin === 1" class="flex gap-2">
+                <button
+                  (click)="openAdminModal(branch, true)"
+                  class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors text-sm"
+                >
+                  Add Another Admin
+                </button>
+              </div>
+              <div *ngIf="branch.has_admin === 0">
+                <button
+                  (click)="openAdminModal(branch, false)"
+                  class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition-colors text-sm"
+                >
+                  Create Admin
+                </button>
+              </div>
             </td>
             <td class="px-6 py-4">
               <div class="flex gap-2">

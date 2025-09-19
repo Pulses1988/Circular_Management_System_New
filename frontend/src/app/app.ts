@@ -1,5 +1,5 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet, RouterModule } from '@angular/router';
+import { RouterOutlet, RouterModule, Router, NavigationEnd } from '@angular/router';
 import { User } from './services/user';
 import { FormsModule } from '@angular/forms'; // ✅ For ngModel
 import { CommonModule } from '@angular/common';
@@ -18,7 +18,20 @@ export class App {
   username = '';
   email = '';
 
-  constructor(private userService: User) {}
+  currentRoute: string = '';
+
+  constructor(private userService: User, private router: Router) {
+    router.events.subscribe((event: any) => {
+      if (event instanceof NavigationEnd) {
+        this.currentRoute = event.urlAfterRedirects;
+      }
+    });
+  }
+
+  showSidebar(): boolean {
+    return !this.currentRoute.includes('/admin-login');
+  }
+
   ngOnInit() {}
   onSubmit() {
     const user = { username: this.username, email: this.email };

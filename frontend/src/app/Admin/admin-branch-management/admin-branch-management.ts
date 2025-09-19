@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { User } from '../../services/user';
 import {
   FormBuilder,
@@ -28,6 +28,7 @@ import { CreateBranchAdminForm } from '../Model/create-branch-admin-form/create-
 })
 export class AdminBranchManagement implements OnInit {
   branches: any = [];
+  brancheswithstatus: any = [];
   headOffice: any = [];
   branchForm: FormGroup;
   showForm = false;
@@ -40,9 +41,25 @@ export class AdminBranchManagement implements OnInit {
   selectedBranchId: number | null = null;
   selectedBranchName: string | null = null;
 
-  constructor(private userService: User, private fb: FormBuilder, private toast: Toast) {
+  @ViewChild('branchFormRef') branchFormRef!: ElementRef;
+  private scrollToForm = false;
+
+  constructor(
+    private userService: User,
+    private fb: FormBuilder,
+    private toast: Toast,
+    private cdr: ChangeDetectorRef
+  ) {
     this.branchForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(3)]],
+      name: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(3),
+          (control: any) =>
+            control.value && control.value.trim().length === 0 ? { whitespace: true } : null,
+        ],
+      ],
       address: [''],
       head_office_id: ['', Validators.required],
     });
@@ -52,12 +69,34 @@ export class AdminBranchManagement implements OnInit {
     this.loadBranches();
   }
 
+  ngAfterViewChecked(): void {
+    if (this.scrollToForm && this.branchFormRef) {
+      this.branchFormRef.nativeElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+      this.scrollToForm = false; // reset flag
+    }
+  }
+
   loadBranches() {
-    this.userService.fetchAllBranches().subscribe((data) => {
-      this.branches = data;
+    this.userService.fetchAllBranches().subscribe((branchesData: any) => {
+      const branchesArray = branchesData as any[]; // ✅ force array type
+
+      this.userService.getBranchesWithAdminStatus().subscribe((statusData: any) => {
+        const statusArray = statusData as any[]; // ✅ force array type
+
+        this.branches = branchesArray.map((branch: any) => {
+          const match = statusArray.find((s: any) => s.id === branch.id);
+          return {
+            ...branch,
+            has_admin: match ? match.has_admin : 0,
+          };
+        });
+      });
     });
 
-    this.userService.fetchAllHeadOffice().subscribe((data) => {
+    this.userService.fetchAllHeadOffice().subscribe((data: any) => {
       this.headOffice = data;
     });
   }
@@ -80,6 +119,19 @@ export class AdminBranchManagement implements OnInit {
     this.currentPage = page;
   }
 
+  openAdminModal(branch: any, hasAdmin: boolean) {
+    this.selectedBranchId = branch.id;
+    this.selectedBranchName = branch.name;
+    this.showAdminModal = true;
+
+    // if you want to differentiate between "Create Admin" and "Add Another Admin"
+    if (hasAdmin) {
+      console.log(`Add another admin for branch: ${branch.name}`);
+    } else {
+      console.log(`Create first admin for branch: ${branch.name}`);
+    }
+  }
+
   handleAdminSubmit(adminData: any) {
     this.toast.show('Branch admin created successfully!', 'success');
     this.showAdminModal = false;
@@ -90,7 +142,12 @@ export class AdminBranchManagement implements OnInit {
 
   submitForm() {
     if (this.branchForm.invalid) return;
-    const branch = this.branchForm.value;
+    const branch = { ...this.branchForm.value };
+    Object.keys(branch).forEach((key) => {
+      if (typeof branch[key] === 'string') {
+        branch[key] = branch[key].trim();
+      }
+    });
     if (this.isEditMode && this.editBranchId) {
       this.userService.updateBranches(this.editBranchId, branch).subscribe(() => {
         this.toast.show('Branch updated successfully!', 'success');
@@ -119,8 +176,13 @@ export class AdminBranchManagement implements OnInit {
       head_office_id: branch.head_office_id,
     });
     this.showForm = true;
+
+    this.scrollToForm = true; // mark that we should scroll on next view check
+    this.cdr.detectChanges();
   }
+
   deleteBranch(id: any) {}
+
   resetForm() {
     this.isEditMode = false;
     this.editBranchId = null;

@@ -7,11 +7,9 @@ import { AdminDepartmentManegement } from './Admin/admin-department-manegement/a
 import { AdminRolesManegement } from './Admin/admin-roles-manegement/admin-roles-manegement';
 
 export const routes: Routes = [
-    {path:'', redirectTo:'admin-login',pathMatch:'full'},
-    {path:'admin-signup', component:AdminSignup},
-    {path:'admin-login',component:AdminLogin},
-    {path:'admin-dashboard',component:AdminDashboard},
-      { path: 'admin-branch', component: AdminBranchManagement },
-    {path:'admin-department-manegement',component:AdminDepartmentManegement},
-    {path:'admin-role-manegement', component:AdminRolesManegement}
+  {
+    path: '',
+    loadChildren: () => import('./Admin/admin.routes').then((m) => m.ADMIN_ROUTS),
+  },
+  { path: '**', redirectTo: '' },
 ];

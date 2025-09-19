@@ -36,7 +36,7 @@ exports.getRolesByHeadOffice = async (req, res) => {
   const { headOfficeId } = req.params;
 
   try {
-    const roles = await roleModel.getRolesByHeadOffice(headOfficeId);
+    const [roles] = await roleModel.getRolesByHeadOffice(headOfficeId);
     res.json(roles);
   } catch (err) {
     console.error("Error fetching roles by head office:", err);
