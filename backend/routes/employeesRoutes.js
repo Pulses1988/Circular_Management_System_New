@@ -6,6 +6,8 @@ const authenticateToken = require("../authMiddleware");
 // Validation endpoints
 router.get("/check-employee-id", authenticateToken, employeeController.checkEmployeeIdExists);
 router.get("/check-email", authenticateToken, employeeController.checkEmailExists);
+router.get("/employee-by-headoffice/:id",authenticateToken,employeeController.getEmployeesByHeadOfficeWithoutBranch);
+router.get("/employee-by-branch/:id", authenticateToken, employeeController.getEmployeesByBranch);
 
 // CRUD endpoints
 router.get("/", authenticateToken, employeeController.getAllEmployees);

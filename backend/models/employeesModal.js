@@ -5,7 +5,7 @@ const bcrypt = require("bcrypt");
 exports.getAllEmployees = () => {
   return db.query(`
     SELECT e.id, e.employee_id, e.first_name, e.middle_name, e.last_name,
-           e.phone_no, e.email, e.permissions, e.created_at,
+           e.phone_no, e.email, e.can_create_circular,e.can_approve_circular, e.created_at,
            r.name AS role_name,
            d.name AS department_name,
            b.name AS branch_name
@@ -44,15 +44,16 @@ exports.createEmployee = ({
   role_id,
   department_id,
   branch_id,
-  permissions,
+  can_create_circular,
+  can_approve_circular,
 }) => {
   const password_hash = bcrypt.hashSync(password, 10);
 
   return db.query(
     `INSERT INTO employees 
       (employee_id, password_hash, first_name, middle_name, last_name, 
-       phone_no, email, role_id, department_id, branch_id, permissions) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       phone_no, email, role_id, department_id, branch_id, can_create_circular,can_approve_circular) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       employee_id,
       password_hash,
@@ -64,7 +65,8 @@ exports.createEmployee = ({
       role_id || null,
       department_id || null,
       branch_id || null,
-      JSON.stringify(permissions || {}),
+      can_create_circular || null,
+      can_approve_circular || null,
     ]
   );
 };
@@ -80,13 +82,14 @@ exports.updateEmployee = (
     role_id,
     department_id,
     branch_id,
-    permissions,
+    can_create_circular,
+    can_approve_circular,
   }
 ) => {
   return db.query(
     `UPDATE employees 
      SET first_name=?, middle_name=?, last_name=?, phone_no=?, email=?, 
-         role_id=?, department_id=?, branch_id=?, permissions=? 
+         role_id=?, department_id=?, branch_id=?, can_create_circular=?,can_approve_circular=?,
      WHERE id=?`,
     [
       first_name || null,
@@ -97,7 +100,8 @@ exports.updateEmployee = (
       role_id || null,
       department_id || null,
       branch_id || null,
-      JSON.stringify(permissions || {}),
+      can_create_circular || null,
+      can_approve_circular || null,
       id,
     ]
   );
@@ -115,4 +119,42 @@ exports.findByEmployeeId = (employee_id) => {
 
 exports.findByEmail = (email) => {
   return db.query("SELECT id FROM employees WHERE email = ?", [email]);
+};
+
+// Get employees for a specific Head Office, but branch_id is NULL
+exports.getEmployeesByHeadOfficeWithoutBranch = (hoId) => {
+  return db.query(
+    `
+    SELECT e.id, e.employee_id, e.first_name, e.middle_name, e.last_name,
+           e.phone_no, e.email, e.can_create_circular, e.can_approve_circular, e.created_at,
+           r.name AS role_name,
+           d.name AS department_name,
+           b.name AS branch_name
+    FROM employees e
+    LEFT JOIN roles r ON e.role_id = r.id
+    LEFT JOIN departments d ON e.department_id = d.id
+    LEFT JOIN branches b ON e.branch_id = b.id
+    WHERE e.head_office_id = ? AND e.branch_id IS NULL
+  `,
+    [hoId]
+  );
+};
+
+// Get employees for a specific branch
+exports.getEmployeesByBranch = (branchId) => {
+  return db.query(
+    `
+    SELECT e.id, e.employee_id, e.first_name, e.middle_name, e.last_name,
+           e.phone_no, e.email, e.can_create_circular, e.can_approve_circular, e.created_at,
+           r.name AS role_name,
+           d.name AS department_name,
+           b.name AS branch_name
+    FROM employees e
+    LEFT JOIN roles r ON e.role_id = r.id
+    LEFT JOIN departments d ON e.department_id = d.id
+    LEFT JOIN branches b ON e.branch_id = b.id
+    WHERE e.branch_id = ?
+  `,
+    [branchId]
+  );
 };

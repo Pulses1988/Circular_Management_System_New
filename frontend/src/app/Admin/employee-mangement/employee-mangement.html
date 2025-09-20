@@ -36,7 +36,39 @@
           *ngIf="employeeForm.get('first_name')?.touched && employeeForm.get('first_name')?.invalid"
           class="text-red-500 text-sm mt-1"
         >
-          <div *ngIf="employeeForm.get('first_name')?.errors?.['required']">First name is required.</div>
+          <div *ngIf="employeeForm.get('first_name')?.errors?.['required']">
+            First name is required.
+          </div>
+          <div *ngIf="employeeForm.get('first_name')?.errors?.['pattern']">
+            Numbers are not allowed in first name.
+          </div>
+          <div *ngIf="employeeForm.get('first_name')?.errors?.['whitespace']">
+            First name cannot be empty or only spaces.
+          </div>
+        </div>
+      </div>
+
+      <!-- Middle Name -->
+      <div>
+        <label class="block text-sm font-medium mb-2 text-gray-700">Middle Name</label>
+        <input
+          type="text"
+          formControlName="middle_name"
+          class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Enter middle name"
+        />
+        <div
+          *ngIf="
+            employeeForm.get('middle_name')?.touched && employeeForm.get('middle_name')?.invalid
+          "
+          class="text-red-500 text-sm mt-1"
+        >
+          <div *ngIf="employeeForm.get('middle_name')?.errors?.['required']">
+            Middle name is required.
+          </div>
+          <div *ngIf="employeeForm.get('middle_name')?.errors?.['pattern']">
+            Numbers are not allowed in Middle name.
+          </div>
         </div>
       </div>
 
@@ -48,6 +80,69 @@
           class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           placeholder="Enter last name"
         />
+        <div
+          *ngIf="employeeForm.get('last_name')?.touched && employeeForm.get('last_name')?.invalid"
+          class="text-red-500 text-sm mt-1"
+        >
+          <div *ngIf="employeeForm.get('last_name')?.errors?.['required']">
+            Last name is required.
+          </div>
+          <div *ngIf="employeeForm.get('last_name')?.errors?.['pattern']">
+            Numbers are not allowed in Last name.
+          </div>
+          <div *ngIf="employeeForm.get('last_name')?.errors?.['whitespace']">
+            Last name cannot be empty or only spaces.
+          </div>
+        </div>
+      </div>
+
+      <!-- Employee ID -->
+      <div>
+        <label class="block text-sm font-medium mb-2 text-gray-700">Employee ID</label>
+        <input
+          type="text"
+          formControlName="employee_id"
+          class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Enter employee ID"
+        />
+        <div
+          *ngIf="
+            employeeForm.get('employee_id')?.touched && employeeForm.get('employee_id')?.invalid
+          "
+          class="text-red-500 text-sm mt-1"
+        >
+          <div *ngIf="employeeForm.get('employee_id')?.errors?.['required']">
+            Employee ID is required.
+          </div>
+          <div
+            *ngIf="employeeForm.get('employee_id')?.errors?.['pattern']"
+            class="text-red-500 text-sm mt-1"
+          >
+            Employee ID cannot contain spaces.
+          </div>
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div>
+        <label class="block text-sm font-medium mb-2 text-gray-700">Password</label>
+        <input
+          type="password"
+          formControlName="password"
+          class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Enter password"
+        />
+        <div
+          *ngIf="employeeForm.get('password')?.touched && employeeForm.get('password')?.invalid"
+          class="text-red-500 text-sm mt-1"
+        >
+          <div *ngIf="employeeForm.get('password')?.errors?.['required']">
+            Password is required.
+          </div>
+          <div *ngIf="employeeForm.get('password')?.errors?.['whitespace']">
+            Password cannot be empty or only spaces.
+          </div>
+        </div>
       </div>
 
       <div>
@@ -58,6 +153,13 @@
           class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           placeholder="Enter email"
         />
+        <div
+          *ngIf="employeeForm.get('email')?.touched && employeeForm.get('email')?.invalid"
+          class="text-red-500 text-sm mt-1"
+        >
+          <div *ngIf="employeeForm.get('email')?.errors?.['required']">Email is required.</div>
+          <div *ngIf="employeeForm.get('email')?.errors?.['pattern']">Enter Valid Email.</div>
+        </div>
       </div>
 
       <div>
@@ -67,6 +169,33 @@
           formControlName="phone_no"
           class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           placeholder="Enter phone number"
+        />
+        <div
+          *ngIf="employeeForm.get('phone_no')?.touched && employeeForm.get('phone_no')?.invalid"
+          class="text-red-500 text-sm mt-1"
+        >
+          <div *ngIf="employeeForm.get('phone_no')?.errors?.['pattern']">Enter only numbers.</div>
+        </div>
+      </div>
+
+      <div *ngIf="role === 'HO_ADMIN' || (role === 'BRANCH_ADMIN' && hasDepartments)">
+        <label class="block text-sm font-medium mb-2 text-gray-700">Department</label>
+        <select
+          formControlName="department_id"
+          class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="" disabled>Select Department</option>
+          <option *ngFor="let dept of departments" [value]="dept.id">{{ dept.name }}</option>
+        </select>
+      </div>
+
+      <div *ngIf="role === 'BRANCH_ADMIN'">
+        <label class="block text-sm font-medium mb-2 text-gray-700">Branch</label>
+        <input
+          type="text"
+          [value]="branches[0]?.name"
+          class="w-full border border-gray-300 rounded-lg p-3 bg-gray-100 cursor-not-allowed"
+          readonly
         />
       </div>
 
@@ -80,27 +209,71 @@
           <option *ngFor="let role of roles" [value]="role.id">{{ role.name }}</option>
         </select>
       </div>
+    </div>
 
-      <div>
-        <label class="block text-sm font-medium mb-2 text-gray-700">Department</label>
-        <select
-          formControlName="department_id"
-          class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="" disabled>Select Department</option>
-          <option *ngFor="let dept of departments" [value]="dept.id">{{ dept.name }}</option>
-        </select>
+    <!-- Permissions Section -->
+    <div class="mt-6 pt-6 border-t border-gray-200">
+      <div class="flex items-center gap-2 mb-4">
+        <mat-icon class="text-blue-600">security</mat-icon>
+        <h3 class="text-lg font-semibold text-gray-800">Permissions</h3>
       </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Can Create Circular -->
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <label class="flex items-center gap-3 cursor-pointer group">
+            <div class="relative">
+              <input 
+                type="checkbox" 
+                formControlName="can_create_circular" 
+                class="sr-only peer"
+              />
+              <div class="w-5 h-5 border-2 border-gray-300 rounded bg-white peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-all duration-200 flex items-center justify-center">
+                <mat-icon 
+                  class="text-white text-sm opacity-0 peer-checked:opacity-100 transition-opacity duration-200"
+                  style="font-size: 14px; width: 14px; height: 14px;"
+                >
+                  check
+                </mat-icon>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <mat-icon class="text-green-600" style="font-size: 20px;">add_circle_outline</mat-icon>
+              <span class="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
+                Can Create Circular
+              </span>
+            </div>
+          </label>
+          <p class="text-xs text-gray-500 mt-2 ml-8">Allow user to create new circulars</p>
+        </div>
 
-      <div>
-        <label class="block text-sm font-medium mb-2 text-gray-700">Branch</label>
-        <select
-          formControlName="branch_id"
-          class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="" disabled>Select Branch</option>
-          <option *ngFor="let branch of branches" [value]="branch.id">{{ branch.name }}</option>
-        </select>
+        <!-- Can Approve Circular -->
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <label class="flex items-center gap-3 cursor-pointer group">
+            <div class="relative">
+              <input 
+                type="checkbox" 
+                formControlName="can_approve_circular" 
+                class="sr-only peer"
+              />
+              <div class="w-5 h-5 border-2 border-gray-300 rounded bg-white peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-all duration-200 flex items-center justify-center">
+                <mat-icon 
+                  class="text-white text-sm opacity-0 peer-checked:opacity-100 transition-opacity duration-200"
+                  style="font-size: 14px; width: 14px; height: 14px;"
+                >
+                  check
+                </mat-icon>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <mat-icon class="text-orange-600" style="font-size: 20px;">verified</mat-icon>
+              <span class="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
+                Can Approve Circular
+              </span>
+            </div>
+          </label>
+          <p class="text-xs text-gray-500 mt-2 ml-8">Allow user to approve created circulars</p>
+        </div>
       </div>
     </div>
 
@@ -142,15 +315,21 @@
         </thead>
         <tbody class="divide-y divide-gray-200">
           <tr *ngFor="let emp of paginatedEmployees(); let i = index" class="hover:bg-gray-50">
-            <td class="px-6 py-4 text-sm text-gray-900">{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
+            <td class="px-6 py-4 text-sm text-gray-900">
+              {{ (currentPage - 1) * itemsPerPage + i + 1 }}
+            </td>
             <td class="px-6 py-4 text-sm text-gray-900">{{ emp.employee_id }}</td>
-            <td class="px-6 py-4 text-sm text-gray-900">{{ emp.first_name }} {{ emp.last_name }}</td>
+            <td class="px-6 py-4 text-sm text-gray-900">
+              {{ emp.first_name }} {{ emp.last_name }}
+            </td>
             <td class="px-6 py-4 text-sm text-gray-600">{{ emp.email }}</td>
             <td class="px-6 py-4 text-sm text-gray-600">{{ emp.phone_no }}</td>
             <td class="px-6 py-4 text-sm text-gray-900">{{ emp.role_name }}</td>
             <td class="px-6 py-4 text-sm text-gray-900">{{ emp.department_name }}</td>
             <td class="px-6 py-4 text-sm text-gray-900">{{ emp.branch_name }}</td>
-            <td class="px-6 py-4 text-sm text-gray-500">{{ emp.created_at | date: 'dd/MM/yyyy' }}</td>
+            <td class="px-6 py-4 text-sm text-gray-500">
+              {{ emp.created_at | date : 'dd/MM/yyyy' }}
+            </td>
             <td class="px-6 py-4 flex gap-2">
               <button
                 (click)="editEmployee(emp)"
