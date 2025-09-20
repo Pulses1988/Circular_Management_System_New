@@ -19,7 +19,8 @@ export class AdminDashboard {
     showHeadOfficeForm = false;
 
   headOffice = {
-    name: '',
+    name: 'Head Office',
+    bank_name: '',
     address: ''
   };
   constructor(private toast:Toast, private user:User){}
@@ -73,7 +74,7 @@ export class AdminDashboard {
   }
   }
  addHeadOffice() {
-    if (!this.headOffice.name.trim() || !this.headOffice.address.trim()) {
+    if (!this.headOffice.name.trim() || this.headOffice.bank_name.trim() || !this.headOffice.address.trim()) {
       this.toast.show('Please fill in all fields', 'error');
       return;
     }
@@ -81,7 +82,7 @@ export class AdminDashboard {
     this.user.addHeadOffice(this.headOffice).subscribe({
       next: () => {
         this.toast.show('Head office added successfully!', 'success');
-        this.headOffice = { name: '', address: '' };
+        this.headOffice = { name: '', bank_name:'', address: '' };
         this.showHeadOfficeForm = false;
         this.fetchCounts(); // Refresh counts
       },

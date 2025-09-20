@@ -14,7 +14,7 @@
   </button>
 </div> -->
 
-<div class="flex h-screen" *ngIf="showSidebar()">
+<div class="flex h-screen" *ngIf="showAdminSidebar()">
   <!-- Sidebar -->
   <app-admin-sidebar></app-admin-sidebar>
 
@@ -24,7 +24,7 @@
   </div>
 </div>
 
-<div *ngIf="!showSidebar()">
+<div *ngIf="!showAdminSidebar()">
   <router-outlet></router-outlet>
 </div>
 <app-toast-component></app-toast-component>

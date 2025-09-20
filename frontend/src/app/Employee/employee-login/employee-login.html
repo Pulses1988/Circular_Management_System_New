@@ -1,0 +1,135 @@
+<div class="h-screen gradient-bg flex items-center justify-center p-4 relative overflow-hidden">
+  <!-- Floating Background Shapes -->
+  <!-- <div class="floating-shapes">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+  </div> -->
+  
+  <!-- Main Login Container -->
+  <div class="w-full max-w-sm relative z-10">
+    <!-- Logo & Brand Header -->
+  <div class=" flex justify-center  text-center flex-col mb-8">
+      <div class="flex items-center justify-center w-16 h-12 bg-white rounded-full mb-4 shadow-lg self-center">
+        <mat-icon class="text-2xl text-gray-800">account_balance</mat-icon>
+      </div>
+      <h1 class="text-2xl font-bold text-white mb-1">SecureBank Portal</h1>
+      <p class="text-blue-200 text-sm">Employee Access</p>
+    </div>
+    
+    <!-- Login Form -->
+    <div class="glass-effect rounded-2xl shadow-2xl p-6">
+      <div class=" flex flex-col text-center mb-4">
+        <h2 class="text-xl font-bold text-gray-800 mb-1">Welcome Back</h2>
+        <p class="text-gray-600 text-sm">Please sign in to your account</p>
+      </div>
+      
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
+        <!-- Employee ID Field -->
+        <div class="space-y-2">
+          <label class="text-sm font-semibold text-gray-700 flex items-center">
+            <mat-icon class="text-blue-600 mr-2 text-lg">badge</mat-icon>
+            Employee ID
+          </label>
+          <div class="relative">
+            <input 
+              type="text"
+              formControlName="employeeId"
+              placeholder="e.g., EMP001"
+              class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-300 bg-white shadow-sm hover:shadow-md"
+              [class.border-red-500]="loginForm.get('employeeId')?.invalid && loginForm.get('employeeId')?.touched"
+              [class.focus:ring-red-500]="loginForm.get('employeeId')?.invalid && loginForm.get('employeeId')?.touched"
+            >
+            <mat-icon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl">person</mat-icon>
+          </div>
+          <div *ngIf="loginForm.get('employeeId')?.invalid && loginForm.get('employeeId')?.touched" 
+               class="text-red-500 text-xs mt-1 flex items-center">
+            <mat-icon class="text-xs mr-1">error</mat-icon>
+            {{ getEmployeeIdErrorMessage() }}
+          </div>
+        </div>
+
+        <!-- Password Field -->
+        <div class="space-y-2">
+          <label class="text-sm font-semibold text-gray-700 flex items-center">
+            <mat-icon class="text-blue-600 mr-2 text-lg">lock</mat-icon>
+            Password
+          </label>
+          <div class="relative">
+            <input 
+              [type]="hidePassword ? 'password' : 'text'"
+              formControlName="password"
+              placeholder="Enter your password"
+              class="w-full px-4 py-3 pl-12 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-300 bg-white shadow-sm hover:shadow-md"
+              [class.border-red-500]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+              [class.focus:ring-red-500]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+            >
+            <mat-icon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl">lock</mat-icon>
+            <button 
+              type="button"
+              (click)="hidePassword = !hidePassword"
+              class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+              <mat-icon class="text-xl">{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+          </div>
+          <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" 
+               class="text-red-500 text-xs mt-1 flex items-center">
+            <mat-icon class="text-xs mr-1">error</mat-icon>
+            {{ getPasswordErrorMessage() }}
+          </div>
+        </div>
+
+        <!-- Forgot Password -->
+        <div class="text-right">
+          <button type="button" 
+                  class="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors hover:underline">
+            Forgot Password?
+          </button>
+        </div>
+
+        <!-- Login Button -->
+        <button type="submit" 
+                mat-raised-button 
+                class="w-full login-btn text-white py-3 rounded-xl font-semibold shadow-lg"
+                [disabled]="isLoading">
+          <span *ngIf="!isLoading" class="flex items-center text-white justify-center">
+            <mat-icon class="mr-2">login</mat-icon>
+            Sign In
+          </span>
+          <span *ngIf="isLoading" class="flex items-center justify-center">
+            <mat-progress-spinner diameter="20" 
+                                  mode="indeterminate" 
+                                  color="accent"
+                                  class="mr-2">
+            </mat-progress-spinner>
+            Signing In...
+          </span>
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="relative my-4">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-gray-300"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+          <span class="px-3 bg-white text-gray-500">or</span>
+        </div>
+      </div>
+
+      <!-- Admin Login Button -->
+      <button type="button" 
+              mat-stroked-button 
+              class="w-full border-2 border-blue-600 text-blue-600 hover:bg-blue-50 py-2 rounded-xl font-semibold transition-all duration-300"
+              (click)="redirectToAdminLogin()">
+        <mat-icon class="mr-2">admin_panel_settings</mat-icon>
+        Admin Login
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center mt-4">
+      <p class="text-blue-200 text-xs">© 2024 SecureBank. All rights reserved.</p>
+    </div>
+  </div>
+</div>
