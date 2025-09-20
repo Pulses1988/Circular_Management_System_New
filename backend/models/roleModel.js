@@ -51,7 +51,7 @@ const getRolesByDepartment = (departmentId) => {
 };
 
 // Get single role by ID
-const getRoleById = (roleId) => {
+const getRoleById = async (roleId) => {
   const query = `
     SELECT r.*, d.name as department_name, b.name as branch_name 
     FROM roles r
@@ -60,7 +60,8 @@ const getRoleById = (roleId) => {
     WHERE r.id = ?
   `;
   
-  return db.execute(query, [roleId]);
+  const [rows] = await db.execute(query, [roleId]);
+  return rows[0]; // Return first row directly
 };
 
 // Check if role with same name exists in the same context

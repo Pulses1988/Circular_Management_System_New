@@ -69,74 +69,56 @@ export class User {
   }
 
   fetchAllAdmin(): Observable<any[]> {
-    const token = localStorage.getItem('authToken'); // Ensure this token exists
-    const headers = { Authorization: `Bearer ${token}` };
     return this.http
-      .get<any[]>(`${environment.apiUrl}/api/admins`, { headers })
+      .get<any[]>(`${environment.apiUrl}/api/admins`, { headers: this.getHeaders() })
       .pipe(catchError(this.handleError));
   }
 
   // --------------Head Office API------------
 
   fetchAllHeadOffice() {
-    const token = localStorage.getItem('authToken'); // Ensure this token exists
-    const headers = { Authorization: `Bearer ${token}` };
     return this.http
-      .get(`${environment.apiUrl}/api/head-office/`, { headers })
+      .get(`${environment.apiUrl}/api/head-office/`, { headers: this.getHeaders() })
       .pipe(catchError(this.handleError));
   }
 
   // ---------------branches API-----------------------
 
   fetchAllBranches() {
-    const token = localStorage.getItem('authToken'); // Ensure this token exists
-    const headers = { Authorization: `Bearer ${token}` };
     return this.http
-      .get(`${environment.apiUrl}/api/branches/`, { headers })
+      .get(`${environment.apiUrl}/api/branches/`, { headers: this.getHeaders() })
       .pipe(catchError(this.handleError));
   }
 
   createBranches(data: {}) {
-    const token = localStorage.getItem('authToken'); // Ensure this token exists
-    const headers = { Authorization: `Bearer ${token}` };
     return this.http
-      .post(`${environment.apiUrl}/api/branches/`, data, { headers })
+      .post(`${environment.apiUrl}/api/branches/`, data, { headers: this.getHeaders() })
       .pipe(catchError(this.handleError));
   }
 
   updateBranches(id: number, data: {}) {
-    const token = localStorage.getItem('authToken'); // Ensure this token exists
-    const headers = { Authorization: `Bearer ${token}` };
-    return this.http.put(`${environment.apiUrl}/api/branches/${id}`, data, { headers });
+    return this.http.put(`${environment.apiUrl}/api/branches/${id}`, data, { headers: this.getHeaders() });
   }
 
   checkUsernameExists(username: string): Observable<boolean> {
-    const token = localStorage.getItem('authToken'); // Ensure this token exists
-    const headers = { Authorization: `Bearer ${token}` };
     return this.http.get<boolean>(
       `${this.apiUrl}/api/branches/check-username?username=${username}`,
-      { headers }
+      { headers: this.getHeaders() }
     );
   }
 
   checkEmailExists(email: string): Observable<boolean> {
-    const token = localStorage.getItem('authToken'); // Ensure this token exists
-    const headers = { Authorization: `Bearer ${token}` };
     return this.http.get<boolean>(`${this.apiUrl}/api/branches/check-email?email=${email}`, {
-      headers,
+      headers: this.getHeaders(),
     });
   }
 
   getBranchesWithAdminStatus() {
-    const token = localStorage.getItem('authToken'); // Ensure this token exists
-    const headers = { Authorization: `Bearer ${token}` };
-    return this.http.get(`${this.apiUrl}/api/branches/getAdminStatus`, { headers });
+    return this.http.get(`${this.apiUrl}/api/branches/getAdminStatus`, { headers: this.getHeaders() });
   }
 
     getBranchById(id:number){
-    const token = localStorage.getItem('authToken'); // Ensure this token exists
-    const headers = { Authorization: `Bearer ${token}` };
-    return this.http.get(`${this.apiUrl}/api/branches/${id}`,{headers})
+    return this.http.get(`${this.apiUrl}/api/branches/${id}`,{headers: this.getHeaders()})
   }
 
   private handleError(error: HttpErrorResponse) {
@@ -162,10 +144,8 @@ export class User {
   }
 
   addHeadOffice(data: { name: string; address: string }) {
-    const token = localStorage.getItem('authToken'); // Ensure this token exists
-    const headers = { Authorization: `Bearer ${token}` };
     return this.http
-      .post(`${this.apiUrl}/api/head-office/`, data, { headers })
+      .post(`${this.apiUrl}/api/head-office/`, data, { headers: this.getHeaders() })
       .pipe(catchError(this.handleError));
   }
 
@@ -174,42 +154,30 @@ export class User {
     head_office_id: number | null;
     branch_id: number | null;
   }) {
-    const token = localStorage.getItem('authToken'); // Ensure this token exists
-    const headers = { Authorization: `Bearer ${token}` };
-    return this.http.post(`${this.apiUrl}/api/departments`, data, { headers });
+    return this.http.post(`${this.apiUrl}/api/departments`, data, { headers: this.getHeaders() });
   }
 
   getDepartmentsByHeadOffice(headOfficeId: number) {
-    const token = localStorage.getItem('authToken');
-    const headers = { Authorization: `Bearer ${token}` };
     return this.http.get<any[]>(`${this.apiUrl}/api/departments/head-office/${headOfficeId}`, {
-      headers,
+      headers: this.getHeaders(),
     });
   }
 
   getDepartmentsByBranch(branchId: number) {
-    const token = localStorage.getItem('authToken');
-    const headers = { Authorization: `Bearer ${token}` };
-    return this.http.get<any[]>(`${this.apiUrl}/api/departments/branch/${branchId}`, { headers });
+    return this.http.get<any[]>(`${this.apiUrl}/api/departments/branch/${branchId}`, { headers: this.getHeaders() });
   }
 
   updateDepartment(id: number, data: { name: string }) {
-    const token = localStorage.getItem('authToken');
-    const headers = { Authorization: `Bearer ${token}` };
-    return this.http.put(`${this.apiUrl}/api/departments/${id}`, data, { headers });
+    return this.http.put(`${this.apiUrl}/api/departments/${id}`, data, { headers: this.getHeaders() });
   }
   getDepartmentCountByHeadOffice(headOfficeId: number): Observable<any> {
-    const token = localStorage.getItem('authToken');
-    const headers = { Authorization: `Bearer ${token}` };
     return this.http.get(`${this.apiUrl}/api/departments/head-office/${headOfficeId}/count`, {
-      headers,
+      headers: this.getHeaders(),
     });
   }
 
   getDepartmentCountByBranch(branchId: number): Observable<any> {
-    const token = localStorage.getItem('authToken');
-    const headers = { Authorization: `Bearer ${token}` };
-    return this.http.get(`${this.apiUrl}/api/departments/branch/${branchId}/count`, { headers });
+    return this.http.get(`${this.apiUrl}/api/departments/branch/${branchId}/count`, { headers: this.getHeaders() });
   }
 
 //  ---------------------------------------------Roles api ---------------------------------------------------
@@ -220,9 +188,7 @@ export class User {
     branch_id?: number | null;
     department_id?: number | null;
   }): Observable<any> {
-    const token = localStorage.getItem('authToken');
-    const headers = { Authorization: `Bearer ${token}` };
-    return this.http.post(`${this.apiUrl}/api/roles`, roleData,{headers});
+    return this.http.post(`${this.apiUrl}/api/roles`, roleData,{headers: this.getHeaders()});
   }
 
    // Get all roles by head office
@@ -234,7 +200,7 @@ export class User {
   }
 
   // Get all roles by branch
-  getRolesByBranch(branchId: number): Observable<Role[]> {
+  getRolesByBranch(branchId: number | undefined): Observable<Role[]> {
     return this.http.get<Role[]>(
       `${this.apiUrl}/api/roles/branch/${branchId}`, 
       { headers: this.getHeaders() }
@@ -285,11 +251,11 @@ export class User {
 
   // Bulk update role positions (for reordering)
   updateRolePositions(roleUpdates: { id: number; position: number }[]): Observable<any> {
-    return this.http.put(
-      `${this.apiUrl}/api/roles/bulk-position-update`, 
-      { roleUpdates }, 
-      { headers: this.getHeaders() }
-    );
-  }
+  return this.http.put(
+    `${this.apiUrl}/api/roles/bulk-position-update`, 
+    { roleUpdates }, 
+    { headers: this.getHeaders() }
+  );
+}
 
 }

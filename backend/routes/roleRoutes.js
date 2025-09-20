@@ -18,14 +18,15 @@ router.get('/department/:departmentId',authenticateToken, roleController.getRole
 // Get single role by ID
 router.get('/:roleId',authenticateToken, roleController.getRoleById);
 
+// Bulk update role positions
+router.put('/bulk-position-update', roleController.updateRolePositions);
+
+
 // Update role
 router.put('/:roleId',authenticateToken, roleController.updateRole);
 
 // Update role position only
 router.put('/:roleId/position',authenticateToken, roleController.updateRolePosition);
-
-// Bulk update role positions
-router.put('/bulk-position-update',authenticateToken, roleController.updateRolePositions);
 
 // Delete role
 router.delete('/:roleId',authenticateToken, roleController.deleteRole);
