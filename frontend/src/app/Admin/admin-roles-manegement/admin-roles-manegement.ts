@@ -57,9 +57,11 @@ export class AdminRolesManegement {
   departmentRoles: { [key: number]: Role[] } = {};
   editingRole: string | null = null;
   editRoleName: string = '';
-  branchRoles: Role[] = [];
+  branchRoles: any[] = [];
   editingBranchRole: number | null = null;
   editBranchRoleName: string = '';
+  hasBranchRoles = false;
+  private positionUpdateTimeout: any;
   
   // Loading states
   isCreatingRole = false;
@@ -79,7 +81,7 @@ export class AdminRolesManegement {
     this.loadCurrentAssignment();
     this.loadBranchInfo();
     this.loadDepartments();
-    this.loadExistingRoles();
+    // this.loadExistingRoles();
   }
 
   // Load current user assignment
@@ -95,20 +97,22 @@ export class AdminRolesManegement {
 
   // Load branch info
   loadBranchInfo() {
-    if(this.currentAssignment?.type==='branch'){
-      this.user.getBranchById(this.currentAssignment.id).subscribe((res)=>{
-        this.branchInfo=res;
-      })
+    if (this.currentAssignment?.type === 'branch') {
+      this.user.getBranchById(this.currentAssignment.id).subscribe((res) => {
+        this.branchInfo = res;
+        // Load existing roles after branch info is loaded
+        this.loadExistingRoles();
+      });
     }
   }
 
   // Convert ServiceRole to local Role interface
-  private convertServiceRoleToLocal(serviceRole: ServiceRole): Role {
+ private convertServiceRoleToLocal(serviceRole: ServiceRole): Role {
     return {
-      id: serviceRole.id,
-      name: serviceRole.name,
-      position: serviceRole.position,
-      head_office_id: serviceRole.head_office_id,
+      id: serviceRole.id || 0,
+      name: serviceRole.name || 'Unnamed Role',
+      position: serviceRole.position || 1,
+      head_office_id: serviceRole.head_office_id || 0,
       branch_id: serviceRole.branch_id ?? null,
       department_id: serviceRole.department_id ?? null,
       timestamp: serviceRole.timestamp,
@@ -147,12 +151,33 @@ export class AdminRolesManegement {
           this.departmentRoles[+key].sort((a, b) => a.position - b.position);
         });
         this.branchRoles.sort((a, b) => a.position - b.position);
+
+        // Set flag for branch roles existence
+        this.hasBranchRoles = this.branchRoles.length > 0;
+        
+        // Update UI logic after loading roles
+        this.updateUILogic();
       },
       error: (err) => {
         console.error('Error loading existing roles:', err);
       }
     });
   }
+  loadDepartmentRoles() {
+    this.departments.forEach((dept, index) => {
+      this.user.getRolesByDepartment(dept.id).subscribe({
+        next: (res: any[]) => {
+          console.log(res,'dfghjk')
+          // const roles = serviceRoles.map(role => this.convertServiceRoleToLocal(role));
+          this.departmentRoles[index] = res.sort((a, b) => a.position - b.position);
+        },
+        error: (err) => {
+          console.error(`Error loading roles for department ${dept.id}:`, err);
+        }
+      });
+    });
+  }
+
 
   // Helper method to get roles for a department (handles undefined)
   getDepartmentRoles(index: number): Role[] {
@@ -165,16 +190,14 @@ export class AdminRolesManegement {
   }
 
   // Get next position for department roles
-  getNextDepartmentPosition(deptIndex: number): number {
-    const roles = this.getDepartmentRoles(deptIndex);
-    return roles.length > 0 ? Math.max(...roles.map(r => r.position)) + 1 : 1;
-  }
+ getNextDepartmentPosition(deptIndex: number): number {
+  const roles = this.getDepartmentRoles(deptIndex);
+  return roles.length > 0 ? Math.max(...roles.map(r => r.position || 0)) + 1 : 1;
+}
 
-  // Get next position for branch roles
-  getNextBranchPosition(): number {
-    return this.branchRoles.length > 0 ? Math.max(...this.branchRoles.map(r => r.position)) + 1 : 1;
-  }
-
+getNextBranchPosition(): number {
+  return this.branchRoles.length > 0 ? Math.max(...this.branchRoles.map(r => r.position || 0)) + 1 : 1;
+}
   loadDepartments() {
     if (!this.currentAssignment) return;
 
@@ -187,6 +210,8 @@ export class AdminRolesManegement {
               this.departmentRoles[index] = [];
             }
           });
+          // Load department roles after departments are loaded
+          this.loadDepartmentRoles();
         },
         error: () => {
           this.toast.show('Failed to load departments', 'error');
@@ -195,24 +220,50 @@ export class AdminRolesManegement {
     } else {
       this.user.getDepartmentsByBranch(this.currentAssignment.id).subscribe({
         next: (res: any) => {
-          this.user.getBranchById(this.currentAssignment!.id).subscribe((res)=>{
-            this.branchInfo=res;
-          })
+          this.user.getBranchById(this.currentAssignment!.id).subscribe((branchRes) => {
+            this.branchInfo = branchRes;
+          });
           this.departments = res;
           this.departments.forEach((_, index) => {
             if (!this.departmentRoles[index]) {
               this.departmentRoles[index] = [];
             }
           });
-          if (this.departments.length === 0) {
-            this.allowDirectRole = true;
-            this.showDirectRoleForm = false;
+          
+          // Load department roles after departments are loaded
+          if (this.departments.length > 0) {
+            this.loadDepartmentRoles();
           }
+          
+          // Update UI logic after loading departments
+          this.updateUILogic();
         },
         error: () => {
           this.toast.show('Failed to load departments', 'error');
         }
       });
+    }
+  }
+
+  // Add new method to handle UI logic
+  updateUILogic() {
+    const noDepartments = this.departments.length === 0;
+    const noBranchRoles = this.branchRoles.length === 0;
+
+    if (noDepartments) {
+      if (noBranchRoles) {
+        // Show dialog when both departments and branch roles are absent
+        this.allowDirectRole = true;
+        this.showDirectRoleForm = false;
+      } else {
+        // Show direct form when no departments but has branch roles
+        this.allowDirectRole = true;
+        this.showDirectRoleForm = true;
+      }
+    } else {
+      // Has departments, don't show direct role options
+      this.allowDirectRole = false;
+      this.showDirectRoleForm = false;
     }
   }
 
@@ -225,6 +276,13 @@ export class AdminRolesManegement {
   startEditRole(deptIndex: number, roleIndex: number, currentRole: Role) {
     this.editingRole = deptIndex + '-' + roleIndex;
     this.editRoleName = currentRole.name;
+     setTimeout(() => {
+    const input = document.querySelector(`input[data-edit="${this.editingRole}"]`) as HTMLInputElement;
+    if (input) {
+      input.focus();
+      input.select(); // This will highlight/select all text
+    }
+  }, 100);
   }
 
   saveEditRole(deptIndex: number, roleIndex: number) {
@@ -308,6 +366,13 @@ export class AdminRolesManegement {
   startEditBranchRole(roleIndex: number, currentRole: Role) {
     this.editingBranchRole = roleIndex;
     this.editBranchRoleName = currentRole.name;
+     setTimeout(() => {
+    const input = document.querySelector(`input[data-edit="${this.editingRole}"]`) as HTMLInputElement;
+    if (input) {
+      input.focus();
+      input.select(); // This will highlight/select all text
+    }
+  }, 100);
   }
 
   saveEditBranchRole(roleIndex: number) {
@@ -392,7 +457,7 @@ export class AdminRolesManegement {
       const roleData: CreateRoleRequest = {
         name: this.currentRoleName.trim(),
         position: this.getNextDepartmentPosition(deptIndex),
-        head_office_id: this.branchInfo.head_office_id,
+        head_office_id: this.currentAssignment?.type==='branch'? this.branchInfo?.head_office_id : department.head_office_id,
         branch_id: department.branch_id,
         department_id: department.id
       };
@@ -457,81 +522,67 @@ export class AdminRolesManegement {
   }
 
   // Fixed move methods with proper type checking
-  moveRoleUp(deptIndex: number, roleIndex: number) {
-    if (roleIndex > 0 && this.departmentRoles[deptIndex]) {
-      const roles = this.departmentRoles[deptIndex];
-      const role1 = roles[roleIndex];
-      const role2 = roles[roleIndex - 1];
-
-      // Swap positions locally first
-      [roles[roleIndex], roles[roleIndex - 1]] = [roles[roleIndex - 1], roles[roleIndex]];
-      
-      // Update positions
-      const newPos1 = roleIndex;
-      const newPos2 = roleIndex + 1;
-      
-      roles[roleIndex - 1].position = newPos1;
-      roles[roleIndex].position = newPos2;
-
-      // Update positions in backend - with proper type checking
-      const updates: { id: number; position: number }[] = [
-        { id: role1.id, position: newPos1 },
-        { id: role2.id, position: newPos2 }
-      ];
-
-      this.user.updateRolePositions(updates).subscribe({
-        next: () => {
-          console.log('Positions updated successfully');
-        },
-        error: (err) => {
-          console.error('Error updating positions:', err);
-          // Revert local changes on error
-          [roles[roleIndex], roles[roleIndex - 1]] = [roles[roleIndex - 1], roles[roleIndex]];
-          roles[roleIndex - 1].position = newPos2;
-          roles[roleIndex].position = newPos1;
-          this.toast.show('Failed to update role positions', 'error');
-        }
-      });
-    }
-  }
-
-  moveRoleDown(deptIndex: number, roleIndex: number) {
+ moveRoleUp(deptIndex: number, roleIndex: number) {
+  if (roleIndex > 0 && this.departmentRoles[deptIndex]) {
     const roles = this.departmentRoles[deptIndex];
-    if (roleIndex < roles.length - 1 && roles) {
-      const role1 = roles[roleIndex];
-      const role2 = roles[roleIndex + 1];
-
-      // Swap positions locally first
-      [roles[roleIndex], roles[roleIndex + 1]] = [roles[roleIndex + 1], roles[roleIndex]];
-      
-      // Update positions
-      const newPos1 = roleIndex + 1;
-      const newPos2 = roleIndex + 2;
-      
-      roles[roleIndex].position = newPos1;
-      roles[roleIndex + 1].position = newPos2;
-
-      // Update positions in backend - with proper type checking
-      const updates: { id: number; position: number }[] = [
-        { id: role1.id, position: newPos1 },
-        { id: role2.id, position: newPos2 }
-      ];
-
-      this.user.updateRolePositions(updates).subscribe({
-        next: () => {
-          console.log('Positions updated successfully');
-        },
-        error: (err) => {
-          console.error('Error updating positions:', err);
-          // Revert local changes on error
-          [roles[roleIndex], roles[roleIndex + 1]] = [roles[roleIndex + 1], roles[roleIndex]];
-          roles[roleIndex].position = newPos2;
-          roles[roleIndex + 1].position = newPos1;
-          this.toast.show('Failed to update role positions', 'error');
-        }
-      });
+    
+    // Swap immediately in UI
+    [roles[roleIndex], roles[roleIndex - 1]] = [roles[roleIndex - 1], roles[roleIndex]];
+    
+    // Clear any existing timeout
+    if (this.positionUpdateTimeout) {
+      clearTimeout(this.positionUpdateTimeout);
     }
+    
+    // Debounce the API call
+    this.positionUpdateTimeout = setTimeout(() => {
+      this.syncPositionsWithBackend(deptIndex);
+    }, 500); // Wait 500ms after last move
   }
+}
+
+moveRoleDown(deptIndex: number, roleIndex: number) {
+  const roles = this.departmentRoles[deptIndex];
+  if (roleIndex < roles.length - 1 && roles) {
+    
+    // Swap immediately in UI
+    [roles[roleIndex], roles[roleIndex + 1]] = [roles[roleIndex + 1], roles[roleIndex]];
+    
+    // Clear any existing timeout
+    if (this.positionUpdateTimeout) {
+      clearTimeout(this.positionUpdateTimeout);
+    }
+    
+    // Debounce the API call
+    this.positionUpdateTimeout = setTimeout(() => {
+      this.syncPositionsWithBackend(deptIndex);
+    }, 500); // Wait 500ms after last move
+  }
+}
+
+// New method to sync positions
+private syncPositionsWithBackend(deptIndex: number) {
+  const roles = this.departmentRoles[deptIndex];
+  const updates: { id: number; position: number }[] = [];
+  
+  roles.forEach((role, index) => {
+    const newPosition = index + 1;
+    role.position = newPosition;
+    updates.push({ id: role.id, position: newPosition });
+  });
+
+  this.user.updateRolePositions(updates).subscribe({
+    next: () => {
+      console.log('Positions synced successfully');
+    },
+    error: (err) => {
+      console.error('Error syncing positions:', err);
+      // Reload data to get correct state
+      this.loadDepartmentRoles();
+      this.toast.show('Failed to update positions. Reloaded data.', 'error');
+    }
+  });
+}
 
   moveBranchRoleUp(roleIndex: number) {
     if (roleIndex > 0) {

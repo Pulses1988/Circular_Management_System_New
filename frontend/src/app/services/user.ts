@@ -234,7 +234,7 @@ export class User {
   }
 
   // Get all roles by branch
-  getRolesByBranch(branchId: number): Observable<Role[]> {
+  getRolesByBranch(branchId: number | undefined): Observable<Role[]> {
     return this.http.get<Role[]>(
       `${this.apiUrl}/api/roles/branch/${branchId}`, 
       { headers: this.getHeaders() }
@@ -285,11 +285,11 @@ export class User {
 
   // Bulk update role positions (for reordering)
   updateRolePositions(roleUpdates: { id: number; position: number }[]): Observable<any> {
-    return this.http.put(
-      `${this.apiUrl}/api/roles/bulk-position-update`, 
-      { roleUpdates }, 
-      { headers: this.getHeaders() }
-    );
-  }
+  return this.http.put(
+    `${this.apiUrl}/api/roles/bulk-position-update`, 
+    { roleUpdates }, 
+    { headers: this.getHeaders() }
+  );
+}
 
 }
