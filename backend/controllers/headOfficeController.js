@@ -24,10 +24,10 @@ exports.getHeadOfficeById = async (req, res) => {
 };
 
 exports.createHeadOffice = async (req, res) => {
-  const { name, address } = req.body;
+  const { name, address, bank_name } = req.body;
   try {
     // 1. Create the head office and get its ID
-    const [result] = await headOfficeModel.createHeadOffice({ name, address });
+    const [result] = await headOfficeModel.createHeadOffice({ name, address, bank_name });
     const headOfficeId = result.insertId;
 
     // 2. Assign this head office ID to the HO_ADMIN

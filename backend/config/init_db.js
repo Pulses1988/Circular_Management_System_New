@@ -23,6 +23,7 @@ const createHeadOfficeTableQuery = `
 CREATE TABLE IF NOT EXISTS head_office (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
+    bank_name VARCHAR(255) NOT NULL,
     address VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

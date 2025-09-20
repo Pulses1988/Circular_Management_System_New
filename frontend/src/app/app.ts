@@ -28,9 +28,11 @@ export class App {
     });
   }
 
-  showSidebar(): boolean {
-    return !this.currentRoute.includes('/admin-login');
-  }
+  showAdminSidebar(): boolean {
+  const isAdminRoute = this.currentRoute.startsWith('/admin');
+  const isLoginRoute = this.currentRoute.includes('/admin-login');
+  return isAdminRoute && !isLoginRoute;
+}
 
   ngOnInit() {}
   onSubmit() {

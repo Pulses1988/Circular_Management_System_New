@@ -1,0 +1,205 @@
+<!-- Complete Employee Dashboard HTML Template -->
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-blue-800 via-blue-700 to-blue-900 text-white shadow-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center py-4">
+        <!-- Logo & Brand -->
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center">
+            <mat-icon class="text-3xl text-blue-200">account_balance</mat-icon>
+            <h1 class="ml-3 text-2xl font-bold">SecureBank Portal</h1>
+          </div>
+        </div>
+        
+        <!-- User Info & Notifications -->
+        <div class="flex items-center space-x-6">
+          <div class="relative">
+            <mat-icon class="text-2xl cursor-pointer hover:text-blue-200 transition-colors" 
+                      [matBadge]="circularStats.urgent" 
+                      matBadgeColor="warn" 
+                      matBadgeSize="small">notifications</mat-icon>
+          </div>
+          
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center ring-2 ring-blue-300">
+              <mat-icon class="text-white">person</mat-icon>
+            </div>
+            <div class="text-sm">
+              <p class="font-semibold">{{ currentEmployee.name }}</p>
+              <p class="text-blue-200 text-xs">{{ currentEmployee.role }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Welcome Section -->
+    <div class="mb-8">
+      <h2 class="text-3xl font-bold text-gray-900 mb-2">Welcome back, {{ currentEmployee.name.split(' ')[0] }}!</h2>
+      <div class="text-gray-600 flex items-center space-x-4">
+        <span class="flex items-center"><mat-icon class="text-sm mr-1">business</mat-icon>{{ currentEmployee.department }}</span>
+        <span class="flex items-center"><mat-icon class="text-sm mr-1">location_on</mat-icon>{{ currentEmployee.branch }}</span>
+        <span class="flex items-center"><mat-icon class="text-sm mr-1">badge</mat-icon>{{ currentEmployee.employeeId }}</span>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <!-- Total Circulars -->
+      <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500 hover:shadow-xl transition-shadow stats-card">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-gray-500 text-sm font-medium">Total Circulars</p>
+            <p class="text-3xl font-bold text-gray-900">{{ circularStats.total }}</p>
+          </div>
+          <div class="stats-card-icon bg-blue-100">
+            <mat-icon class="text-blue-600">article</mat-icon>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seen Circulars -->
+      <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500 hover:shadow-xl transition-shadow stats-card">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-gray-500 text-sm font-medium">Read</p>
+            <p class="text-3xl font-bold text-gray-900">{{ circularStats.seen }}</p>
+          </div>
+          <div class="stats-card-icon bg-green-100">
+            <mat-icon class="text-green-600">visibility</mat-icon>
+          </div>
+        </div>
+        <div class="mt-1">
+          <div class="flex items-center text-green-600 text-sm">
+            <mat-icon class="text-xs mt-2">trending_up</mat-icon>
+            <span>{{ ((circularStats.seen / circularStats.total) * 100).toFixed(1) }}% completion</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Unseen Circulars -->
+      <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500 hover:shadow-xl transition-shadow stats-card">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-gray-500 text-sm font-medium">Unread</p>
+            <p class="text-3xl font-bold text-gray-900">{{ circularStats.unseen }}</p>
+          </div>
+          <div class="stats-card-icon bg-red-100">
+            <mat-icon class="text-red-600">visibility_off</mat-icon>
+          </div>
+        </div>
+        <div class="mt-1" *ngIf="circularStats.unseen > 0">
+          <div class="flex items-center text-red-600 text-sm">
+            <mat-icon class="text-xs mt-2">schedule</mat-icon>
+            <span>Requires attention</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Urgent Circulars -->
+      <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-500 hover:shadow-xl transition-shadow stats-card">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-gray-500 text-sm font-medium">Urgent</p>
+            <p class="text-3xl font-bold text-gray-900">{{ circularStats.urgent }}</p>
+          </div>
+          <div class="stats-card-icon bg-orange-100">
+            <mat-icon class="text-orange-600">priority_high</mat-icon>
+          </div>
+        </div>
+        <div class="mt-1" *ngIf="circularStats.urgent > 0">
+          <div class="flex items-center  text-orange-600 text-sm animate-pulse">
+            <mat-icon class="text-xs mt-2">warning</mat-icon>
+            <span>Immediate action needed</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mb-8">
+      <h3 class="text-xl font-semibold text-gray-900 mb-6">Quick Actions</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div *ngFor="let action of quickActions" 
+             class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 quick-action-card"
+             (click)="navigateToAction(action.route)">
+          <div class="flex items-center space-x-4">
+            <div class="quick-action-icon {{ action.color }}">
+              <mat-icon class="text-white">{{ action.icon }}</mat-icon>
+            </div>
+            <div class="flex-1">
+              <h4 class="font-semibold text-gray-900">{{ action.title }}</h4>
+              <p class="text-sm text-gray-500">{{ action.description }}</p>
+            </div>
+            <mat-icon class="text-gray-400">chevron_right</mat-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Circulars -->
+    <div class="bg-white rounded-xl shadow-lg">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xl font-semibold text-gray-900">Recent Circulars</h3>
+          <button class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
+            View all
+            <mat-icon class="ml-1 text-sm">arrow_forward</mat-icon>
+          </button>
+        </div>
+      </div>
+      
+      <div class="divide-y divide-gray-200">
+        <div *ngFor="let circular of recentCirculars; let i = index" 
+             class="px-6 py-4 cursor-pointer circular-row"
+             [class.unread-circular]="!circular.isRead"
+             (click)="markAsRead(circular.id)">
+          <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+              <div class="priority-badge"
+                   [ngClass]="getPriorityBadgeClass(circular.priority)">
+                <mat-icon>{{ getPriorityIcon(circular.priority) }}</mat-icon>
+              </div>
+            </div>
+            
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center space-x-2">
+                <h4 class="circular-title" 
+                    [class.font-bold]="!circular.isRead">
+                  {{ circular.title }}
+                </h4>
+                <span *ngIf="!circular.isRead" 
+                      class="new-badge">
+                  New
+                </span>
+              </div>
+              <p class="circular-department">{{ circular.department }}</p>
+            </div>
+            
+            <div class="text-right">
+              <p class="circular-date">{{ formatDate(circular.date) }}</p>
+              <div class="flex items-center justify-end mt-1">
+                <span class="priority-text"
+                      [ngClass]="getPriorityTextClass(circular.priority)">
+                  {{ circular.priority | titlecase }}
+                </span>
+              </div>
+            </div>
+            
+            <div class="flex-shrink-0">
+              <mat-icon class="read-status-icon" 
+                        [class.unread-icon]="!circular.isRead"
+                        [class.read-icon]="circular.isRead">
+                {{ circular.isRead ? 'visibility' : 'visibility_off' }}
+              </mat-icon>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
