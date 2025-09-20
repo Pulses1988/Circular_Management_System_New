@@ -11,18 +11,21 @@ import { User } from '../../services/user';
 import { Toast } from '../../toast/toast';
 import { CommonModule, DatePipe, NgFor } from '@angular/common';
 import { subscribe } from 'diagnostics_channel';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-employee-mangement',
-  imports: [FormsModule, ReactiveFormsModule, CommonModule],
+  imports: [FormsModule, ReactiveFormsModule, CommonModule, MatIconModule],
   templateUrl: './employee-mangement.html',
   styleUrl: './employee-mangement.scss',
 })
 export class EmployeeMangement {
   employees: any[] = [];
+  allRoles: any[] = []; // keep original roles
   roles: any[] = [];
   departments: any[] = [];
   branches: any[] = [];
+  hasDepartments: boolean = true;
 
   employeeForm: FormGroup;
 
@@ -49,21 +52,62 @@ export class EmployeeMangement {
     private cdr: ChangeDetectorRef
   ) {
     this.employeeForm = this.fb.group({
-      first_name: ['', Validators.required],
-      middle_name: [''],
-      last_name: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      phone_no: [''],
+      first_name: [
+        '',
+        [Validators.required, Validators.pattern(/^[A-Za-z\s]+$/), this.noWhitespaceValidator],
+      ],
+      middle_name: ['', Validators.pattern(/^[A-Za-z\s]*$/)], // optional but no numbers
+      last_name: [
+        '',
+        [Validators.required, Validators.pattern(/^[A-Za-z\s]+$/), this.noWhitespaceValidator],
+      ],
+      email: ['', [Validators.required, Validators.email, this.noWhitespaceValidator]],
+      phone_no: ['', [Validators.pattern(/^[0-9]*$/)]],
       role_id: ['', Validators.required],
-      department_id: ['', Validators.required],
+      department_id: [''],
       branch_id: ['', Validators.required],
-      employee_id: ['', Validators.required],
-      password_hash: ['', Validators.required],
+      employee_id: ['', [Validators.required, Validators.pattern(/^\S+$/)]], // no spaces
+      password: ['', Validators.required, this.noWhitespaceValidator],
+      can_create_circular: [false],
+      can_approve_circular: [false],
     });
+  }
+
+  noWhitespaceValidator(control: any) {
+    if (control.value && control.value.trim().length === 0) {
+      return { whitespace: true };
+    }
+    return null;
   }
 
   ngOnInit(): void {
     this.loadData();
+    this.employeeForm.get('department_id')?.valueChanges.subscribe((value) => {
+      console.log('department selected', value);
+      this.loadRolesForDepartment(value);
+    });
+
+    this.employeeForm.get('department_id')?.valueChanges.subscribe(() => {
+      this.checkDepartmentValidation();
+    });
+
+    this.employeeForm.get('role_id')?.valueChanges.subscribe(() => {
+      this.checkDepartmentValidation();
+    });
+  }
+
+  checkDepartmentValidation() {
+    const departmentControl = this.employeeForm.get('department_id');
+    if (this.departments.length > 0 && !departmentControl?.value) {
+      departmentControl?.setErrors({ required: true });
+    } else {
+      departmentControl?.setErrors(null);
+    }
+  }
+
+  loadRolesForDepartment(dept_id: number) {
+    this.roles = this.allRoles.filter((role) => role.department_id === Number(dept_id));
+    console.log(this.roles);
   }
 
   ngAfterViewChecked(): void {
@@ -102,26 +146,57 @@ export class EmployeeMangement {
       });
 
       this.userService.getRolesByHeadOffice(this.userAssignment.id).subscribe((data) => {
-        this.roles=data;
+        // this.roles = data;
+        this.allRoles = data;
+      });
+
+      this.userService.getEmployeeByHeadOfficeId(this.userAssignment.id).subscribe((data: any) => {
         console.log(data);
+        
+        this.employees = data.map((emp: any) => ({
+          ...emp,
+          role_name: emp.role?.name || '',
+          department_name: emp.department?.name || '',
+          branch_name: emp.branch?.name || '',
+        }));
+        console.log('Employees (HO_ADMIN):', this.employees);
       });
     }
 
     if (this.role === 'BRANCH_ADMIN') {
+      this.userService.getBranchById(this.userAssignment.id).subscribe((branch: any) => {
+        this.employeeForm.patchValue({
+          branch_id: branch.id,
+        });
+        this.branches = [branch]; // optional, just in case
+      });
+
       this.userService.getDepartmentsByBranch(this.userAssignment.id).subscribe((data) => {
         this.departments = data;
-        console.log(data);
+        this.hasDepartments = data.length > 0;
       });
 
       this.userService.getRolesByBranch(this.userAssignment.id).subscribe((data) => {
+        this.allRoles = data;
+
+        // If no departments, show all roles
+        if (!this.hasDepartments) {
+          this.roles = this.allRoles;
+        }
+      });
+
+      this.userService.getEmployeeByBranchId(this.userAssignment.id).subscribe((data: any) => {
         console.log(data);
+        
+        this.employees = data.map((emp: any) => ({
+          ...emp,
+          role_name: emp.role?.name || '',
+          department_name: emp.department?.name || '',
+          branch_name: emp.branch?.name || '',
+        }));
+        console.log('Employees (BRANCH_ADMIN):', this.employees);
       });
     }
-
-    // // Fetch branches
-    // this.employeeService.getAllBranches().subscribe((data: any) => {
-    //   this.branches = data;
-    // });
   }
 
   toggleForm() {
@@ -159,11 +234,11 @@ export class EmployeeMangement {
       //   this.resetForm();
       // });
     } else {
-      // this.employeeService.createEmployee(employee).subscribe(() => {
-      //   this.toast.show('Employee created successfully!', 'success');
-      //   this.loadData();
-      //   this.resetForm();
-      // });
+      this.userService.createEmployee(employee).subscribe(() => {
+        this.toast.show('Employee created successfully!', 'success');
+        this.loadData();
+        this.resetForm();
+      });
     }
   }
 
@@ -181,7 +256,7 @@ export class EmployeeMangement {
       department_id: emp.department_id,
       branch_id: emp.branch_id,
       employee_id: emp.employee_id,
-      password_hash: '', // leave blank for security
+      password: '', // leave blank for security
     });
 
     this.showForm = true;

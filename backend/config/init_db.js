@@ -64,7 +64,8 @@ const createEmployeeTableQuery = `CREATE TABLE IF NOT EXISTS employees (
     role_id INT NULL,           
     department_id INT NULL,     
     branch_id INT NULL,         
-    permissions JSON,           
+    can_create_circular BOOLEAN,
+    can_approve_circular BOOLEAN,           
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET NULL,

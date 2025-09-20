@@ -25,6 +25,32 @@ exports.getEmployeeById = async (req, res) => {
   }
 };
 
+// Get employees for specific Head Office with branch_id NULL
+exports.getEmployeesByHeadOfficeWithoutBranch = async (req, res) => {
+  const { id: hoId } = req.params;
+  try {
+    const [rows] = await employeeModel.getEmployeesByHeadOfficeWithoutBranch(
+      hoId
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch employees" });
+  }
+};
+
+// Get employees for specific branch
+exports.getEmployeesByBranch = async (req, res) => {
+  const { id: branchId } = req.params;
+  try {
+    const [rows] = await employeeModel.getEmployeesByBranch(branchId);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch employees" });
+  }
+};
+
 // Create new employee
 exports.createEmployee = async (req, res) => {
   try {
