@@ -12,6 +12,7 @@ import { Toast } from '../../toast/toast';
 import { CommonModule, DatePipe, NgFor } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { Subject, takeUntil } from 'rxjs'; // Import Subject and takeUntil for proper unsubscription
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-employee-mangement',
@@ -29,7 +30,7 @@ export class EmployeeMangement {
   hasDepartments: boolean = true;
 
   employeeForm: FormGroup;
-
+  showPassword: boolean = false;
   showForm = false;
   isEditMode = false;
   editEmployeeId: number | null = null;
@@ -40,6 +41,9 @@ export class EmployeeMangement {
 
   role: any;
   userAssignment: any;
+
+  showErrorModal = false;
+  excelErrors: string[] = [];
 
   @ViewChild('employeeFormRef') employeeFormRef!: ElementRef;
   private scrollToForm = false;
@@ -123,6 +127,10 @@ export class EmployeeMangement {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
   }
 
   checkDepartmentValidation() {
@@ -222,6 +230,225 @@ export class EmployeeMangement {
     this.currentPage = page;
   }
 
+  // ---------------------------read excel file and save the data---------------------------------
+
+  onFileChange(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const binaryData = e.target.result;
+      const workbook = XLSX.read(binaryData, { type: 'binary' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(sheet, { defval: '' }); // defval to avoid undefined
+
+      console.log('Excel Data:', data);
+
+      this.validateAndSaveExcelData(data);
+    };
+    reader.readAsBinaryString(file);
+  }
+
+  downloadSampleExcel() {
+    // --- Step 1: Determine columns based on role ---
+    let columns: string[] = [
+      'First Name',
+      'Middle Name',
+      'Last Name',
+      'Email',
+      'Phone',
+      'Employee ID',
+      'Password',
+      'Role',
+    ];
+
+    if (this.role === 'BRANCH_ADMIN') {
+      columns.push('Branch'); // always show branch for branch admin
+
+      if (this.hasDepartments) {
+        columns.push('Department');
+      }
+    } else if (this.role === 'HO_ADMIN') {
+      // HO_ADMIN should not show branch
+      if (this.hasDepartments) {
+        columns.push('Department');
+      }
+    }
+
+    columns.push('Can Create Circular', 'Can Approve Circular');
+
+    // --- Step 2: Add one example row ---
+    let exampleRow: any = {};
+    columns.forEach((col) => {
+      switch (col) {
+        case 'First Name':
+          exampleRow[col] = 'John';
+          break;
+        case 'Middle Name':
+          exampleRow[col] = 'A';
+          break;
+        case 'Last Name':
+          exampleRow[col] = 'Doe';
+          break;
+        case 'Email':
+          exampleRow[col] = 'john@example.com';
+          break;
+        case 'Phone':
+          exampleRow[col] = '9876543210';
+          break;
+        case 'Employee ID':
+          exampleRow[col] = 'EMP001';
+          break;
+        case 'Password':
+          exampleRow[col] = '12345';
+          break;
+        case 'Role':
+          exampleRow[col] = this.roles[0]?.name || 'Manager';
+          break;
+        case 'Branch':
+          exampleRow[col] = this.branches[0]?.name || '';
+          break;
+        case 'Department':
+          exampleRow[col] = this.departments[0]?.name || '';
+          break;
+        case 'Can Create Circular':
+          exampleRow[col] = true;
+          break;
+        case 'Can Approve Circular':
+          exampleRow[col] = false;
+          break;
+        default:
+          exampleRow[col] = '';
+      }
+    });
+
+    // --- Step 3: Create worksheet ---
+    const worksheet = XLSX.utils.json_to_sheet([exampleRow], { header: columns });
+
+    // --- Step 4: Style header row ---
+    columns.forEach((col, idx) => {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: idx }); // first row (header)
+      if (!worksheet[cellAddress]) return;
+      worksheet[cellAddress].s = {
+        font: { bold: true }, // white bold text
+        alignment: { horizontal: 'center' },
+      };
+    });
+
+    // --- Step 5: Create workbook and save ---
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Employee Template');
+    XLSX.writeFile(workbook, 'Employee_Upload_Sample.xlsx');
+  }
+
+  async validateAndSaveExcelData(data: any[]) {
+    this.excelErrors = []; // Reset errors at start
+
+    for (let row of data) {
+      const firstName = row['First Name'];
+      const middleName = row['Middle Name'];
+      const lastName = row['Last Name'];
+      const email = row['Email'];
+      const phone = row['Phone'];
+      const employeeId = row['Employee ID'];
+      const password = row['Password'];
+      const roleName = row['Role'];
+      const branchName = row['Branch'];
+      const departmentName = row['Department'];
+      const canCreate = row['Can Create Circular'];
+      const canApprove = row['Can Approve Circular'];
+
+      // --- Check Role and Assignment ---
+      if (this.role === 'BRANCH_ADMIN') {
+        if (branchName?.toLowerCase() !== this.branches[0]?.name.toLowerCase()) {
+          this.excelErrors.push(
+            `Row skipped: Branch "${branchName}" does not match your branch "${this.branches[0]?.name}" for employee ${firstName} ${lastName}`
+          );
+          continue;
+        }
+      } else if (this.role === 'HO_ADMIN') {
+        if (branchName) {
+          this.excelErrors.push(
+            `Row skipped: HO_ADMIN cannot assign employees to a branch for employee ${firstName} ${lastName}`
+          );
+          continue;
+        }
+      }
+
+      // --- Check Department ---
+      let departmentId = null;
+      if (departmentName && this.hasDepartments) {
+        const dept = this.departments.find(
+          (d) => d.name.toLowerCase() === departmentName?.toLowerCase()
+        );
+        if (!dept) {
+          this.excelErrors.push(
+            `Department "${departmentName}" not found for employee ${firstName} ${lastName}`
+          );
+          continue;
+        }
+        departmentId = dept.id;
+      }
+
+      // --- Check Role ---
+      let validRole: any = null;
+      if (this.hasDepartments && departmentId) {
+        // Role must exist in selected department
+        validRole = this.allRoles.find(
+          (r) =>
+            r.name.toLowerCase() === roleName?.toLowerCase() && r.department_id === departmentId
+        );
+      } else {
+        // No departments: role just needs to exist globally
+        validRole = this.allRoles.find((r) => r.name.toLowerCase() === roleName?.toLowerCase());
+      }
+
+      if (!validRole) {
+        this.excelErrors.push(
+          `Role "${roleName}" not found in the selected department "${departmentName}" for employee ${firstName} ${lastName}`
+        );
+        continue;
+      }
+
+      // --- Prepare employee object ---
+      const employee = {
+        first_name: firstName,
+        middle_name: middleName,
+        last_name: lastName,
+        email: email,
+        phone_no: phone,
+        employee_id: employeeId,
+        password: password,
+        branch_id: this.role === 'BRANCH_ADMIN' ? this.branches[0].id : null,
+        department_id: departmentId,
+        role_id: validRole.id,
+        head_office_id: this.role === 'HO_ADMIN' ? this.userAssignment.id : null,
+        can_create_circular: canCreate,
+        can_approve_circular: canApprove,
+      };
+
+      // --- Save employee via service ---
+      try {
+        await this.userService.createEmployee(employee).toPromise();
+        // Optional: success toast
+        this.toast.show(`Employee ${firstName} ${lastName} added successfully`, 'success');
+      } catch (err: any) {
+        this.excelErrors.push(`Error adding ${firstName} ${lastName}: ${err.message}`);
+      }
+    }
+
+    // --- Show modal if there are errors ---
+    if (this.excelErrors.length > 0) {
+      this.showErrorModal = true;
+    } else {
+      this.toast.show('All employees uploaded successfully!', 'success');
+    }
+
+    this.loadData(); // Reload employee data
+  }
+
   submitForm() {
     // --- STEP 1: Clear all dynamic validators and re-apply them based on current mode and data ---
     this.employeeForm.get('employee_id')?.clearValidators();
@@ -311,7 +538,10 @@ export class EmployeeMangement {
           this.resetForm();
         },
         error: (err) => {
-          this.toast.show('Error updating employee: ' + (err.error?.message || err.message), 'error');
+          this.toast.show(
+            'Error updating employee: ' + (err.error?.message || err.message),
+            'error'
+          );
           console.error('Error updating employee:', err);
         },
       });
@@ -323,7 +553,10 @@ export class EmployeeMangement {
           this.resetForm();
         },
         error: (err) => {
-          this.toast.show('Error creating employee: ' + (err.error?.message || err.message), 'error');
+          this.toast.show(
+            'Error creating employee: ' + (err.error?.message || err.message),
+            'error'
+          );
           console.error('Error creating employee:', err);
         },
       });
@@ -428,8 +661,12 @@ export class EmployeeMangement {
     this.employeeForm.get('role_id')?.setValidators([Validators.required]);
 
     // Apply default `required` for employee_id and password if back to add mode
-    this.employeeForm.get('employee_id')?.setValidators([Validators.required, Validators.pattern(/^\S+$/)]);
-    this.employeeForm.get('password')?.setValidators([Validators.required, this.noWhitespaceValidator]);
+    this.employeeForm
+      .get('employee_id')
+      ?.setValidators([Validators.required, Validators.pattern(/^\S+$/)]);
+    this.employeeForm
+      .get('password')
+      ?.setValidators([Validators.required, this.noWhitespaceValidator]);
 
     // Apply department_id required validator if departments exist
     if (this.hasDepartments) {

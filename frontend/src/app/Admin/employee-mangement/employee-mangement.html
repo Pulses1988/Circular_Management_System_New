@@ -7,13 +7,59 @@
     </div>
   </div>
 
-  <!-- Add Button -->
-  <button
-    (click)="toggleForm()"
-    class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors mb-6"
-  >
-    {{ showForm ? 'Close Form' : 'Add New Employee' }}
-  </button>
+  <!-- Top Actions -->
+  <div class="flex justify-between items-center mb-6">
+    <!-- Add Employee Button -->
+    <button
+      (click)="toggleForm()"
+      class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+    >
+      {{ showForm ? 'Close Form' : 'Add New Employee' }}
+    </button>
+
+    <!-- Right Section: Note + Buttons side-by-side -->
+    <div
+      class="flex items-center gap-8 bg-blue-50 border-l-4 border-blue-500 p-5 rounded-lg shadow-sm">
+      <!-- Note -->
+      <div class="flex items-start gap-3 max-w-2xl">
+        <p class="text-sm leading-relaxed text-gray-700">
+          📌 You can <span class="font-semibold">add multiple employees</span> at once by uploading
+          an Excel file. Please download the <span class="font-semibold">sample template</span> and
+          follow the same format carefully to ensure successful upload.
+        </p>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex gap-3">
+        <!-- Upload Excel -->
+        <div class="relative">
+          <input
+            type="file"
+            (change)="onFileChange($event)"
+            accept=".xlsx, .xls"
+            id="fileUpload"
+            class="hidden"
+          />
+          <label
+            for="fileUpload"
+            class="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-5 py-2 rounded-lg shadow-md cursor-pointer hover:from-green-600 hover:to-emerald-700 transition-all"
+          >
+            <mat-icon>upload</mat-icon>
+            Upload
+          </label>
+        </div>
+
+        <!-- Download Sample -->
+        <button
+          (click)="downloadSampleExcel()"
+          class="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-5 py-2 rounded-lg shadow-md hover:from-blue-600 hover:to-indigo-700 transition-all"
+        >
+          <mat-icon>download</mat-icon>
+          Sample File
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Employee Form -->
   <form
@@ -124,14 +170,25 @@
       </div>
 
       <!-- Password -->
-      <div>
+      <div *ngIf="!isEditMode">
         <label class="block text-sm font-medium mb-2 text-gray-700">Password</label>
-        <input
-          type="password"
-          formControlName="password"
-          class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Enter password"
-        />
+        <div class="relative">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="password"
+            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
+            placeholder="Enter password"
+          />
+          <button
+            type="button"
+            (click)="togglePasswordVisibility()"
+            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+          >
+            <mat-icon class="text-lg">
+              {{ showPassword ? 'visibility_off' : 'visibility' }}
+            </mat-icon>
+          </button>
+        </div>
         <div
           *ngIf="employeeForm.get('password')?.touched && employeeForm.get('password')?.invalid"
           class="text-red-500 text-sm mt-1"
@@ -393,6 +450,29 @@
         class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
       >
         Next
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Excel Errors Modal -->
+<div
+  *ngIf="showErrorModal"
+  class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+>
+  <div class="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
+    <h2 class="text-xl font-bold mb-4">Excel Upload Errors</h2>
+    <div class="max-h-64 overflow-y-auto">
+      <ul class="list-disc pl-5 space-y-2">
+        <li *ngFor="let err of excelErrors">{{ err }}</li>
+      </ul>
+    </div>
+    <div class="mt-4 flex justify-end">
+      <button
+        (click)="showErrorModal = false"
+        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        OK
       </button>
     </div>
   </div>
