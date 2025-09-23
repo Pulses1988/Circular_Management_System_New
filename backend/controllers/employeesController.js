@@ -111,3 +111,14 @@ exports.checkEmailExists = async (req, res) => {
     res.status(500).json({ error: "Failed to check email" });
   }
 };
+
+exports.checkPhoneNoExists = async (req, res) => {
+  const { phone } = req.query;
+  try {
+    const [rows] = await employeeModel.findByPhone(phone);
+    res.json(rows.length > 0);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({error:"Failed to check phone number"})
+  }
+};
