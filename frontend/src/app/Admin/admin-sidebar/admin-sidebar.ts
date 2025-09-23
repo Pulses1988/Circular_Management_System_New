@@ -47,6 +47,12 @@ export class AdminSidebar {
       route: '/admin/admin-role-management',
       roles: ['HO_ADMIN','BRANCH_ADMIN'],
     },
+    {
+      label: 'Employee Management',
+      icon: 'manage_accounts',
+      route: '/admin/admin-employee-management',
+      roles: ['HO_ADMIN','BRANCH_ADMIN'],
+    },
   ];
 
   get filteredNavItems(): NavItem[] {

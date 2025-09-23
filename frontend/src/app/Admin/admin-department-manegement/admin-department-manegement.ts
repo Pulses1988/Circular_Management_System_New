@@ -83,6 +83,7 @@ export class AdminDepartmentManegement {
         this.user.getBranchById(id).subscribe({
           next:(res:any)=>{
             this.officeInfo=res;
+            console.log(res,'oficeIno')
           },
           error: (err: any) => {
             console.error('Error fetching Branch Info:', err);
