@@ -125,6 +125,10 @@ exports.findByEmail = (email) => {
   return db.query("SELECT id FROM employees WHERE email = ?", [email]);
 };
 
+exports.findByPhone = (phone) => {
+  return db.query("SELECT id FROM employees WHERE phone_no = ?", [phone]);
+};
+
 // Get employees for a specific Head Office, but branch_id is NULL
 exports.getEmployeesByHeadOfficeWithoutBranch = (hoId) => {
   return db.query(

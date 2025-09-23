@@ -8,6 +8,7 @@ router.get("/check-employee-id", authenticateToken, employeeController.checkEmpl
 router.get("/check-email", authenticateToken, employeeController.checkEmailExists);
 router.get("/employee-by-headoffice/:id",authenticateToken,employeeController.getEmployeesByHeadOfficeWithoutBranch);
 router.get("/employee-by-branch/:id", authenticateToken, employeeController.getEmployeesByBranch);
+router.get("/check-phone",authenticateToken,employeeController.checkPhoneNoExists);
 
 // CRUD endpoints
 router.get("/", authenticateToken, employeeController.getAllEmployees);
