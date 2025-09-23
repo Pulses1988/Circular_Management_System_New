@@ -43,3 +43,7 @@ body {
 /* Your existing SCSS code can go below */
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+.logout-dialog-backdrop{
+backdrop-filter: blur(4px); 
+      background-color: rgba(0, 0, 0, 0.5);
+}

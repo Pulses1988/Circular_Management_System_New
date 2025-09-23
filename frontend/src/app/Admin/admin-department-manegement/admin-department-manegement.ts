@@ -21,6 +21,7 @@ export class AdminDepartmentManegement {
   departments: any[] = [];
   editingDeptId: number | null = null;
   editingDeptName: string = '';
+  officeInfo!:any;
 
   constructor(private user: User, private toast: Toast) {}
 
@@ -51,6 +52,17 @@ export class AdminDepartmentManegement {
             this.loading = false;
           },
         });
+        this.user.fetchHeadOfficeById(id).subscribe({
+          next:(res:any)=>{
+            this.officeInfo=res;
+            console.log(this.officeInfo,'.....office')
+          },
+           error: (err: any) => {
+            console.error('Error fetching head office Info:', err);
+            this.toast.show('Failed to load head office Info', 'error');
+            this.loading = false;
+          },
+        })
       } else if (assignment.type === 'branch') {
         this.branch_id = id;
         this.user.getDepartmentsByBranch(id).subscribe({
@@ -68,6 +80,16 @@ export class AdminDepartmentManegement {
             this.loading = false;
           },
         });
+        this.user.getBranchById(id).subscribe({
+          next:(res:any)=>{
+            this.officeInfo=res;
+          },
+          error: (err: any) => {
+            console.error('Error fetching Branch Info:', err);
+            this.toast.show('Failed to load Branch Info', 'error');
+            this.loading = false;
+          },
+        })
       }
     }
   }

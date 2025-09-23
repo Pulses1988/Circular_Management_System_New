@@ -6,14 +6,51 @@ import { AdminBranchManagement } from './admin-branch-management/admin-branch-ma
 import { AdminDepartmentManegement } from './admin-department-manegement/admin-department-manegement';
 import { EmployeeMangement } from './employee-mangement/employee-mangement';
 import { AdminRolesManegement } from './admin-roles-manegement/admin-roles-manegement';
+import { AuthGuard } from '../Authentication/auth.guard';
+import { RoleGuard } from '../Authentication/role.guard';
+import { UnauthorizedPage } from './unauthorized-page/unauthorized-page';
 
 export const ADMIN_ROUTS: Routes = [
   { path: '', redirectTo: 'admin-login', pathMatch: 'full' },
   { path: 'admin-signup', component: AdminSignup },
   { path: 'admin-login', component: AdminLogin },
-  { path: 'admin-dashboard', component: AdminDashboard },
-  { path: 'admin-branch', component: AdminBranchManagement },
-  { path: 'admin-department-manegement', component: AdminDepartmentManegement },
-  { path: 'admin-employee-management', component: EmployeeMangement },
-  { path: 'admin-role-manegement', component: AdminRolesManegement },
+  { 
+    path: 'admin-dashboard', 
+    component: AdminDashboard,
+    canActivate: [AuthGuard]
+  },
+  { 
+    path: 'admin-branch', 
+    component: AdminBranchManagement,
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['HO_ADMIN'] }
+  },
+  { 
+    path: 'admin-department-management', 
+    component: AdminDepartmentManegement,
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['HO_ADMIN', 'BRANCH_ADMIN'] }
+  },
+  { 
+    path: 'admin-employee-management', 
+    component: EmployeeMangement,
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['HO_ADMIN', 'BRANCH_ADMIN'] }
+  },
+  { 
+    path: 'admin-role-management', 
+    component: AdminRolesManegement,
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['HO_ADMIN', 'BRANCH_ADMIN'] }
+  },
+  // Add unauthorized route
+  { 
+    path: 'unauthorized', 
+    component: UnauthorizedPage 
+  },
+  // Catch all route - redirect to login
+  { 
+    path: '**', 
+    redirectTo: 'admin-login' 
+  }
 ];
