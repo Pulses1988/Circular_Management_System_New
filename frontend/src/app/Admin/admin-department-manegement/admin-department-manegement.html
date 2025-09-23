@@ -1,7 +1,7 @@
 <div class="mx-auto bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 min-h-screen p-6">
   <!-- Header -->
   <div class="flex items-center justify-between mt-8 mb-6">
-    <h1 class="text-3xl font-bold text-gray-800">Manage Departments of {{officeInfo.name }}</h1>
+    <h1 class="text-3xl font-bold text-gray-800">Manage Departments of {{officeInfo?.name}} @if(this.branch_id){Branch}</h1>
     <div class="bg-white px-3 py-1 rounded-lg shadow-sm text-sm text-gray-600">
       Total: {{ departments.length || 0 }}
     </div>
