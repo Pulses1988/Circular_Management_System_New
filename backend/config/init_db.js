@@ -53,7 +53,8 @@ const createDepartmentQuery = `
     )
 );`;
 
-const createEmployeeTableQuery = `CREATE TABLE IF NOT EXISTS employees (
+const createEmployeeTableQuery = `
+CREATE TABLE IF NOT EXISTS employees (
     id INT PRIMARY KEY AUTO_INCREMENT,
     employee_id VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
@@ -62,18 +63,21 @@ const createEmployeeTableQuery = `CREATE TABLE IF NOT EXISTS employees (
     last_name VARCHAR(255),
     phone_no VARCHAR(20),
     email VARCHAR(255),
-    role_id INT NULL,           
-    department_id INT NULL,     
-    branch_id INT NULL,         
+    role_id INT NULL,
+    department_id INT NULL,
+    branch_id INT NULL,
+    head_office_id INT NULL, 
     can_create_circular BOOLEAN,
-    can_approve_circular BOOLEAN,           
+    can_approve_circular BOOLEAN,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET NULL,
     FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL,
-    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE SET NULL
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE SET NULL,
+    FOREIGN KEY (head_office_id) REFERENCES head_office(id) ON DELETE SET NULL 
 );
 `;
+
 
 const createRolesQuery = `
 CREATE TABLE IF NOT EXISTS roles (
@@ -98,20 +102,21 @@ async function initializeDatabase() {
     await db.query(createBranchesTableQuery);
     console.log("Branches table is ready");
 
-    await db.query(createAdminTableQuery);
-    console.log("Admin table is ready");
-
     await db.query(createDepartmentQuery);
     console.log("Departments table is ready");
 
-    await db.query(createEmployeeTableQuery);
-    console.log("Employee table is ready");
-
     await db.query(createRolesQuery);
     console.log("Roles table is ready");
+
+    await db.query(createAdminTableQuery);
+    console.log("Admin table is ready");
+
+    await db.query(createEmployeeTableQuery);
+    console.log("Employee table is ready");
   } catch (err) {
     console.error("Error initializing database:", err);
   }
 }
+
 
 module.exports = initializeDatabase;

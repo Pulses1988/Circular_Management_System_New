@@ -14,6 +14,6 @@ export const ADMIN_ROUTS: Routes = [
   { path: 'admin-dashboard', component: AdminDashboard },
   { path: 'admin-branch', component: AdminBranchManagement },
   { path: 'admin-department-manegement', component: AdminDepartmentManegement },
-  { path: 'employee-management', component: EmployeeMangement },
+  { path: 'admin-employee-management', component: EmployeeMangement },
   { path: 'admin-role-manegement', component: AdminRolesManegement },
 ];

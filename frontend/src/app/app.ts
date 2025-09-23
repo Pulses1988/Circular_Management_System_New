@@ -29,10 +29,11 @@ export class App {
   }
 
   showAdminSidebar(): boolean {
-  const isAdminRoute = this.currentRoute.startsWith('/admin');
-  const isLoginRoute = this.currentRoute.includes('/admin-login');
-  return isAdminRoute && !isLoginRoute;
-}
+    const isAdminRoute = this.currentRoute.startsWith('/admin');
+    const isLoginRoute = this.currentRoute.includes('/admin-login');
+    const isSignupRoute = this.currentRoute.includes('/admin-signup');
+    return isAdminRoute && !isLoginRoute && !isSignupRoute;
+  }
 
   ngOnInit() {}
   onSubmit() {

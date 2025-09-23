@@ -44,6 +44,7 @@ exports.createEmployee = ({
   role_id,
   department_id,
   branch_id,
+  head_office_id,
   can_create_circular,
   can_approve_circular,
 }) => {
@@ -52,8 +53,8 @@ exports.createEmployee = ({
   return db.query(
     `INSERT INTO employees 
       (employee_id, password_hash, first_name, middle_name, last_name, 
-       phone_no, email, role_id, department_id, branch_id, can_create_circular,can_approve_circular) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       phone_no, email, role_id, department_id, branch_id,head_office_id, can_create_circular,can_approve_circular) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       employee_id,
       password_hash,
@@ -65,6 +66,7 @@ exports.createEmployee = ({
       role_id || null,
       department_id || null,
       branch_id || null,
+      head_office_id || null,
       can_create_circular || null,
       can_approve_circular || null,
     ]
@@ -82,6 +84,7 @@ exports.updateEmployee = (
     role_id,
     department_id,
     branch_id,
+    head_office_id,
     can_create_circular,
     can_approve_circular,
   }
@@ -89,7 +92,7 @@ exports.updateEmployee = (
   return db.query(
     `UPDATE employees 
      SET first_name=?, middle_name=?, last_name=?, phone_no=?, email=?, 
-         role_id=?, department_id=?, branch_id=?, can_create_circular=?,can_approve_circular=?,
+         role_id=?, department_id=?, branch_id=?, head_office_id=?, can_create_circular=?,can_approve_circular=?
      WHERE id=?`,
     [
       first_name || null,
@@ -100,6 +103,7 @@ exports.updateEmployee = (
       role_id || null,
       department_id || null,
       branch_id || null,
+      head_office_id || null,
       can_create_circular || null,
       can_approve_circular || null,
       id,
@@ -126,16 +130,19 @@ exports.getEmployeesByHeadOfficeWithoutBranch = (hoId) => {
   return db.query(
     `
     SELECT e.id, e.employee_id, e.first_name, e.middle_name, e.last_name,
-           e.phone_no, e.email, e.can_create_circular, e.can_approve_circular, e.created_at,
+           e.phone_no, e.email, e.head_office_id, e.can_create_circular, e.can_approve_circular, e.created_at,
+           r.id AS role_id,
            r.name AS role_name,
+           d.id AS department_id,
            d.name AS department_name,
+           b.id AS branch_id,
            b.name AS branch_name
     FROM employees e
     LEFT JOIN roles r ON e.role_id = r.id
     LEFT JOIN departments d ON e.department_id = d.id
     LEFT JOIN branches b ON e.branch_id = b.id
     WHERE e.head_office_id = ? AND e.branch_id IS NULL
-  `,
+    `,
     [hoId]
   );
 };
@@ -145,7 +152,7 @@ exports.getEmployeesByBranch = (branchId) => {
   return db.query(
     `
     SELECT e.id, e.employee_id, e.first_name, e.middle_name, e.last_name,
-           e.phone_no, e.email, e.can_create_circular, e.can_approve_circular, e.created_at,
+           e.phone_no, e.email,e.role_id,e.department_id,e.branch_id, e.can_create_circular, e.can_approve_circular, e.created_at,
            r.name AS role_name,
            d.name AS department_name,
            b.name AS branch_name

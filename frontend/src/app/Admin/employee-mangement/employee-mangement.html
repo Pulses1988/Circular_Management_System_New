@@ -175,6 +175,12 @@
           class="text-red-500 text-sm mt-1"
         >
           <div *ngIf="employeeForm.get('phone_no')?.errors?.['pattern']">Enter only numbers.</div>
+          <span *ngIf="employeeForm.get('phone_no')?.errors?.['maxlength']">
+            Phone number cannot be more than 10 digits.
+          </span>
+          <span *ngIf="employeeForm.get('phone_no')?.errors?.['minlength']">
+            Phone number must be at least 10 digits.
+          </span>
         </div>
       </div>
 
@@ -212,67 +218,44 @@
     </div>
 
     <!-- Permissions Section -->
+    <!-- Permissions Section -->
     <div class="mt-6 pt-6 border-t border-gray-200">
       <div class="flex items-center gap-2 mb-4">
         <mat-icon class="text-blue-600">security</mat-icon>
         <h3 class="text-lg font-semibold text-gray-800">Permissions</h3>
       </div>
-      
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Can Create Circular -->
         <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <label class="flex items-center gap-3 cursor-pointer group">
-            <div class="relative">
-              <input 
-                type="checkbox" 
-                formControlName="can_create_circular" 
-                class="sr-only peer"
-              />
-              <div class="w-5 h-5 border-2 border-gray-300 rounded bg-white peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-all duration-200 flex items-center justify-center">
-                <mat-icon 
-                  class="text-white text-sm opacity-0 peer-checked:opacity-100 transition-opacity duration-200"
-                  style="font-size: 14px; width: 14px; height: 14px;"
-                >
-                  check
-                </mat-icon>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <mat-icon class="text-green-600" style="font-size: 20px;">add_circle_outline</mat-icon>
-              <span class="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
-                Can Create Circular
-              </span>
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              formControlName="can_create_circular"
+              class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+            />
+            <div class="flex items-center gap-2 ml-2">
+              <mat-icon class="text-green-600" style="font-size: 20px">add_circle_outline</mat-icon>
+              <span class="text-sm font-medium text-gray-700">Can Create Circular</span>
             </div>
           </label>
-          <p class="text-xs text-gray-500 mt-2 ml-8">Allow user to create new circulars</p>
+          <p class="text-xs text-gray-500 mt-2 ml-7">Allow user to create new circulars</p>
         </div>
 
         <!-- Can Approve Circular -->
         <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <label class="flex items-center gap-3 cursor-pointer group">
-            <div class="relative">
-              <input 
-                type="checkbox" 
-                formControlName="can_approve_circular" 
-                class="sr-only peer"
-              />
-              <div class="w-5 h-5 border-2 border-gray-300 rounded bg-white peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-all duration-200 flex items-center justify-center">
-                <mat-icon 
-                  class="text-white text-sm opacity-0 peer-checked:opacity-100 transition-opacity duration-200"
-                  style="font-size: 14px; width: 14px; height: 14px;"
-                >
-                  check
-                </mat-icon>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <mat-icon class="text-orange-600" style="font-size: 20px;">verified</mat-icon>
-              <span class="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
-                Can Approve Circular
-              </span>
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              formControlName="can_approve_circular"
+              class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+            />
+            <div class="flex items-center gap-2 ml-2">
+              <mat-icon class="text-orange-600" style="font-size: 20px">verified</mat-icon>
+              <span class="text-sm font-medium text-gray-700">Can Approve Circular</span>
             </div>
           </label>
-          <p class="text-xs text-gray-500 mt-2 ml-8">Allow user to approve created circulars</p>
+          <p class="text-xs text-gray-500 mt-2 ml-7">Allow user to approve created circulars</p>
         </div>
       </div>
     </div>
@@ -306,13 +289,28 @@
             <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Name</th>
             <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
             <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Phone</th>
+
             <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Role</th>
-            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Department</th>
-            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Branch</th>
+
+            <!-- Show Department column only if user is HO_ADMIN or BRANCH_ADMIN with departments -->
+            <th
+              *ngIf="role === 'HO_ADMIN' || (role === 'BRANCH_ADMIN' && hasDepartments)"
+              class="px-6 py-4 text-left text-sm font-semibold text-gray-700"
+            >
+              Department
+            </th>
+
+            <th
+              *ngIf="role === 'BRANCH_ADMIN'"
+              class="px-6 py-4 text-left text-sm font-semibold text-gray-700"
+            >
+              Branch
+            </th>
             <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Created At</th>
             <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
           </tr>
         </thead>
+
         <tbody class="divide-y divide-gray-200">
           <tr *ngFor="let emp of paginatedEmployees(); let i = index" class="hover:bg-gray-50">
             <td class="px-6 py-4 text-sm text-gray-900">
@@ -324,12 +322,24 @@
             </td>
             <td class="px-6 py-4 text-sm text-gray-600">{{ emp.email }}</td>
             <td class="px-6 py-4 text-sm text-gray-600">{{ emp.phone_no }}</td>
+
             <td class="px-6 py-4 text-sm text-gray-900">{{ emp.role_name }}</td>
-            <td class="px-6 py-4 text-sm text-gray-900">{{ emp.department_name }}</td>
-            <td class="px-6 py-4 text-sm text-gray-900">{{ emp.branch_name }}</td>
+
+            <!-- Conditional Department -->
+            <td
+              *ngIf="role === 'HO_ADMIN' || (role === 'BRANCH_ADMIN' && hasDepartments)"
+              class="px-6 py-4 text-sm text-gray-900"
+            >
+              {{ emp?.department_name }}
+            </td>
+
+            <td *ngIf="role === 'BRANCH_ADMIN'" class="px-6 py-4 text-sm text-gray-900">
+              {{ emp.branch_name }}
+            </td>
             <td class="px-6 py-4 text-sm text-gray-500">
               {{ emp.created_at | date : 'dd/MM/yyyy' }}
             </td>
+
             <td class="px-6 py-4 flex gap-2">
               <button
                 (click)="editEmployee(emp)"

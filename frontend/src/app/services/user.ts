@@ -148,6 +148,12 @@ export class User {
     });
   }
 
+  updateEmployee(id: number, data: {}) {
+    return this.http.put(`${this.apiUrl}/api/employees/${id}`, data, {
+      headers: this.getHeaders(),
+    });
+  }
+
   private handleError(error: HttpErrorResponse) {
     let errorMessage = 'An unknown error occurred!';
     if (error.error instanceof ErrorEvent) {
