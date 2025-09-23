@@ -110,3 +110,14 @@ exports.getBranchesWithAdminStatus = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch branches" });
   }
 };
+
+exports.getBranchCountByHeadOfficeId= async (req, res) => {
+  const { headOfficeId } = req.params;
+  try {
+    const [result] = await branchModel.getBranchCountByHeadOfficeId(headOfficeId);
+    res.json(result[0]); // return { count: number }
+  } catch (err) {
+    console.error("Error fetching Branch count by head office:", err);
+    res.status(500).json({ error: "Failed to fetch Branch count" });
+  }
+};

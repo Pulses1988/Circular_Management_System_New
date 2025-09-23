@@ -14,7 +14,7 @@ import { User } from '../../services/user';
 export class AdminDashboard {
     isHoAdmin:boolean=false; // Dynamically set based on login or user data
   totalDepartments = 0;
-  totalBranches = 5;
+  totalBranches = 0;
   totalEmployees = 150;
     showHeadOfficeForm = false;
 
@@ -48,6 +48,15 @@ export class AdminDashboard {
           this.toast.show('Failed to fetch department count', 'error');
         }
       });
+      this.user.getBranchCountByHeadOfficeId(id).subscribe({
+        next:(res:any)=>{
+          this.totalBranches=res.count;
+          console.log(res,'branch count')
+        },
+        error: () => {
+          this.toast.show('Failed to fetch Branch count', 'error');
+        }
+      })
     } else {
       this.user.getDepartmentCountByBranch(id).subscribe({
         next: (res: any) => {

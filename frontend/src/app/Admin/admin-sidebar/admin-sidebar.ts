@@ -1,7 +1,10 @@
 import { CommonModule, NgIf } from '@angular/common';
 import { Component } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterModule } from '@angular/router';
+import { AdminAuth } from '../../services/admin-auth';
+import { LogoutConfirmation } from '../logout-confirmation/logout-confirmation';
 
 interface NavItem {
   label: string;
@@ -22,18 +25,27 @@ export class AdminSidebar {
 
   role: string | null = localStorage.getItem('role');
 
+  constructor( private dialog: MatDialog,
+  private authService: AdminAuth){}
+
   navItems: NavItem[] = [
-    { label: 'Dashboard', icon: 'home', route: '/admin-dashboard' },
+    { label: 'Dashboard', icon: 'home', route: '/admin/admin-dashboard' },
     {
       label: 'Department Management',
       icon: 'calendar_view_week',
-      route: '/admin-department-manegement',
+      route: '/admin/admin-department-management',
     },
     {
       label: 'Branch Management',
       icon: 'account_tree',
-      route: '/admin-branch',
+      route: '/admin/admin-branch',
       roles: ['HO_ADMIN'],
+    },
+    {
+      label: 'Role Management',
+      icon: 'assignment_ind',
+      route: '/admin/admin-role-management',
+      roles: ['HO_ADMIN','BRANCH_ADMIN'],
     },
   ];
 
@@ -52,4 +64,22 @@ export class AdminSidebar {
   collapseSidebar() {
     this.isSidebarOpen = false;
   }
+  openLogoutDialog(): void {
+  const dialogRef = this.dialog.open(LogoutConfirmation, {
+    width: '350px',
+    disableClose: false,
+    hasBackdrop: true,
+    backdropClass: 'logout-dialog-backdrop',
+    panelClass: 'logout-dialog-panel'
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    if (result === true) {
+      this.performLogout();
+    }
+  });
+}
+private performLogout(): void {
+  this.authService.logout();
+}
 }

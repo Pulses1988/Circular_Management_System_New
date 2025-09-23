@@ -1,0 +1,33 @@
+<div class="logout-dialog">
+      <!-- Dialog Header -->
+      <div class="dialog-header">
+        <mat-icon class="logout-icon">logout</mat-icon>
+        <h2 mat-dialog-title class="dialog-title">Confirm Logout</h2>
+      </div>
+
+      <!-- Dialog Content -->
+      <div mat-dialog-content class="dialog-content">
+        <p>Are you sure you want to logout?</p>
+        <p class="warning-text">You will be redirected to the login page.</p>
+      </div>
+
+      <!-- Dialog Actions -->
+      <div mat-dialog-actions class="dialog-actions">
+        <button 
+          mat-button 
+          class="cancel-btn"
+          (click)="onCancel()"
+        >
+          Cancel
+        </button>
+        <button 
+          mat-raised-button 
+          color="warn" 
+          class="logout-btn"
+          (click)="onConfirm()"
+        >
+          <mat-icon class="btn-icon">logout</mat-icon>
+          Logout
+        </button>
+      </div>
+    </div>

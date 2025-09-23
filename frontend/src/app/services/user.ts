@@ -34,14 +34,19 @@ export interface Role {
 })
 export class User {
   private apiUrl = environment.apiUrl;
+  token!:string | null;
 
   constructor(private http: HttpClient) {}
   private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('authToken'); // Adjust based on your auth implementation
+    if (typeof window !== 'undefined') {
+    this.token = localStorage.getItem('authToken');
+    }
+     // Adjust based on your auth implementation
     return new HttpHeaders({
       'Content-Type': 'application/json',
-      Authorization: token ? `Bearer ${token}` : '',
+      Authorization: this.token ? `Bearer ${this.token}` : '',
     });
+  
   }
 
   getUsers(): Observable<any> {
@@ -82,6 +87,12 @@ export class User {
       .pipe(catchError(this.handleError));
   }
 
+  fetchHeadOfficeById(id:number){
+    return this.http
+    .get(`${environment.apiUrl}/api/head-office/${id}`,{headers:this.getHeaders()})
+    .pipe(catchError(this.handleError));
+  }
+
   // ---------------branches API-----------------------
 
   fetchAllBranches() {
@@ -98,6 +109,12 @@ export class User {
 
   updateBranches(id: number, data: {}) {
     return this.http.put(`${environment.apiUrl}/api/branches/${id}`, data, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  getBranchCountByHeadOfficeId(headOfficeId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/api/branches/head-office/${headOfficeId}/count`, {
       headers: this.getHeaders(),
     });
   }
@@ -173,7 +190,7 @@ export class User {
   }
 
   loginAdmin(data: { username: string; password: string }) {
-    return this.http.post(`${this.apiUrl}/api/admins/login`, data);
+    return this.http.post(`${this.apiUrl}/api/admins/login`, data)
   }
 
   addHeadOffice(data: { name: string; address: string }) {

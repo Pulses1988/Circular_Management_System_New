@@ -32,7 +32,8 @@ export class App {
     const isAdminRoute = this.currentRoute.startsWith('/admin');
     const isLoginRoute = this.currentRoute.includes('/admin-login');
     const isSignupRoute = this.currentRoute.includes('/admin-signup');
-    return isAdminRoute && !isLoginRoute && !isSignupRoute;
+    const unauthorised = this.currentRoute.includes('/unauthorized');
+    return isAdminRoute && !isLoginRoute && !isSignupRoute && !unauthorised;
   }
 
   ngOnInit() {}

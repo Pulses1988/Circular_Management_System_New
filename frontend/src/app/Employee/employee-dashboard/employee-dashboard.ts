@@ -37,7 +37,7 @@ interface QuickAction {
 })
 export class EmployeeDashboard {
   currentEmployee = {
-    name: 'John Doe',
+    name: 'Rohit Chougale',
     employeeId: 'EMP001',
     role: 'Senior Analyst',
     department: 'Finance',

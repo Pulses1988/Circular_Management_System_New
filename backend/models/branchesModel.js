@@ -52,3 +52,10 @@ exports.getBranchesWithAdminStatus = () => {
     FROM branches b
   `);
 };
+
+exports.getBranchCountByHeadOfficeId = (headOfficeId) => {
+  return db.query(
+    "SELECT COUNT(*) as count FROM branches WHERE head_office_id = ?",
+    [headOfficeId]
+  );
+};
