@@ -5,10 +5,11 @@ import { FormsModule } from '@angular/forms'; // ✅ For ngModel
 import { CommonModule } from '@angular/common';
 import { ToastComponent } from './toast/toast-component/toast-component';
 import { AdminSidebar } from './Admin/admin-sidebar/admin-sidebar';
+import { Navbar } from "./Employee/navbar/navbar";
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule, CommonModule, RouterModule, ToastComponent, AdminSidebar],
+  imports: [FormsModule, CommonModule, RouterModule, ToastComponent, AdminSidebar, Navbar],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -35,6 +36,14 @@ export class App {
     const unauthorised = this.currentRoute.includes('/unauthorized');
     return isAdminRoute && !isLoginRoute && !isSignupRoute && !unauthorised;
   }
+
+  showNavbar(): boolean {
+  const isAdminRoute = this.currentRoute.startsWith('/admin');
+  const isEmployeeLogin = this.currentRoute.includes('/employee-login');
+
+  // Show navbar everywhere except admin pages and employee-login
+  return !isAdminRoute && !isEmployeeLogin;
+}
 
   ngOnInit() {}
   onSubmit() {

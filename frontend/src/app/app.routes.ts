@@ -4,6 +4,9 @@ import { EmployeeLogin } from './Employee/employee-login/employee-login';
 
 export const routes: Routes = [
   {
+    path:'',redirectTo:'employee-login',pathMatch: 'full' 
+  },
+  {
     path: 'admin',
     loadChildren: () => import('./Admin/admin.routes').then((m) => m.ADMIN_ROUTS),
   },
@@ -13,5 +16,5 @@ export const routes: Routes = [
   {
     path:'employee-login', component:EmployeeLogin
   },
-  { path: '**', redirectTo: '' },
+  { path: '**', component:EmployeeLogin },
 ];

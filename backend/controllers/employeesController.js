@@ -1,4 +1,6 @@
 const employeeModel = require("../models/employeesModal");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 // Get all employees
 exports.getAllEmployees = async (req, res) => {
@@ -8,6 +10,80 @@ exports.getAllEmployees = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch employees" });
+  }
+};
+
+exports.loginEmployee = async (req, res) => {
+  try {
+    const { employee_id, password } = req.body;
+
+    // Validation
+    if (!employee_id || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee ID and password are required"
+      });
+    }
+
+    // Get employee data
+    const [rows] = await employeeModel.loginEmployee(employee_id);
+
+    if (rows.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid employee ID or password"
+      });
+    }
+
+    const employee = rows[0];
+
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, employee.password_hash);
+    if (!isValidPassword) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid employee ID or password"
+      });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        employeeId: employee.id,
+        employee_id: employee.employee_id,
+        role_id: employee.role_id,
+        department_id: employee.department_id,
+        branch_id: employee.branch_id,
+        head_office_id: employee.head_office_id,
+        head_office_name:employee.head_office_name,
+        can_create_circular: employee.can_create_circular,
+        can_approve_circular: employee.can_approve_circular,
+        bank_name:employee.bank_name,
+      },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    );
+
+    // Remove password_hash from response
+    delete employee.password_hash;
+
+    // Success response
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      data: {
+        token: token,
+        employee: employee
+      }
+    });
+
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
