@@ -1,30 +1,22 @@
-<!-- 
-     <h1>Add User</h1>
-    <form (ngSubmit)="onSubmit()">
-      <input [(ngModel)]="username" name="username" placeholder="Username" required />
-      <input [(ngModel)]="email" name="email" placeholder="Email" required />
-      <button type="submit">Add User</button>
-    </form>
+@if (showAdminSidebar()) {
+  <div class="flex h-screen">
+    <!-- Admin Sidebar -->
+    <app-admin-sidebar></app-admin-sidebar>
 
-    <div class="bg-blue-500 text-white p-6 rounded-lg shadow-lg m-4">
-  <h1 class="text-2xl font-bold mb-2">Tailwind CSS is working!</h1>
-  <p class="text-blue-100">This is a test component with Tailwind classes.</p>
-  <button class="bg-white text-blue-500 px-4 py-2 rounded mt-4 hover:bg-gray-100 transition-colors">
-    Test Button
-  </button>
-</div> -->
-
-<div class="flex h-screen" *ngIf="showAdminSidebar()">
-  <!-- Sidebar -->
-  <app-admin-sidebar></app-admin-sidebar>
-
-  <!-- Main Content (fills remaining space) -->
-  <div class="flex-1 overflow-auto">
-    <router-outlet></router-outlet>
+    <!-- Main Content -->
+    <div class="flex-1 overflow-auto">
+      <router-outlet></router-outlet>
+    </div>
   </div>
-</div>
+} @else {
+  @if (showNavbar()) {
+    <!-- Navbar (not shown on admin pages or employee-login) -->
+    <app-navbar></app-navbar>
+  }
 
-<div *ngIf="!showAdminSidebar()">
+  <!-- Main Content -->
   <router-outlet></router-outlet>
-</div>
+}
+
+<!-- Toast always visible -->
 <app-toast-component></app-toast-component>

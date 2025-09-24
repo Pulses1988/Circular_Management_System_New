@@ -1,15 +1,29 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NumberSymbol } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatBadgeModule } from '@angular/material/badge';
+import { EmployeeService } from '../../services/employee-service';
 
 interface CircularStats {
   total: number;
   seen: number;
   unseen: number;
   urgent: number;
+}
+
+interface EmployeeData{
+  id:Number
+  first_name:string,
+  last_name:string,
+  role_name:string,
+  department_name:string | null,
+  branch_name:string | null,
+  head_office_name: string | null,
+  employee_id:string,
+  can_approve_circular: number
+  can_create_circular: number
 }
 
 interface RecentCircular {
@@ -126,13 +140,20 @@ export class EmployeeDashboard {
     }
   ];
 
+  employeeData!:EmployeeData;
+
+  constructor(
+    private employeeService: EmployeeService
+  ){}
+
   ngOnInit() {
     this.loadEmployeeData();
   }
 
   loadEmployeeData() {
     // Load employee data from service
-    console.log('Loading employee dashboard data...');
+    this.employeeData=this.employeeService.getCurrentEmployee()
+    console.log('Loading employee dashboard data...',this.employeeData);
   }
 
   getPriorityColor(priority: string): string {

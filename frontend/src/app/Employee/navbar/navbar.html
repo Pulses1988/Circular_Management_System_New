@@ -1,0 +1,37 @@
+<header class="bg-gradient-to-r from-blue-800 via-blue-700 to-blue-900 text-white shadow-xl">
+    @if (employeeData) {
+    <div class="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center py-4">
+        <!-- Logo & Brand -->
+        <div class="flex items-center space-x-4">
+          <div class="flex justify-center items-center">
+            <mat-icon class="text-2xl mb-1.5 text-blue-200">account_balance</mat-icon>
+
+            <h1 class="ml-1 text-2xl font-bold">{{employeeData?.bank_name}}</h1>
+
+          </div>
+        </div>
+        
+        <!-- User Info & Notifications -->
+        <div class="flex items-center space-x-6">
+          <div class="relative">
+            <mat-icon class="text-2xl cursor-pointer hover:text-blue-200 transition-colors" 
+                      [matBadge]="circularStats.urgent" 
+                      matBadgeColor="warn" 
+                      matBadgeSize="small">notifications</mat-icon>
+          </div>
+          
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center ring-2 ring-blue-300">
+              <mat-icon class="text-white">person</mat-icon>
+            </div>
+            <div class="text-sm">
+              <p class="font-semibold">{{ employeeData?.first_name}} {{employeeData?.last_name}}</p>
+              <p class="text-blue-200 text-xs">{{ employeeData?.role_name }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+}
+  </header>

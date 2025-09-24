@@ -12,6 +12,7 @@ router.get("/check-phone",authenticateToken,employeeController.checkPhoneNoExist
 
 // CRUD endpoints
 router.get("/", authenticateToken, employeeController.getAllEmployees);
+router.post('/login', employeeController.loginEmployee);
 router.get("/:id", authenticateToken, employeeController.getEmployeeById);
 router.post("/", authenticateToken, employeeController.createEmployee);
 router.put("/:id", authenticateToken, employeeController.updateEmployee);

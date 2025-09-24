@@ -33,6 +33,30 @@ exports.getEmployeeById = (id) => {
   );
 };
 
+exports.loginEmployee = (employee_id) => {
+  return db.query(
+    `
+    SELECT e.id, e.employee_id, e.password_hash, e.first_name, e.middle_name, e.last_name,
+           e.phone_no, e.email, e.role_id, e.department_id, e.branch_id, e.head_office_id,
+           e.can_create_circular, e.can_approve_circular, e.created_at,
+           r.name AS role_name,
+           d.name AS department_name,
+           b.name AS branch_name,
+           b.address AS branch_address,
+           ho.name AS head_office_name,
+           ho.address AS head_office_address,
+           ho.bank_name AS head_office_bank_name
+    FROM employees e
+    LEFT JOIN roles r ON e.role_id = r.id
+    LEFT JOIN departments d ON e.department_id = d.id
+    LEFT JOIN branches b ON e.branch_id = b.id
+    LEFT JOIN head_office ho ON e.head_office_id = ho.id
+    WHERE e.employee_id = ?
+    `,
+    [employee_id]
+  );
+};
+
 exports.createEmployee = ({
   employee_id,
   password,
