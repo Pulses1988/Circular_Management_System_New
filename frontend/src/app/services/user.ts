@@ -34,19 +34,18 @@ export interface Role {
 })
 export class User {
   private apiUrl = environment.apiUrl;
-  token!:string | null;
+  token!: string | null;
 
   constructor(private http: HttpClient) {}
   private getHeaders(): HttpHeaders {
     if (typeof window !== 'undefined') {
-    this.token = localStorage.getItem('authToken');
+      this.token = localStorage.getItem('authToken');
     }
-     // Adjust based on your auth implementation
+    // Adjust based on your auth implementation
     return new HttpHeaders({
       'Content-Type': 'application/json',
       Authorization: this.token ? `Bearer ${this.token}` : '',
     });
-  
   }
 
   getUsers(): Observable<any> {
@@ -87,10 +86,10 @@ export class User {
       .pipe(catchError(this.handleError));
   }
 
-  fetchHeadOfficeById(id:number){
+  fetchHeadOfficeById(id: number) {
     return this.http
-    .get(`${environment.apiUrl}/api/head-office/${id}`,{headers:this.getHeaders()})
-    .pipe(catchError(this.handleError));
+      .get(`${environment.apiUrl}/api/head-office/${id}`, { headers: this.getHeaders() })
+      .pipe(catchError(this.handleError));
   }
 
   // ---------------branches API-----------------------
@@ -171,6 +170,25 @@ export class User {
     });
   }
 
+  checkEmployeeIdExists(empId: string): Observable<boolean> {
+    return this.http.get<boolean>(
+      `${this.apiUrl}/api/employees/check-employee-id?employee_id=${empId}`,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  checkEmployeeEmailExists(email: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}/api/employees/check-email?email=${email}`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  checkEmployeePhoneNoExists(phoneNo: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}/api/employees/check-phone?phone=${phoneNo}`, {
+      headers: this.getHeaders(),
+    });
+  }
+
   private handleError(error: HttpErrorResponse) {
     let errorMessage = 'An unknown error occurred!';
     if (error.error instanceof ErrorEvent) {
@@ -190,7 +208,7 @@ export class User {
   }
 
   loginAdmin(data: { username: string; password: string }) {
-    return this.http.post(`${this.apiUrl}/api/admins/login`, data)
+    return this.http.post(`${this.apiUrl}/api/admins/login`, data);
   }
 
   addHeadOffice(data: { name: string; address: string }) {

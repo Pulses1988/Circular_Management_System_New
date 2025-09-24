@@ -6,10 +6,11 @@ import { CommonModule } from '@angular/common';
 import { ToastComponent } from './toast/toast-component/toast-component';
 import { AdminSidebar } from './Admin/admin-sidebar/admin-sidebar';
 import { Navbar } from "./Employee/navbar/navbar";
+import { EmployeeSidebar } from './Employee/employee-sidebar/employee-sidebar';
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule, CommonModule, RouterModule, ToastComponent, AdminSidebar, Navbar],
+  imports: [FormsModule, CommonModule, RouterModule, ToastComponent, AdminSidebar, EmployeeSidebar, Navbar],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

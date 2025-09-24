@@ -58,9 +58,15 @@ export class AdminBranchManagement implements OnInit {
           Validators.minLength(3),
           (control: any) =>
             control.value && control.value.trim().length === 0 ? { whitespace: true } : null,
+          (control: any) =>
+            control.value && /[0-9]/.test(control.value) ? { numbersNotAllowed: true } : null,
         ],
       ],
-      address: [''],
+      address: [
+        '',
+        (control: any) =>
+          control.value && /^[0-9]+$/.test(control.value) ? { numbersOnlyNotAllowed: true } : null,
+      ],
       head_office_id: ['', Validators.required],
     });
   }
