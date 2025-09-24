@@ -1,21 +1,26 @@
 @if (showAdminSidebar()) {
-  <div class="flex h-screen">
-    <!-- Admin Sidebar -->
-    <app-admin-sidebar></app-admin-sidebar>
-
-    <!-- Main Content -->
-    <div class="flex-1 overflow-auto">
-      <router-outlet></router-outlet>
-    </div>
-  </div>
-} @else {
-  @if (showNavbar()) {
-    <!-- Navbar (not shown on admin pages or employee-login) -->
-    <app-navbar></app-navbar>
-  }
+<div class="flex h-screen">
+  <!-- Admin Sidebar -->
+  <app-admin-sidebar></app-admin-sidebar>
 
   <!-- Main Content -->
-  <router-outlet></router-outlet>
+  <div class="flex-1 overflow-auto">
+    <router-outlet></router-outlet>
+  </div>
+</div>
+} @else { @if (showNavbar()) {
+<!-- Navbar (not shown on admin pages or employee-login) -->
+<app-navbar></app-navbar>
+<div class="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+  <app-employee-sidebar class="h-screen"></app-employee-sidebar>
+  <div class="flex-1 overflow-auto">
+    <router-outlet></router-outlet>
+  </div>
+</div>
+}
+
+<!-- Main Content -->
+<!-- <router-outlet></router-outlet> -->
 }
 
 <!-- Toast always visible -->

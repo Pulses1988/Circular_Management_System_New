@@ -47,6 +47,12 @@
               >
                 Only spaces are not allowed.
               </small>
+              <small
+                *ngIf="adminForm.get('first_name')?.errors?.['lettersOnly']"
+                class="text-red-500"
+              >
+                Numbers and special characters are not allowed.
+              </small>
             </div>
           </div>
 
@@ -61,6 +67,16 @@
               class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all placeholder-gray-400"
               placeholder="Enter middle name"
             />
+            <div
+              *ngIf="adminForm.get('middle_name')?.touched && adminForm.get('middle_name')?.errors"
+            >
+              <small
+                *ngIf="adminForm.get('middle_name')?.errors?.['lettersOnly']"
+                class="text-red-500"
+              >
+                Numbers and special characters are not allowed.
+              </small>
+            </div>
           </div>
 
           <!-- Last Name -->
@@ -80,6 +96,12 @@
                 class="text-red-500"
               >
                 Only spaces are not allowed.
+              </small>
+              <small
+                *ngIf="adminForm.get('last_name')?.errors?.['lettersOnly']"
+                class="text-red-500"
+              >
+                Numbers and special characters are not allowed.
               </small>
             </div>
           </div>

@@ -38,9 +38,9 @@ export class CreateBranchAdminForm implements OnInit {
         [this.usernameDuplicateValidator()],
       ],
       password: ['', [Validators.required, this.noWhitespaceValidator]],
-      first_name: ['', this.noWhitespaceValidator],
-      middle_name: [''],
-      last_name: ['', this.noWhitespaceValidator],
+      first_name: ['', [this.noWhitespaceValidator,this.lettersOnlyValidator]],
+      middle_name: ['',this.lettersOnlyValidator],
+      last_name: ['', [this.noWhitespaceValidator,this.lettersOnlyValidator]],
       email: [
         '',
         [Validators.required, Validators.email, this.noWhitespaceValidator],
@@ -52,6 +52,14 @@ export class CreateBranchAdminForm implements OnInit {
   }
   ngOnInit(): void {
     console.log(this.branchName);
+  }
+
+  lettersOnlyValidator(control: AbstractControl) {
+    if (control.value && /[^a-zA-Z\s]/.test(control.value)) {
+      // if there is anything other than letters and spaces
+      return { lettersOnly: true };
+    }
+    return null;
   }
 
   ngOnChanges(): void {

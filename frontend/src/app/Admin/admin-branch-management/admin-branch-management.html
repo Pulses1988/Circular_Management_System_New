@@ -43,6 +43,9 @@
           <div *ngIf="branchForm.get('name')?.errors?.['minlength']">
             Minimum 3 characters required.
           </div>
+          <div *ngIf="branchForm.get('name')?.errors?.['numbersNotAllowed']">
+            Branch name cannot contain numbers.
+          </div>
         </div>
       </div>
 
@@ -54,6 +57,14 @@
           class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           placeholder="Enter address"
         />
+        <div
+          *ngIf="branchForm.get('address')?.touched && branchForm.get('address')?.invalid"
+          class="text-red-500 text-sm mt-1"
+        >
+          <div *ngIf="branchForm.get('address')?.errors?.['numbersOnlyNotAllowed']">
+            Address cannot be numbers only.
+          </div>
+        </div>
       </div>
       <div>
         <label class="block text-sm font-medium mb-2 text-gray-700">Head Office</label>

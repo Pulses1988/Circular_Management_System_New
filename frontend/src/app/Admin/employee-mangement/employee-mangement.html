@@ -161,6 +161,9 @@
           <div *ngIf="employeeForm.get('employee_id')?.errors?.['required']">
             Employee ID is required.
           </div>
+          <div *ngIf="employeeForm.get('employee_id')?.errors?.['employeeIdTaken']">
+            Employee ID is already exist.
+          </div>
           <div
             *ngIf="employeeForm.get('employee_id')?.errors?.['pattern']"
             class="text-red-500 text-sm mt-1"
@@ -217,6 +220,9 @@
         >
           <div *ngIf="employeeForm.get('email')?.errors?.['required']">Email is required.</div>
           <div *ngIf="employeeForm.get('email')?.errors?.['pattern']">Enter Valid Email.</div>
+          <div *ngIf="employeeForm.get('email')?.errors?.['emailTaken']">
+            Email is already exists.
+          </div>
         </div>
       </div>
 
@@ -233,6 +239,9 @@
           class="text-red-500 text-sm mt-1"
         >
           <div *ngIf="employeeForm.get('phone_no')?.errors?.['pattern']">Enter only numbers.</div>
+          <div *ngIf="employeeForm.get('phone_no')?.errors?.['phoneNoTaken']">
+            phone number is exists
+          </div>
           <span *ngIf="employeeForm.get('phone_no')?.errors?.['maxlength']">
             Phone number cannot be more than 10 digits.
           </span>
@@ -335,6 +344,37 @@
       </button>
     </div>
   </form>
+
+
+  <!-- Search and Filter Section -->
+<div class="bg-white p-4 rounded-lg shadow-md mb-6">
+  <div class="flex flex-col md:flex-row gap-4">
+    <!-- Search Input -->
+    <div class="flex-1">
+      <label class="block text-sm font-medium mb-2 text-gray-700">Search by Name or Employee ID</label>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="applyFilters()"
+        class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        placeholder="Enter name or employee ID..."
+      />
+    </div>
+
+    <!-- Department Filter -->
+    <div class="flex-1">
+      <label class="block text-sm font-medium mb-2 text-gray-700">Filter by Department</label>
+      <select
+        [(ngModel)]="selectedDepartment"
+        (change)="applyFilters()"
+        class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      >
+        <option value="all">All Departments</option>
+        <option *ngFor="let dept of departments" [value]="dept.id">{{ dept.name }}</option>
+      </select>
+    </div>
+  </div>
+</div>
 
   <!-- Employee Table -->
   <div class="bg-white rounded-lg shadow-md overflow-hidden">
