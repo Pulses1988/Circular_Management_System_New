@@ -1,0 +1,415 @@
+// Employee Sidebar Styles
+.employee-sidebar {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+// Custom scrollbar for navigation
+nav {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+  
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+    
+    &:hover {
+      background: #94a3b8;
+    }
+  }
+}
+
+// Active navigation item styles
+.router-link-active {
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 60%;
+    background: linear-gradient(to bottom, #3b82f6, #6366f1);
+    border-radius: 2px;
+  }
+  
+  mat-icon {
+    transform: scale(1.1);
+    transition: transform 0.3s ease;
+  }
+}
+
+// Hover animations for navigation items
+.nav-item {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+  
+  &:hover::after {
+    left: 100%;
+  }
+}
+
+// Badge animations
+.badge-pulse {
+  animation: badgePulse 2s infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+// Mobile overlay backdrop blur
+.mobile-backdrop {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+// Sidebar collapse/expand animation
+.sidebar-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// User avatar hover effect
+.user-avatar {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+  }
+}
+
+// Quick stats cards
+.stats-card {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Logout button hover effect
+.logout-btn {
+  position: relative;
+  transition: all 0.3s ease;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: linear-gradient(45deg, #ef4444, #dc2626);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  &:hover::before {
+    opacity: 0.1;
+  }
+  
+  &:hover mat-icon {
+    animation: shake 0.5s ease-in-out;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { 
+    transform: translateX(0); 
+  }
+  25% { 
+    transform: translateX(-2px); 
+  }
+  75% { 
+    transform: translateX(2px); 
+  }
+}
+
+// Mobile sidebar slide animation
+.mobile-sidebar {
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &.open {
+    transform: translateX(0);
+  }
+}
+
+// Submenu expand animation
+.submenu {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+  
+  &.expanded {
+    max-height: 300px;
+  }
+}
+
+// Loading shimmer for badges
+.badge-loading {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { 
+    background-position: -200% 0; 
+  }
+  100% { 
+    background-position: 200% 0; 
+  }
+}
+
+// Focus states for accessibility
+.nav-item:focus,
+.logout-btn:focus,
+.sidebar-button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+// Gradient text effects
+.gradient-text {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+// Glass morphism effect
+.glass-effect {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+// Smooth shadow transitions
+.shadow-transition {
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  
+  &:hover {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+}
+
+// Pulse animation for notifications
+.notification-pulse {
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 12px;
+    height: 12px;
+    background: #ef4444;
+    border-radius: 50%;
+    animation: ping 1.5s ease-in-out infinite both;
+  }
+}
+
+@keyframes ping {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  80%, 100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+// Slide in animation for mobile menu
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutLeft {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+// Ripple effect for buttons
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+  
+  &:active::after {
+    width: 300px;
+    height: 300px;
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .sidebar-dark {
+    background: rgba(17, 24, 39, 0.95);
+    color: #f9fafb;
+    border-right-color: rgba(55, 65, 81, 0.5);
+    
+    .nav-item {
+      &:hover {
+        background: rgba(55, 65, 81, 0.5);
+      }
+      
+      &.router-link-active {
+        background: linear-gradient(to right, rgba(59, 130, 246, 0.2), rgba(99, 102, 241, 0.2));
+        
+        &::before {
+          background: linear-gradient(to bottom, #60a5fa, #818cf8);
+        }
+      }
+    }
+    
+    .stats-card {
+      background: rgba(31, 41, 55, 0.8);
+      border-color: rgba(55, 65, 81, 0.5);
+      
+      &:hover {
+        background: rgba(31, 41, 55, 1);
+      }
+    }
+    
+    .glass-effect {
+      background: rgba(17, 24, 39, 0.95);
+      border-color: rgba(55, 65, 81, 0.3);
+    }
+    
+    // Custom scrollbar for dark mode
+    nav {
+      scrollbar-color: #4b5563 #1f2937;
+      
+      &::-webkit-scrollbar-track {
+        background: #1f2937;
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background: #4b5563;
+        
+        &:hover {
+          background: #6b7280;
+        }
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .mobile-sidebar {
+    width: 85vw;
+    max-width: 320px;
+  }
+  
+  .nav-item {
+    padding: 12px 16px;
+    
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .nav-item {
+    border: 1px solid transparent;
+    
+    &:hover {
+      border-color: currentColor;
+    }
+  }
+  
+  .router-link-active {
+    border-color: #3b82f6;
+    border-width: 2px;
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .nav-item::after,
+  .logout-btn:hover mat-icon,
+  .badge-pulse,
+  .notification-pulse::after {
+    animation: none;
+  }
+}
+
+// Print styles
+@media print {
+  .employee-sidebar {
+    display: none;
+  }
+}
