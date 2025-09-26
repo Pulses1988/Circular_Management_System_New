@@ -159,7 +159,7 @@ export class EmployeeService {
   }
 
   // Helper method to check if running in browser
-  private isBrowser(): boolean {
+  isBrowser(): boolean {
      return typeof window !== 'undefined' && typeof localStorage !== 'undefined';
   }
 

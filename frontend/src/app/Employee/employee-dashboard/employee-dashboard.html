@@ -6,16 +6,23 @@
   <!-- Main Content -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Welcome Section -->
+     @if (employeeData) {
     <div class="mb-8">
-      <h2 class="text-3xl font-bold text-gray-900 mb-2">Welcome back, {{ employeeData?.first_name}} ..!</h2>
+      <h2 class="text-3xl font-bold text-gray-900 mb-2">Welcome back, {{ employeeData!.first_name}} ..!</h2>
       <div class="text-gray-600 flex items-center space-x-4">
-        @if(employeeData?.department_name){
-        <span class="flex items-center"><mat-icon class="text-sm mr-1">business</mat-icon>{{ employeeData?.department_name }}</span>
+        @if(employeeData!.department_name){
+        <span class="flex items-center"><mat-icon class="text-sm mr-1">business</mat-icon>{{ employeeData!.department_name }}</span>
         }
-        <span class="flex items-center"><mat-icon class="text-sm mr-1">location_on</mat-icon>{{ employeeData?.head_office_name || employeeData.branch_name }}</span>
-        <span class="flex items-center"><mat-icon class="text-sm mr-1">badge</mat-icon>{{ employeeData?.employee_id }}</span>
+        @if (employeeData.head_office_name) {
+        <span class="flex items-center"><mat-icon class="text-sm mr-1">location_on</mat-icon>{{employeeData!.head_office_name}}</span>
+        }@else {
+        <span class="flex items-center"><mat-icon class="text-sm mr-1">location_on</mat-icon>{{employeeData!.branch_name}}</span>
+
+        }
+        <span class="flex items-center"><mat-icon class="text-sm mr-1">badge</mat-icon>{{ employeeData!.employee_id }}</span>
       </div>
     </div>
+  }
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
