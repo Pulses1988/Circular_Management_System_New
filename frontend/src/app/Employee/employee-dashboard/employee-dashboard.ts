@@ -152,8 +152,7 @@ export class EmployeeDashboard {
 
   loadEmployeeData() {
     // Load employee data from service
-    this.employeeData=this.employeeService.getCurrentEmployee()
-    console.log('Loading employee dashboard data...',this.employeeData);
+    this.employeeData=this.employeeService.getCurrentEmployee();
   }
 
   getPriorityColor(priority: string): string {

@@ -37,19 +37,7 @@ export class Navbar {
     urgent: 3
   };
 
-  employeeData: EmployeeData = {
-  id: 0,
-  first_name: '',
-  last_name: '',
-  role_name: '',
-  department_name: null,
-  branch_name: null,
-  head_office_name: null,
-  employee_id: '',
-  can_approve_circular: 0,
-  can_create_circular: 0,
-  bank_name: ''
-};
+  employeeData!: EmployeeData
 
   constructor(private employeService:EmployeeService){}
 
