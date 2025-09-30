@@ -182,8 +182,13 @@ export class EmployeeService {
     return employee?.can_approve_circular || false;
   }
 
-  // get approver Employee
+  // --------------------------get approver Employee-----------------------------------
   getApprovers() {
     return this.http.get(`${this.apiUrl}/api/employees/approvers`, { headers: this.getHeaders() });
+  }
+
+  // --------------------------get repeat cycle data-----------------------------------
+  getReapetCycleData() {
+    return this.http.get(`${this.apiUrl}/api/repeat-cycle/`, { headers: this.getHeaders() });
   }
 }

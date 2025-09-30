@@ -127,6 +127,18 @@ export class CreateCircular {
   }
 
   ngOnInit(): void {
+    this.initializeForm();
+    this.loadEmployeeData();
+    this.loadData();
+    this.setupAutoSave();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private loadEmployeeData(): void {
     const encryptedUser = localStorage.getItem('emp_user');
     if (encryptedUser) {
       const decryptedUser = this.decryptData(encryptedUser);
@@ -140,15 +152,6 @@ export class CreateCircular {
         originator_id: this.employee.id, // hidden
       });
     }
-
-    this.loadData();
-    // this.generateReferenceCode();
-    this.setupAutoSave();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   private initializeForm(): void {
@@ -208,8 +211,14 @@ export class CreateCircular {
   private loadData(): void {
     // get source type
     this.circularService.getSourceTypes().subscribe((data) => {
-      console.log(data);
       this.sourceTypes = data as SourceType[];
+
+      // Set default value if editing existing circular
+      if (this.circularForm.value.source_type_id) {
+        this.circularForm.patchValue({
+          source_type_id: this.circularForm.value.source_type_id,
+        });
+      }
     });
 
     // get circular
@@ -224,6 +233,8 @@ export class CreateCircular {
       this.availableApprovers = data as Approver[];
     });
 
+    
+
     // this.loadSourceTypes();
     this.loadDepartments();
   }
@@ -237,18 +248,6 @@ export class CreateCircular {
       { id: 5, name: 'Marketing' },
     ];
   }
-
-  // Reference code generation
-  // generateReferenceCode(): void {
-  //   const year = new Date().getFullYear();
-  //   const month = String(new Date().getMonth() + 1).padStart(2, '0');
-  //   const random = Math.floor(Math.random() * 1000)
-  //     .toString()
-  //     .padStart(3, '0');
-  //   const code = `CIR/${year}/${month}/${random}`;
-
-  //   this.circularForm.patchValue({ reference_code: code });
-  // }
 
   // File management
   onFileSelect(event: Event): void {
@@ -296,9 +295,9 @@ export class CreateCircular {
     document.execCommand(command, false);
   }
 
-  onContentChange(event: Event): void {
+  onContentChange(event: Event) {
     const content = (event.target as HTMLElement).innerHTML;
-    this.circularForm.patchValue({ content }, { emitEvent: false });
+    this.circularForm.get('content')?.setValue(content, { emitEvent: false });
   }
 
   onPaste(event: ClipboardEvent): void {
@@ -352,6 +351,23 @@ export class CreateCircular {
         break;
     }
     this.assistantExpanded = false;
+  }
+
+  private clearForm(): void {
+    // Reset the main form and its state
+    this.circularForm.reset();
+
+    // Clear file attachment
+    this.attachedFile = null;
+
+    // Clear selected approvers
+    this.selectedApprovers = [];
+
+    // Reset specific fields to initial values if needed
+    this.circularForm.patchValue({
+      confidentiality: 'INTERNAL',
+      // Add other fields you want to reset to default values
+    });
   }
 
   private applyTemplate(): void {
@@ -476,6 +492,10 @@ export class CreateCircular {
         this.isProcessing = false;
         const message = status === 'DRAFT' ? 'Draft saved!' : 'Submitted for approval!';
         this.snackBar.open(message, 'Close', { duration: 3000 });
+
+        this.clearForm();
+
+        this.loadEmployeeData();
 
         if (status === 'PENDING_APPROVAL') {
           setTimeout(() => {
