@@ -193,3 +193,22 @@ exports.getEmployeesByBranch = (branchId) => {
     [branchId]
   );
 };
+
+// Get employees who have approve authority
+exports.getApprovers = () => {
+  return db.query(`
+    SELECT e.id, e.employee_id, e.first_name, e.middle_name, e.last_name,
+           e.phone_no, e.email, e.can_create_circular, e.can_approve_circular, e.created_at,
+           r.name AS role_name,
+           d.name AS department_name,
+           b.name AS branch_name,
+           ho.name AS head_office_name
+    FROM employees e
+    LEFT JOIN roles r ON e.role_id = r.id
+    LEFT JOIN departments d ON e.department_id = d.id
+    LEFT JOIN branches b ON e.branch_id = b.id
+    LEFT JOIN head_office ho ON e.head_office_id = ho.id
+    WHERE e.can_approve_circular = TRUE
+    ORDER BY e.created_at DESC
+  `);
+};

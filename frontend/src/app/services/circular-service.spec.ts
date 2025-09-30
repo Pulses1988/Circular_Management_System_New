@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { Employee } from './employee';
+import { CircularService } from './circular-service';
 
-describe('Employee', () => {
-  let service: Employee;
+describe('CircularService', () => {
+  let service: CircularService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(Employee);
+    service = TestBed.inject(CircularService);
   });
 
   it('should be created', () => {

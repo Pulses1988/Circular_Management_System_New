@@ -1,5 +1,11 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { EmployeeService } from '../../services/employee-service';
 import { Router } from '@angular/router';
@@ -7,11 +13,25 @@ import { MatIcon } from '@angular/material/icon';
 import { CommonModule, TitleCasePipe } from '@angular/common';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
+import { CircularService } from '../../services/circular-service';
 
-interface Circular {
+export interface Circular {
   id: number;
   title: string;
-  reference_code: string;
+  content: string | null;
+  circular_code: string;
+  circular_pdf: Buffer | null; // PDF as blob/buffer
+  creator_employee_id: number;
+  creator_name: string;
+  reference_circular_id: number | null;
+  source_type_id: number;
+  source_type: string;
+  effective_from: string; // ISO date string
+  created_at: string; // ISO date string
+  published_at: string | null; // ISO date string or null
+  send_type: 'INTERNAL' | 'CONFIDENTIAL' | 'RESTRICTED' | 'PUBLIC';
+  status: 'DRAFT' | 'PENDING_APPROVAL' | 'REJECTED' | 'APPROVED' | 'PUBLISHED' | 'ARCHIVED';
+  repeat_cycle: 'ONE_TIME' | 'WEEKLY' | 'QUARTERLY' | 'ANNUALLY';
 }
 
 interface SourceType {
@@ -24,10 +44,21 @@ interface Department {
   name: string;
 }
 
-interface Reviewer {
+export interface Approver {
   id: number;
-  name: string;
-  department: string;
+  employee_id: string;
+  first_name: string;
+  middle_name: string | null;
+  last_name: string;
+  phone_no: string | null;
+  email: string;
+  role_name: string | null;
+  department_name: string | null;
+  branch_name: string | null;
+  head_office_name: string | null;
+  can_create_circular: 0 | 1; // MySQL tinyint returns as number
+  can_approve_circular: 0 | 1;
+  created_at: string; // ISO timestamp
 }
 
 interface AttachedFile {
@@ -39,47 +70,79 @@ interface AttachedFile {
 
 @Component({
   selector: 'app-create-circular',
-  imports: [MatIcon,FormsModule,CommonModule,ReactiveFormsModule],
+  imports: [MatIcon, FormsModule, CommonModule, ReactiveFormsModule],
   templateUrl: './create-circular.html',
-  styleUrl: './create-circular.scss'
+  styleUrl: './create-circular.scss',
 })
 export class CreateCircular {
-private destroy$ = new Subject<void>();
-  
+  private destroy$ = new Subject<void>();
+
   circularForm!: FormGroup;
   isDarkMode = false;
   isProcessing = false;
   lastSaved: Date | null = null;
   assistantExpanded = false;
-  
-  attachedFiles: AttachedFile[] = [];
-  selectedReviewers: number[] = [];
-  
+  employee: any;
+
+  attachedFile: AttachedFile | null = null;
+  selectedApprovers: number[] = [];
+
   // Data arrays
   previousCirculars: Circular[] = [];
   sourceTypes: SourceType[] = [];
   departments: Department[] = [];
-  availableReviewers: Reviewer[] = [];
-  
+  availableApprovers: Approver[] = [];
+
   confidentialityLevels = [
-    { value: 'public', label: 'Public', description: 'Available to all employees' },
-    { value: 'internal', label: 'Internal', description: 'Restricted to internal staff' },
-    { value: 'confidential', label: 'Confidential', description: 'Limited access only' },
-    { value: 'restricted', label: 'Restricted', description: 'Highly sensitive information' }
+    { value: 'PUBLIC', label: 'Public', description: 'Available to all employees' },
+    { value: 'INTERNAL', label: 'Internal', description: 'Restricted to internal staff' },
+    { value: 'CONFIDENTIAL', label: 'Confidential', description: 'Limited access only' },
+    { value: 'RESTRICTED', label: 'Restricted', description: 'Highly sensitive information' },
+  ];
+
+  repeatCycles = [
+    { value: 'ONE_TIME', label: 'One Time' },
+    { value: 'WEEKLY', label: 'Weekly' },
+    { value: 'QUARTERLY', label: 'Quarterly' },
+    { value: 'ANNUALLY', label: 'Annually' },
   ];
 
   constructor(
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
-    private router: Router
+    private router: Router,
+    private circularService: CircularService,
+    private employeeService: EmployeeService
   ) {
     this.initializeForm();
     this.detectSystemTheme();
   }
 
+  private decryptData(encryptedData: string): string {
+    try {
+      return decodeURIComponent(atob(encryptedData));
+    } catch (error) {
+      return '';
+    }
+  }
+
   ngOnInit(): void {
+    const encryptedUser = localStorage.getItem('emp_user');
+    if (encryptedUser) {
+      const decryptedUser = this.decryptData(encryptedUser);
+      this.employee = JSON.parse(decryptedUser);
+      console.log('Logged in employee:', this.employee);
+
+      const fullName = `${this.employee.first_name} ${this.employee.last_name}`.trim();
+
+      this.circularForm.patchValue({
+        originator: fullName, // visible
+        originator_id: this.employee.id, // hidden
+      });
+    }
+
     this.loadData();
-    this.generateReferenceCode();
+    // this.generateReferenceCode();
     this.setupAutoSave();
   }
 
@@ -91,35 +154,33 @@ private destroy$ = new Subject<void>();
   private initializeForm(): void {
     this.circularForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(3)]],
-      reference_code: ['', Validators.required],
+      circular_code: ['', Validators.required],
       previous_circular_id: [''],
       source_type_id: ['', Validators.required],
-      originator_department_id: ['', Validators.required],
       originator: ['', Validators.required],
-      confidentiality: ['internal', Validators.required],
+      originator_id: [''],
+      confidentiality: ['INTERNAL', Validators.required],
       effective_from: ['', Validators.required],
-      content: ['', [Validators.required, Validators.minLength(10)]]
+      repeat_cycle: ['', Validators.required],
+      content: ['', [Validators.required, Validators.minLength(10)]],
     });
   }
 
   private detectSystemTheme(): void {
     if (typeof window !== 'undefined') {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    this.isDarkMode = mediaQuery.matches;
-    
-    // Listen for system theme changes
-    mediaQuery.addEventListener('change', (e) => {
-      this.isDarkMode = e.matches;
-    });
-  }
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      this.isDarkMode = mediaQuery.matches;
+
+      // Listen for system theme changes
+      mediaQuery.addEventListener('change', (e) => {
+        this.isDarkMode = e.matches;
+      });
+    }
   }
 
   private setupAutoSave(): void {
     this.circularForm.valueChanges
-      .pipe(
-        debounceTime(3000),
-        takeUntil(this.destroy$)
-      )
+      .pipe(debounceTime(3000), takeUntil(this.destroy$))
       .subscribe(() => {
         if (this.circularForm.valid) {
           this.autoSave();
@@ -145,28 +206,26 @@ private destroy$ = new Subject<void>();
 
   // Data loading
   private loadData(): void {
-    this.loadPreviousCirculars();
-    this.loadSourceTypes();
+    // get source type
+    this.circularService.getSourceTypes().subscribe((data) => {
+      console.log(data);
+      this.sourceTypes = data as SourceType[];
+    });
+
+    // get circular
+    this.circularService.getAllCircular().subscribe((data) => {
+      console.log(data);
+      this.previousCirculars = data as Circular[];
+    });
+
+    // get Approvers
+    this.employeeService.getApprovers().subscribe((data) => {
+      console.log(data);
+      this.availableApprovers = data as Approver[];
+    });
+
+    // this.loadSourceTypes();
     this.loadDepartments();
-    this.loadReviewers();
-  }
-
-  private loadPreviousCirculars(): void {
-    // Mock data - replace with actual service call
-    this.previousCirculars = [
-      { id: 1, title: 'Holiday Notice 2024', reference_code: 'CIR/2024/001' },
-      { id: 2, title: 'Policy Update', reference_code: 'CIR/2024/002' },
-      { id: 3, title: 'New Procedures', reference_code: 'CIR/2024/003' }
-    ];
-  }
-
-  private loadSourceTypes(): void {
-    this.sourceTypes = [
-      { id: 1, name: 'Head Office' },
-      { id: 2, name: 'Branch Office' },
-      { id: 3, name: 'Department' },
-      { id: 4, name: 'External' }
-    ];
   }
 
   private loadDepartments(): void {
@@ -175,59 +234,53 @@ private destroy$ = new Subject<void>();
       { id: 2, name: 'Information Technology' },
       { id: 3, name: 'Finance' },
       { id: 4, name: 'Operations' },
-      { id: 5, name: 'Marketing' }
-    ];
-  }
-
-  private loadReviewers(): void {
-    this.availableReviewers = [
-      { id: 1, name: 'John Smith', department: 'Human Resources' },
-      { id: 2, name: 'Sarah Johnson', department: 'Finance' },
-      { id: 3, name: 'Mike Davis', department: 'Operations' },
-      { id: 4, name: 'Emily Brown', department: 'IT' },
-      { id: 5, name: 'David Wilson', department: 'Marketing' }
+      { id: 5, name: 'Marketing' },
     ];
   }
 
   // Reference code generation
-  generateReferenceCode(): void {
-    const year = new Date().getFullYear();
-    const month = String(new Date().getMonth() + 1).padStart(2, '0');
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    const code = `CIR/${year}/${month}/${random}`;
-    
-    this.circularForm.patchValue({ reference_code: code });
-  }
+  // generateReferenceCode(): void {
+  //   const year = new Date().getFullYear();
+  //   const month = String(new Date().getMonth() + 1).padStart(2, '0');
+  //   const random = Math.floor(Math.random() * 1000)
+  //     .toString()
+  //     .padStart(3, '0');
+  //   const code = `CIR/${year}/${month}/${random}`;
+
+  //   this.circularForm.patchValue({ reference_code: code });
+  // }
 
   // File management
   onFileSelect(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const files = Array.from(input.files || []);
-    
-    files.forEach(file => {
+    const file = input.files ? input.files[0] : null; // Get only the first file
+
+    if (file) {
       if (file.size > 10 * 1024 * 1024) {
         this.snackBar.open(`File ${file.name} is too large (max 10MB)`, 'Close', {
           duration: 3000,
-          panelClass: ['error-snackbar']
+          panelClass: ['error-snackbar'],
         });
+        input.value = ''; // Clear the input so the same file can be selected again
         return;
       }
-      
-      const attachedFile: AttachedFile = {
-        id: this.generateId(),
+
+      this.attachedFile = {
+        id: this.generateId(), // Still useful for tracking if needed
         name: file.name,
         size: file.size,
-        file: file
+        file: file,
       };
-      
-      this.attachedFiles.push(attachedFile);
-    });
-    
-    input.value = '';
+    } else {
+      this.attachedFile = null; // Clear if no file is selected
+    }
+
+    input.value = ''; // Clear the input value to allow re-selection of the same file
   }
 
-  removeFile(fileId: string): void {
-    this.attachedFiles = this.attachedFiles.filter(f => f.id !== fileId);
+  removeFile(): void {
+    // Simply set the attachedFile to null to remove it
+    this.attachedFile = null;
   }
 
   truncateFileName(name: string): string {
@@ -260,25 +313,25 @@ private destroy$ = new Subject<void>();
   }
 
   // Reviewer management
-  toggleReviewer(reviewerId: number, event: Event): void {
+  toggleApprover(approverId: number, event: Event): void {
     const checked = (event.target as HTMLInputElement).checked;
-    
+
     if (checked) {
-      if (!this.selectedReviewers.includes(reviewerId)) {
-        this.selectedReviewers.push(reviewerId);
+      if (!this.selectedApprovers.includes(approverId)) {
+        this.selectedApprovers.push(approverId);
       }
     } else {
-      this.selectedReviewers = this.selectedReviewers.filter(id => id !== reviewerId);
+      this.selectedApprovers = this.selectedApprovers.filter((id) => id !== approverId);
     }
   }
 
-  removeReviewer(reviewerId: number): void {
-    this.selectedReviewers = this.selectedReviewers.filter(id => id !== reviewerId);
+  removeApprover(approverId: number): void {
+    this.selectedApprovers = this.selectedApprovers.filter((id) => id !== approverId);
   }
 
-  getReviewerName(reviewerId: number): string {
-    const reviewer = this.availableReviewers.find(r => r.id === reviewerId);
-    return reviewer ? reviewer.name : '';
+  getApproverName(approverId: number): string {
+    const approver = this.availableApprovers.find((r) => r.id === approverId);
+    return approver ? approver.first_name : '';
   }
 
   // Smart assistant
@@ -319,7 +372,7 @@ private destroy$ = new Subject<void>();
       <br>
       <p>Best regards,<br>[Your name]</p>
     `;
-    
+
     this.circularForm.patchValue({ content: template });
     this.snackBar.open('Template applied successfully', 'Close', { duration: 2000 });
   }
@@ -338,15 +391,15 @@ private destroy$ = new Subject<void>();
     // Implement actual auto-save logic here
   }
 
-  saveDraft(): void {
-    if (this.circularForm.value.title || this.circularForm.value.content) {
-      this.lastSaved = new Date();
-      this.snackBar.open('Draft saved successfully', 'Close', {
-        duration: 2000,
-        panelClass: ['success-snackbar']
-      });
-    }
-  }
+  // saveDraft(): void {
+  //   if (this.circularForm.value.title || this.circularForm.value.content) {
+  //     this.lastSaved = new Date();
+  //     this.snackBar.open('Draft saved successfully', 'Close', {
+  //       duration: 2000,
+  //       panelClass: ['success-snackbar'],
+  //     });
+  //   }
+  // }
 
   previewCircular(): void {
     this.snackBar.open('Preview feature coming soon', 'Close', { duration: 2000 });
@@ -355,34 +408,91 @@ private destroy$ = new Subject<void>();
   discardDraft(): void {
     if (confirm('Are you sure you want to discard this draft? All changes will be lost.')) {
       this.circularForm.reset();
-      this.attachedFiles = [];
-      this.selectedReviewers = [];
+      // this.attachedFiles = [];
+      this.selectedApprovers = [];
       this.router.navigate(['/employee-dashboard']);
     }
   }
 
-  submitCircular(): void {
-    if (this.circularForm.valid && this.selectedReviewers.length > 0) {
-      this.isProcessing = true;
-      
-      // Simulate submission
-      setTimeout(() => {
-        this.isProcessing = false;
-        this.snackBar.open('Circular submitted successfully!', 'Close', {
+  submitCircular(status: 'DRAFT' | 'PENDING_APPROVAL'): void {
+    // For DRAFT - only check title and circular code
+    if (status === 'DRAFT') {
+      if (!this.circularForm.value.title || !this.circularForm.value.circular_code) {
+        this.snackBar.open('Title and Circular Code are required to save draft', 'Close', {
           duration: 3000,
-          panelClass: ['success-snackbar']
+          panelClass: ['error-snackbar'],
         });
-        
-        setTimeout(() => {
-          this.router.navigate(['/employee-dashboard']);
-        }, 1500);
-      }, 2000);
-    } else {
-      this.snackBar.open('Please fill all required fields and select reviewers', 'Close', {
-        duration: 3000,
-        panelClass: ['error-snackbar']
-      });
+        return;
+      }
     }
+
+    // For APPROVAL - check everything
+    if (status === 'PENDING_APPROVAL') {
+      if (this.circularForm.invalid) {
+        this.circularForm.markAllAsTouched();
+        return;
+      }
+      if (!this.attachedFile) {
+        this.snackBar.open('PDF file is required', 'Close', {
+          duration: 3000,
+          panelClass: ['error-snackbar'],
+        });
+        return;
+      }
+      if (this.selectedApprovers.length === 0) {
+        this.snackBar.open('Please select at least one approver', 'Close', {
+          duration: 3000,
+          panelClass: ['error-snackbar'],
+        });
+        return;
+      }
+    }
+
+    this.isProcessing = true;
+
+    // Your existing formData code here...
+    const formData = new FormData();
+    formData.append('title', this.circularForm.value.title || '');
+    formData.append('content', this.circularForm.value.content || '');
+    formData.append('source_type_id', this.circularForm.value.source_type_id || '');
+    formData.append('creator_employee_id', this.circularForm.value.originator_id || '');
+    formData.append('circular_code', this.circularForm.value.circular_code);
+    formData.append('send_type', this.circularForm.value.confidentiality);
+    formData.append('effective_from', this.circularForm.value.effective_from || '');
+    formData.append('repeat_cycle', this.circularForm.value.repeat_cycle);
+    formData.append('status', status);
+    formData.append('reference_circular_id', this.circularForm.value.previous_circular_id || '');
+
+    if (this.attachedFile) {
+      formData.append('pdfFile', this.attachedFile.file, this.attachedFile.name);
+    }
+
+    if (status === 'PENDING_APPROVAL') {
+      formData.append('approvers', JSON.stringify(this.selectedApprovers));
+    }
+
+    this.circularService.uploadCircular(formData).subscribe({
+      next: (res) => {
+        this.isProcessing = false;
+        const message = status === 'DRAFT' ? 'Draft saved!' : 'Submitted for approval!';
+        this.snackBar.open(message, 'Close', { duration: 3000 });
+
+        if (status === 'PENDING_APPROVAL') {
+          setTimeout(() => {
+            this.router.navigate(['/employee-dashboard']);
+          }, 1500);
+        }
+      },
+      error: (err) => {
+        this.isProcessing = false;
+        this.snackBar.open('Failed to submit circular', 'Close', { duration: 3000 });
+      },
+    });
+  }
+
+  // Add this simple method to check if draft can be saved
+  canSaveDraft(): boolean {
+    return !!(this.circularForm.value.title && this.circularForm.value.circular_code);
   }
 
   // Utility functions
@@ -394,15 +504,14 @@ private destroy$ = new Subject<void>();
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
-    
+
     if (diffMins < 1) return 'just now';
     if (diffMins < 60) return `${diffMins}m ago`;
-    
+
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `${diffHours}h ago`;
-    
+
     const diffDays = Math.floor(diffHours / 24);
     return `${diffDays}d ago`;
   }
-
 }

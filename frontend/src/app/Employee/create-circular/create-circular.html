@@ -1,357 +1,375 @@
 <div class="create-circular-wrapper" [class.dark-mode]="isDarkMode">
-      <!-- Compact Header -->
-      <div class="header">
-        <div class="header-content">
-          <div class="header-left">
-            <button class="back-btn" (click)="goBack()" title="Go back">
-              <mat-icon>arrow_back</mat-icon>
-            </button>
-            <div class="title-info">
-              <h1>Create Circular</h1>
-              <div class="breadcrumb">
-                <span>Dashboard</span>
-                <mat-icon>chevron_right</mat-icon>
-                <span>New Circular</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="header-actions">
-            <div class="auto-save" *ngIf="lastSaved">
-              <mat-icon class="save-icon">cloud_done</mat-icon>
-              <span>Saved {{ getTimeAgo(lastSaved) }}</span>
-            </div>
-            <button class="theme-btn" (click)="toggleTheme()" [title]="isDarkMode ? 'Light mode' : 'Dark mode'">
-              <mat-icon>{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Main Form -->
-      <div class="form-container">
-        <form [formGroup]="circularForm" class="circular-form">
-          
-          <!-- Basic Information Row -->
-          <div class="form-section">
-            <div class="section-header">
-              <mat-icon>info_outline</mat-icon>
-              <h3>Basic Information</h3>
-            </div>
-            
-            <div class="form-grid">
-              <!-- Title -->
-              <div class="form-field full-width">
-                <label>Title <span class="required">*</span></label>
-                <input 
-                  type="text" 
-                  formControlName="title"
-                  placeholder="Enter circular title..."
-                  [class.error]="isFieldInvalid('title')"
-                  class="form-input"
-                />
-                <div class="field-error" *ngIf="isFieldInvalid('title')">
-                  Title is required
-                </div>
-              </div>
-
-              <!-- Reference Code -->
-              <div class="form-field">
-                <label>Reference Code <span class="required">*</span></label>
-                <div class="input-group">
-                  <input 
-                    type="text" 
-                    formControlName="reference_code"
-                    placeholder="Auto-generated"
-                    readonly
-                    class="form-input readonly"
-                  />
-                  <button type="button" class="input-btn" (click)="generateReferenceCode()" title="Generate new code">
-                    <mat-icon>refresh</mat-icon>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Previous Circular Reference -->
-              <div class="form-field">
-                <label>Previous Circular Reference</label>
-                <div class="select-wrapper">
-                  <select formControlName="previous_circular_id" class="form-select">
-                    <option value="">Select previous circular</option>
-                    <option *ngFor="let circular of previousCirculars" [value]="circular.id">
-                      {{ circular.reference_code }} - {{ circular.title }}
-                    </option>
-                  </select>
-                  <mat-icon class="select-icon">expand_more</mat-icon>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Source & Origin Row -->
-          <div class="form-section">
-            <div class="section-header">
-              <mat-icon>source</mat-icon>
-              <h3>Source & Origin</h3>
-            </div>
-            
-            <div class="form-grid">
-              <!-- Source Type -->
-              <div class="form-field">
-                <label>Source Type <span class="required">*</span></label>
-                <div class="select-wrapper">
-                  <select formControlName="source_type_id" class="form-select">
-                    <option value="">Select source type</option>
-                    <option *ngFor="let source of sourceTypes" [value]="source.id">
-                      {{ source.name }}
-                    </option>
-                  </select>
-                  <mat-icon class="select-icon">expand_more</mat-icon>
-                </div>
-              </div>
-
-              <!-- Originator Department -->
-              <div class="form-field">
-                <label>Originator Department <span class="required">*</span></label>
-                <div class="select-wrapper">
-                  <select formControlName="originator_department_id" class="form-select">
-                    <option value="">Select department</option>
-                    <option *ngFor="let dept of departments" [value]="dept.id">
-                      {{ dept.name }}
-                    </option>
-                  </select>
-                  <mat-icon class="select-icon">expand_more</mat-icon>
-                </div>
-              </div>
-
-              <!-- Originator -->
-              <div class="form-field">
-                <label>Originator <span class="required">*</span></label>
-                <input 
-                  type="text" 
-                  formControlName="originator"
-                  placeholder="Enter originator name..."
-                  class="form-input"
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- Security & Timeline Row -->
-          <div class="form-section">
-            <div class="section-header">
-              <mat-icon>security</mat-icon>
-              <h3>Security & Timeline</h3>
-            </div>
-            
-            <div class="form-grid">
-              <!-- Confidentiality -->
-              <div class="form-field">
-                <label>Confidentiality <span class="required">*</span></label>
-                <div class="confidentiality-options">
-                  <label class="radio-option" *ngFor="let level of confidentialityLevels">
-                    <input 
-                      type="radio" 
-                      [value]="level.value" 
-                      formControlName="confidentiality"
-                    />
-                    <div class="radio-custom"></div>
-                    <div class="radio-content">
-                      <span class="radio-title">{{ level.label }}</span>
-                      <span class="radio-desc">{{ level.description }}</span>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <!-- Effective From -->
-              <div class="form-field">
-                <label>Effective From <span class="required">*</span></label>
-                <input 
-                  type="datetime-local" 
-                  formControlName="effective_from"
-                  class="form-input"
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- Content Section -->
-          <div class="form-section">
-            <div class="section-header">
-              <mat-icon>description</mat-icon>
-              <h3>Content</h3>
-            </div>
-            
-            <div class="content-area">
-              <!-- File Attachment (Compact) -->
-              <div class="attachment-section">
-                <label>Attachments</label>
-                <div class="file-upload-compact">
-                  <input 
-                    #fileInput 
-                    type="file" 
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                    multiple
-                    style="display: none"
-                    (change)="onFileSelect($event)"
-                  />
-                  <button type="button" class="upload-btn" (click)="fileInput.click()">
-                    <mat-icon>attach_file</mat-icon>
-                    <span>Attach Files</span>
-                  </button>
-                  
-                  <!-- Attached Files List -->
-                  <div class="attached-files-compact" *ngIf="attachedFiles.length > 0">
-                    <div class="file-chip" *ngFor="let file of attachedFiles; trackBy: trackByFileId">
-                      <mat-icon class="file-icon">description</mat-icon>
-                      <span class="file-name" [title]="file.name">{{ truncateFileName(file.name) }}</span>
-                      <button type="button" class="remove-file" (click)="removeFile(file.id)">
-                        <mat-icon>close</mat-icon>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Body/Text Content -->
-              <div class="form-field full-width">
-                <label>Content <span class="required">*</span></label>
-                <div class="editor-toolbar">
-                  <button type="button" class="toolbar-btn" (click)="formatText('bold')" title="Bold">
-                    <mat-icon>format_bold</mat-icon>
-                  </button>
-                  <button type="button" class="toolbar-btn" (click)="formatText('italic')" title="Italic">
-                    <mat-icon>format_italic</mat-icon>
-                  </button>
-                  <button type="button" class="toolbar-btn" (click)="formatText('underline')" title="Underline">
-                    <mat-icon>format_underlined</mat-icon>
-                  </button>
-                  <div class="toolbar-divider"></div>
-                  <button type="button" class="toolbar-btn" (click)="formatText('insertUnorderedList')" title="Bullet List">
-                    <mat-icon>format_list_bulleted</mat-icon>
-                  </button>
-                  <button type="button" class="toolbar-btn" (click)="formatText('insertOrderedList')" title="Numbered List">
-                    <mat-icon>format_list_numbered</mat-icon>
-                  </button>
-                </div>
-                <div 
-                  class="rich-editor"
-                  contenteditable="true"
-                  (input)="onContentChange($event)"
-                  (paste)="onPaste($event)"
-                  [innerHTML]="circularForm!.get('content')?.value"
-                  #contentEditor
-                ></div>
-                <div class="editor-footer">
-                  <span class="char-count">{{ getContentLength() }} / 5000 characters</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Reviewers Section -->
-          <div class="form-section">
-            <div class="section-header">
-              <mat-icon>group</mat-icon>
-              <h3>Review Process</h3>
-            </div>
-            
-            <div class="reviewers-section">
-              <label>Select Reviewers <span class="required">*</span></label>
-              <div class="reviewers-grid">
-                <div class="reviewer-card" *ngFor="let reviewer of availableReviewers">
-                  <label class="reviewer-checkbox">
-                    <input 
-                      type="checkbox" 
-                      [value]="reviewer.id"
-                      (change)="toggleReviewer(reviewer.id, $event)"
-                    />
-                    <div class="checkbox-custom"></div>
-                    <div class="reviewer-info">
-                      <div class="reviewer-name">{{ reviewer.name }}</div>
-                      <div class="reviewer-dept">{{ reviewer.department }}</div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-              
-              <div class="selected-reviewers" *ngIf="selectedReviewers.length > 0">
-                <h4>Selected Reviewers ({{ selectedReviewers.length }})</h4>
-                <div class="reviewer-chips">
-                  <div class="reviewer-chip" *ngFor="let reviewerId of selectedReviewers">
-                    <span>{{ getReviewerName(reviewerId) }}</span>
-                    <button type="button" (click)="removeReviewer(reviewerId)">
-                      <mat-icon>close</mat-icon>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </form>
-      </div>
-
-      <!-- Action Bar -->
-      <div class="action-bar">
-        <div class="action-content">
-          <div class="action-left">
-            <button type="button" class="action-btn secondary" (click)="saveDraft()">
-              <mat-icon>save</mat-icon>
-              Save Draft
-            </button>
-            <button type="button" class="action-btn secondary" (click)="previewCircular()">
-              <mat-icon>preview</mat-icon>
-              Preview
-            </button>
-          </div>
-          
-          <div class="action-right">
-            <button type="button" class="action-btn danger" (click)="discardDraft()">
-              <mat-icon>delete_outline</mat-icon>
-              Discard
-            </button>
-            <button 
-              type="button" 
-              class="action-btn primary" 
-              (click)="submitCircular()"
-              [disabled]="!circularForm.valid || isProcessing"
-            >
-              <mat-icon *ngIf="!isProcessing">send</mat-icon>
-              <div class="spinner" *ngIf="isProcessing"></div>
-              {{ isProcessing ? 'Submitting...' : 'Submit for Review' }}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Smart Assistant (Floating) -->
-      <div class="smart-assistant" [class.expanded]="assistantExpanded">
-        <button class="assistant-toggle" (click)="toggleAssistant()">
-          <mat-icon>{{ assistantExpanded ? 'close' : 'smart_toy' }}</mat-icon>
+  <!-- Compact Header -->
+  <div class="header">
+    <div class="header-content">
+      <div class="header-left">
+        <button class="back-btn" (click)="goBack()" title="Go back">
+          <mat-icon>arrow_back</mat-icon>
         </button>
+        <div class="title-info">
+          <h1>Create Circular</h1>
+          <div class="breadcrumb">
+            <span>Dashboard</span>
+            <mat-icon>chevron_right</mat-icon>
+            <span>New Circular</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-actions">
         
-        <div class="assistant-content" *ngIf="assistantExpanded">
-          <div class="assistant-header">
-            <mat-icon>smart_toy</mat-icon>
-            <h4>Smart Assistant</h4>
+        <button
+          class="theme-btn"
+          (click)="toggleTheme()"
+          [title]="isDarkMode ? 'Light mode' : 'Dark mode'"
+        >
+          <mat-icon>{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Form -->
+  <div class="form-container">
+    <form [formGroup]="circularForm" class="circular-form">
+      <!-- Basic Information Row -->
+      <div class="form-section">
+        <div class="section-header">
+          <mat-icon>info_outline</mat-icon>
+          <h3>Basic Information</h3>
+        </div>
+
+        <div class="form-grid">
+          <!-- Title -->
+          <div class="form-field full-width">
+            <label>Title <span class="required">*</span></label>
+            <input
+              type="text"
+              formControlName="title"
+              placeholder="Enter circular title..."
+              [class.error]="isFieldInvalid('title')"
+              class="form-input"
+            />
+            <div class="field-error" *ngIf="isFieldInvalid('title')">Title is required</div>
           </div>
-          
-          <div class="assistant-suggestions">
-            <div class="suggestion" (click)="applySuggestion('template')">
-              <mat-icon>description</mat-icon>
-              <span>Use Template</span>
-            </div>
-            <div class="suggestion" (click)="applySuggestion('check')">
-              <mat-icon>spell_check</mat-icon>
-              <span>Grammar Check</span>
-            </div>
-            <div class="suggestion" (click)="applySuggestion('similar')">
-              <mat-icon>find_in_page</mat-icon>
-              <span>Find Similar</span>
+
+          <!-- Reference Code -->
+          <div class="form-field">
+            <label>Circular Code <span class="required">*</span></label>
+            <div class="input">
+              <input
+                type="text"
+                formControlName="circular_code"
+                placeholder="Auto-generated"
+                class="form-input readonly"
+              />
             </div>
           </div>
+
+          <!-- Previous Circular Reference -->
+          <div class="form-field">
+            <label>Previous Circular Reference</label>
+            <div class="select-wrapper">
+              <select formControlName="previous_circular_id" class="form-select">
+                <option value="">Select previous circular</option>
+                <option *ngFor="let circular of previousCirculars" [value]="circular.id">
+                  {{ circular.circular_code }} - {{ circular.title }}
+                </option>
+              </select>
+              <mat-icon class="select-icon">expand_more</mat-icon>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Source & Origin Row -->
+      <div class="form-section">
+        <div class="section-header">
+          <mat-icon>source</mat-icon>
+          <h3>Source & Origin</h3>
+        </div>
+
+        <div class="form-grid">
+          <!-- Source Type -->
+          <div class="form-field">
+            <label>Source Type <span class="required">*</span></label>
+            <div class="select-wrapper">
+              <select formControlName="source_type_id" class="form-select">
+                <option value="">Select source type</option>
+                <option *ngFor="let source of sourceTypes" [value]="source.id">
+                  {{ source.name }}
+                </option>
+              </select>
+              <mat-icon class="select-icon">expand_more</mat-icon>
+            </div>
+          </div>
+
+          <!-- Originator -->
+          <div class="form-field">
+            <label>Originator <span class="required">*</span></label>
+            <input
+              type="text"
+              formControlName="originator"
+              placeholder="Enter originator name..."
+              class="form-input"
+              readonly
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Security & Timeline Row -->
+      <div class="form-section">
+        <div class="section-header">
+          <mat-icon>security</mat-icon>
+          <h3>Security & Timeline</h3>
+        </div>
+
+        <div class="form-grid">
+          <!-- Confidentiality -->
+          <div class="form-field">
+            <label>Confidentiality <span class="required">*</span></label>
+            <div class="confidentiality-options">
+              <label class="radio-option" *ngFor="let level of confidentialityLevels">
+                <input type="radio" [value]="level.value" formControlName="confidentiality" />
+                <div class="radio-custom"></div>
+                <div class="radio-content">
+                  <span class="radio-title">{{ level.label }}</span>
+                  <span class="radio-desc">{{ level.description }}</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <!-- Effective From -->
+            <div class="form-field">
+              <label>Effective From <span class="required">*</span></label>
+              <input type="datetime-local" formControlName="effective_from" class="form-input" />
+            </div>
+
+            <!-- Repeat Cycle -->
+            <div class="form-field mt-5">
+              <label>Repeat Cycle <span class="required">*</span></label>
+              <div class="select-wrapper">
+                <select formControlName="repeat_cycle" class="form-select">
+                  <option value="">Select repeat cycle</option>
+                  <option *ngFor="let cycle of repeatCycles" [value]="cycle.value">
+                    {{ cycle.label }}
+                  </option>
+                </select>
+                <mat-icon class="select-icon">expand_more</mat-icon>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <mat-icon>description</mat-icon>
+          <h3>Content</h3>
+        </div>
+
+        <div class="content-area">
+          <!-- File Attachment (Compact) -->
+          <div class="attachment-section">
+            <label>Attachments</label>
+            <div class="file-upload-compact">
+              <input
+                #fileInput
+                type="file"
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                style="display: none"
+                (change)="onFileSelect($event)"
+              />
+              <button type="button" class="upload-btn" (click)="fileInput.click()">
+                <mat-icon>attach_file</mat-icon>
+                <span>Attach File</span>
+              </button>
+
+              <!-- Attached File Display -->
+              <div class="attached-files-compact" *ngIf="attachedFile">
+                <div class="file-chip">
+                  <mat-icon class="file-icon">description</mat-icon>
+                  <span class="file-name" [title]="attachedFile.name">{{
+                    truncateFileName(attachedFile.name)
+                  }}</span>
+                  <button type="button" class="remove-file" (click)="removeFile()">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Body/Text Content -->
+          <div class="form-field full-width">
+            <label>Content <span class="required">*</span></label>
+            <div class="editor-toolbar">
+              <button type="button" class="toolbar-btn" (click)="formatText('bold')" title="Bold">
+                <mat-icon>format_bold</mat-icon>
+              </button>
+              <button
+                type="button"
+                class="toolbar-btn"
+                (click)="formatText('italic')"
+                title="Italic"
+              >
+                <mat-icon>format_italic</mat-icon>
+              </button>
+              <button
+                type="button"
+                class="toolbar-btn"
+                (click)="formatText('underline')"
+                title="Underline"
+              >
+                <mat-icon>format_underlined</mat-icon>
+              </button>
+              <div class="toolbar-divider"></div>
+              <button
+                type="button"
+                class="toolbar-btn"
+                (click)="formatText('insertUnorderedList')"
+                title="Bullet List"
+              >
+                <mat-icon>format_list_bulleted</mat-icon>
+              </button>
+              <button
+                type="button"
+                class="toolbar-btn"
+                (click)="formatText('insertOrderedList')"
+                title="Numbered List"
+              >
+                <mat-icon>format_list_numbered</mat-icon>
+              </button>
+            </div>
+            <div
+              class="rich-editor"
+              contenteditable="true"
+              (input)="onContentChange($event)"
+              (paste)="onPaste($event)"
+              [innerHTML]="circularForm!.get('content')?.value"
+              #contentEditor
+            ></div>
+            <div class="editor-footer">
+              <span class="char-count">{{ getContentLength() }} / 5000 characters</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Approvers Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <mat-icon>group</mat-icon>
+          <h3>Approve Process</h3>
+        </div>
+
+        <div class="reviewers-section">
+          <label>Select Approvers <span class="required">*</span></label>
+          <div class="reviewers-grid">
+            <div class="reviewer-card" *ngFor="let approver of availableApprovers">
+              <label class="reviewer-checkbox">
+                <input
+                  type="checkbox"
+                  [value]="approver.id"
+                  (change)="toggleApprover(approver.id, $event)"
+                />
+                <div class="checkbox-custom"></div>
+                <div class="reviewer-info">
+                  <div class="reviewer-name">
+                    {{ approver.first_name }} {{ approver.middle_name }} {{ approver.last_name }}
+                  </div>
+                  <div class="reviewer-dept">
+                    {{ approver.department_name! }} {{ approver.branch_name! }}
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="selected-reviewers" *ngIf="selectedApprovers.length > 0">
+            <h4>Selected Reviewers ({{ selectedApprovers.length }})</h4>
+            <div class="reviewer-chips">
+              <div class="reviewer-chip" *ngFor="let approverId of selectedApprovers">
+                <span>{{ getApproverName(approverId) }}</span>
+                <button type="button" (click)="removeApprover(approverId)">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Action Bar -->
+  <div class="action-bar">
+    <div class="action-content">
+      <div class="action-left">
+        <button
+          type="button"
+          class="action-btn secondary"
+          (click)="submitCircular('DRAFT')"
+          [disabled]="!canSaveDraft() || isProcessing"
+        >
+          <mat-icon>save</mat-icon>
+          Save Draft
+        </button>
+        <button type="button" class="action-btn secondary" (click)="previewCircular()">
+          <mat-icon>preview</mat-icon>
+          Preview
+        </button>
+      </div>
+
+      <div class="action-right">
+        <button type="button" class="action-btn danger" (click)="discardDraft()">
+          <mat-icon>delete_outline</mat-icon>
+          Discard
+        </button>
+        <button
+          type="button"
+          class="action-btn primary"
+          (click)="submitCircular('PENDING_APPROVAL')"
+          [disabled]="isProcessing || circularForm.invalid || selectedApprovers.length === 0"
+        >
+          <mat-icon *ngIf="!isProcessing">send</mat-icon>
+          <div class="spinner" *ngIf="isProcessing"></div>
+          {{ isProcessing ? 'Submitting...' : 'Submit for Approve' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Smart Assistant (Floating) -->
+  <div class="smart-assistant" [class.expanded]="assistantExpanded">
+    <button class="assistant-toggle" (click)="toggleAssistant()">
+      <mat-icon>{{ assistantExpanded ? 'close' : 'smart_toy' }}</mat-icon>
+    </button>
+
+    <div class="assistant-content" *ngIf="assistantExpanded">
+      <div class="assistant-header">
+        <mat-icon>smart_toy</mat-icon>
+        <h4>Smart Assistant</h4>
+      </div>
+
+      <div class="assistant-suggestions">
+        <div class="suggestion" (click)="applySuggestion('template')">
+          <mat-icon>description</mat-icon>
+          <span>Use Template</span>
+        </div>
+        <div class="suggestion" (click)="applySuggestion('check')">
+          <mat-icon>spell_check</mat-icon>
+          <span>Grammar Check</span>
+        </div>
+        <div class="suggestion" (click)="applySuggestion('similar')">
+          <mat-icon>find_in_page</mat-icon>
+          <span>Find Similar</span>
         </div>
       </div>
     </div>
+  </div>
+</div>
