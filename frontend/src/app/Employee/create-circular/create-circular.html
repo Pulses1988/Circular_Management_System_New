@@ -17,7 +17,6 @@
       </div>
 
       <div class="header-actions">
-        
         <button
           class="theme-btn"
           (click)="toggleTheme()"
@@ -250,9 +249,9 @@
               contenteditable="true"
               (input)="onContentChange($event)"
               (paste)="onPaste($event)"
-              [innerHTML]="circularForm!.get('content')?.value"
               #contentEditor
             ></div>
+
             <div class="editor-footer">
               <span class="char-count">{{ getContentLength() }} / 5000 characters</span>
             </div>
@@ -319,10 +318,6 @@
           <mat-icon>save</mat-icon>
           Save Draft
         </button>
-        <button type="button" class="action-btn secondary" (click)="previewCircular()">
-          <mat-icon>preview</mat-icon>
-          Preview
-        </button>
       </div>
 
       <div class="action-right">
@@ -345,7 +340,7 @@
   </div>
 
   <!-- Smart Assistant (Floating) -->
-  <div class="smart-assistant" [class.expanded]="assistantExpanded">
+  <!-- <div class="smart-assistant" [class.expanded]="assistantExpanded">
     <button class="assistant-toggle" (click)="toggleAssistant()">
       <mat-icon>{{ assistantExpanded ? 'close' : 'smart_toy' }}</mat-icon>
     </button>
@@ -371,5 +366,5 @@
         </div>
       </div>
     </div>
-  </div>
+  </div> -->
 </div>

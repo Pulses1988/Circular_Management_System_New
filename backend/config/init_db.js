@@ -137,6 +137,23 @@ const createCircularApprovalsQuery = `CREATE TABLE IF NOT EXISTS circular_approv
     FOREIGN KEY (approver_id) REFERENCES employees(id) ON DELETE CASCADE
 );`;
 
+const createRepeatCycleTableQuery = `
+CREATE TABLE IF NOT EXISTS repeat_cycles (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(50) NOT NULL UNIQUE,
+  duration_days INT DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+`;
+
+const insertDefaultRepeatCycleQuery = `
+INSERT INTO repeat_cycles (name, duration_days)
+SELECT 'Once', NULL
+WHERE NOT EXISTS (
+    SELECT 1 FROM repeat_cycles WHERE name = 'Once'
+);
+`;
+
 async function initializeDatabase() {
   try {
     await db.query(createHeadOfficeTableQuery);
@@ -165,6 +182,13 @@ async function initializeDatabase() {
 
     await db.query(createCircularApprovalsQuery);
     console.log("Circular Approvals table is ready");
+
+    // Repeat Cycle Table
+    await db.query(createRepeatCycleTableQuery);
+    console.log("Repeat Cycles table is ready");
+
+    await db.query(insertDefaultRepeatCycleQuery);
+    console.log("Default 'Once' repeat cycle added");
   } catch (err) {
     console.error("Error initializing database:", err);
   }
