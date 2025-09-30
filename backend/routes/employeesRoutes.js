@@ -10,6 +10,9 @@ router.get("/employee-by-headoffice/:id",authenticateToken,employeeController.ge
 router.get("/employee-by-branch/:id", authenticateToken, employeeController.getEmployeesByBranch);
 router.get("/check-phone",authenticateToken,employeeController.checkPhoneNoExists);
 
+// Other endpoints
+router.get('/approvers',authenticateToken,employeeController.getApprovers);
+
 // CRUD endpoints
 router.get("/", authenticateToken, employeeController.getAllEmployees);
 router.post('/login', employeeController.loginEmployee);
@@ -17,5 +20,7 @@ router.get("/:id", authenticateToken, employeeController.getEmployeeById);
 router.post("/", authenticateToken, employeeController.createEmployee);
 router.put("/:id", authenticateToken, employeeController.updateEmployee);
 router.delete("/:id", authenticateToken, employeeController.deleteEmployee);
+
+
 
 module.exports = router;

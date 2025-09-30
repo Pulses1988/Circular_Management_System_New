@@ -78,7 +78,6 @@ CREATE TABLE IF NOT EXISTS employees (
 );
 `;
 
-
 const createRolesQuery = `
 CREATE TABLE IF NOT EXISTS roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -94,6 +93,50 @@ CREATE TABLE IF NOT EXISTS roles (
     CONSTRAINT fk_roles_department FOREIGN KEY (department_id) REFERENCES departments(id)
 );
 `;
+
+const createCircularQuery = `
+CREATE TABLE IF NOT EXISTS circulars (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(512) ,
+  content TEXT,
+  creator_employee_id INT ,
+  circular_pdf LONGBLOB ,
+  reference_circular_id INT NULL,
+  circular_code VARCHAR(100) ,             
+  source_type_id INT ,                     
+  effective_from TIMESTAMP ,                
+  send_type ENUM('INTERNAL','CONFIDENTIAL','RESTRICTED','PUBLIC') ,
+  status ENUM('DRAFT','PENDING_APPROVAL','REJECTED','APPROVED','PUBLISHED','ARCHIVED') ,
+  repeat_cycle ENUM('ONE_TIME','WEEKLY','QUARTERLY','ANNUALLY')  ,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  published_at TIMESTAMP NULL,
+
+  FOREIGN KEY (creator_employee_id) REFERENCES employees(id),
+  FOREIGN KEY (reference_circular_id) REFERENCES circulars(id) ON DELETE SET NULL,
+  FOREIGN KEY (source_type_id) REFERENCES source_types(id)
+);
+`;
+
+const createSourceTypeQuery = `CREATE TABLE IF NOT EXISTS source_types (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL UNIQUE
+);
+`;
+
+const createCircularApprovalsQuery = `CREATE TABLE IF NOT EXISTS circular_approvals (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    circular_id INT NOT NULL,
+    approver_id INT NOT NULL,
+    has_seen BOOLEAN DEFAULT FALSE,
+    seen_at TIMESTAMP NULL,
+    status ENUM('PENDING','APPROVED','REJECTED') DEFAULT 'PENDING',
+    comments TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (circular_id) REFERENCES circulars(id) ON DELETE CASCADE,
+    FOREIGN KEY (approver_id) REFERENCES employees(id) ON DELETE CASCADE
+);`;
+
 async function initializeDatabase() {
   try {
     await db.query(createHeadOfficeTableQuery);
@@ -113,10 +156,18 @@ async function initializeDatabase() {
 
     await db.query(createEmployeeTableQuery);
     console.log("Employee table is ready");
+
+    await db.query(createSourceTypeQuery);
+    console.log("Source type is ready");
+
+    await db.query(createCircularQuery);
+    console.log("Circular table is ready");
+
+    await db.query(createCircularApprovalsQuery);
+    console.log("Circular Approvals table is ready");
   } catch (err) {
     console.error("Error initializing database:", err);
   }
 }
-
 
 module.exports = initializeDatabase;

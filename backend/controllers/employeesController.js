@@ -2,6 +2,10 @@ const employeeModel = require("../models/employeesModal");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  "f47da57fdab5d8fdbe2b7855db15c11304197f2941d340cd302bbcddee0f04117f4ae1a5fbdb1e0a64f8f727587e3442bf9b44be6811f7f9c383f4860380b7f7";
+
 // Get all employees
 exports.getAllEmployees = async (req, res) => {
   try {
@@ -21,7 +25,7 @@ exports.loginEmployee = async (req, res) => {
     if (!employee_id || !password) {
       return res.status(400).json({
         success: false,
-        message: "Employee ID and password are required"
+        message: "Employee ID and password are required",
       });
     }
 
@@ -31,18 +35,21 @@ exports.loginEmployee = async (req, res) => {
     if (rows.length === 0) {
       return res.status(401).json({
         success: false,
-        message: "Invalid employee ID or password"
+        message: "Invalid employee ID or password",
       });
     }
 
     const employee = rows[0];
 
     // Verify password
-    const isValidPassword = await bcrypt.compare(password, employee.password_hash);
+    const isValidPassword = await bcrypt.compare(
+      password,
+      employee.password_hash
+    );
     if (!isValidPassword) {
       return res.status(401).json({
         success: false,
-        message: "Invalid employee ID or password"
+        message: "Invalid employee ID or password",
       });
     }
 
@@ -55,13 +62,13 @@ exports.loginEmployee = async (req, res) => {
         department_id: employee.department_id,
         branch_id: employee.branch_id,
         head_office_id: employee.head_office_id,
-        head_office_name:employee.head_office_name,
+        head_office_name: employee.head_office_name,
         can_create_circular: employee.can_create_circular,
         can_approve_circular: employee.can_approve_circular,
-        bank_name:employee.bank_name,
+        bank_name: employee.bank_name,
       },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
+      JWT_SECRET,
+      { expiresIn: "24h" }
     );
 
     // Remove password_hash from response
@@ -73,16 +80,15 @@ exports.loginEmployee = async (req, res) => {
       message: "Login successful",
       data: {
         token: token,
-        employee: employee
-      }
+        employee: employee,
+      },
     });
-
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Login error:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -195,6 +201,17 @@ exports.checkPhoneNoExists = async (req, res) => {
     res.json(rows.length > 0);
   } catch (err) {
     console.error(err);
-    res.status(500).json({error:"Failed to check phone number"})
+    res.status(500).json({ error: "Failed to check phone number" });
+  }
+};
+
+// Get employees with approve authority
+exports.getApprovers = async (req, res) => {
+  try {
+    const [rows] = await employeeModel.getApprovers();
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch approvers" });
   }
 };

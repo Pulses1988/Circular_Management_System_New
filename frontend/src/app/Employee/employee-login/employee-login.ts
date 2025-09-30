@@ -16,14 +16,13 @@ import { EmployeeService } from '../../services/employee-service';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule
+    MatSnackBarModule,
   ],
   templateUrl: './employee-login.html',
-  styleUrl: './employee-login.scss'
+  styleUrl: './employee-login.scss',
 })
 export class EmployeeLogin {
-
- loginForm: FormGroup;
+  loginForm: FormGroup;
   isLoading = false;
   hidePassword = true;
 
@@ -31,11 +30,11 @@ export class EmployeeLogin {
     private fb: FormBuilder,
     private router: Router,
     private snackBar: MatSnackBar,
-    private employeeService : EmployeeService
+    private employeeService: EmployeeService
   ) {
     this.loginForm = this.fb.group({
-      employeeId: ['', [Validators.required,]],
-      password: ['', [Validators.required,]]
+      employeeId: ['', [Validators.required]],
+      password: ['', [Validators.required]],
     });
   }
 
@@ -44,53 +43,51 @@ export class EmployeeLogin {
   }
 
   onSubmit(): void {
-  if (this.loginForm.valid) {
-    this.isLoading = true;
-    const { employeeId, password } = this.loginForm.value;
-    
-    const data = {
-      employee_id: employeeId,
-      password: password
-    };
+    if (this.loginForm.valid) {
+      this.isLoading = true;
+      const { employeeId, password } = this.loginForm.value;
 
-    this.employeeService.employeeLogin(data).subscribe({
-      next: (response) => {
-        if (response.success) {
-          // Store data using the service
-          this.employeeService.storeAuthData(
-            response.data.token, 
-            response.data.employee
-          );
-          
-          this.snackBar.open('Login successful!', 'Close', {
-            duration: 3000,
-            panelClass: ['success-snackbar']
-          });
-          
-          this.router.navigate(['/employee-dashboard']);
-        }
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.snackBar.open(
-          error.error?.message || 'Invalid credentials. Please try again.', 
-          'Close', 
-          {
-            duration: 3000,
-            panelClass: ['error-snackbar']
+      const data = {
+        employee_id: employeeId,
+        password: password,
+      };
+
+      this.employeeService.employeeLogin(data).subscribe({
+        next: (response) => {
+          if (response.success) {
+            // Store data using the service
+            console.log(response.data.token);
+
+            this.employeeService.storeAuthData(response.data.token, response.data.employee);
+
+            this.snackBar.open('Login successful!', 'Close', {
+              duration: 3000,
+              panelClass: ['success-snackbar'],
+            });
+
+            this.router.navigate(['/employee-dashboard']);
           }
-        );
-        this.isLoading = false;
-      }
-    });
-  } else {
-    this.markFormGroupTouched();
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.snackBar.open(
+            error.error?.message || 'Invalid credentials. Please try again.',
+            'Close',
+            {
+              duration: 3000,
+              panelClass: ['error-snackbar'],
+            }
+          );
+          this.isLoading = false;
+        },
+      });
+    } else {
+      this.markFormGroupTouched();
+    }
   }
-}
-
 
   private markFormGroupTouched(): void {
-    Object.keys(this.loginForm.controls).forEach(key => {
+    Object.keys(this.loginForm.controls).forEach((key) => {
       this.loginForm.get(key)?.markAsTouched();
     });
   }
