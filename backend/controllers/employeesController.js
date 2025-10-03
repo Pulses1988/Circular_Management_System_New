@@ -121,6 +121,18 @@ exports.getEmployeesByHeadOfficeWithoutBranch = async (req, res) => {
   }
 };
 
+// Get employees by Department
+exports.getEmployeesByDepartment = async (req, res) => {
+  const { departmentId } = req.params;
+  try {
+    const [rows] = await employeeModel.getEmployeesByDepartment(departmentId);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch employees by department" });
+  }
+};
+
 // Get employees for specific branch
 exports.getEmployeesByBranch = async (req, res) => {
   const { id: branchId } = req.params;
@@ -213,5 +225,20 @@ exports.getApprovers = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch approvers" });
+  }
+};
+
+// Filter employees by department and branch
+exports.filterEmployees = async (req, res) => {
+  const { department_id, branch_id } = req.query;
+  try {
+    const [rows] = await employeeModel.filterEmployees(
+      department_id,
+      branch_id
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch employees" });
   }
 };

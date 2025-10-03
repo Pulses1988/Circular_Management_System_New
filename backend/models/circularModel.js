@@ -11,14 +11,14 @@ exports.createCircular = (data) => {
     source_type_id,
     effective_from,
     send_type,
-    repeat_cycle,
+    repeat_cycle_id,
     status,
     published_at,
   } = data;
 
   return db.query(
     `INSERT INTO circulars
-      (title, content, creator_employee_id, circular_pdf, reference_circular_id, circular_code, source_type_id, effective_from, send_type,repeat_cycle, status, published_at)
+      (title, content, creator_employee_id, circular_pdf, reference_circular_id, circular_code, source_type_id, effective_from, send_type,repeat_cycle_id, status, published_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       title,
@@ -30,7 +30,7 @@ exports.createCircular = (data) => {
       source_type_id,
       effective_from,
       send_type,
-      repeat_cycle,
+      repeat_cycle_id,
       status,
       published_at,
     ]
@@ -75,7 +75,7 @@ exports.updateCircular = async (req, res) => {
       source_type_id: req.body.source_type_id,
       effective_from: req.body.effective_from,
       send_type: req.body.send_type,
-      repeat_cycle: req.body.repeat_cycle,
+      repeat_cycle_id: req.body.repeat_cycle_id,
       status: req.body.status,
       published_at: req.body.published_at || null,
       pdfBuffer: req.file ? req.file.buffer : null, // optional update

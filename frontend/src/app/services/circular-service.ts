@@ -96,4 +96,9 @@ export class CircularService {
   getSourceTypes() {
     return this.http.get(`${this.apiUrl}/api/source-type/`, { headers: this.getHeaders() });
   }
+
+  // -----------------------repeat cycle Data--------------------------------
+  getReapetCycleDataForEmployee() {
+    return this.http.get(`${this.apiUrl}/api/repeat-cycle/`, { headers: this.getHeaders() });
+  }
 }

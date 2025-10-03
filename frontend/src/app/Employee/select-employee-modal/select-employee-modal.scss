@@ -1,0 +1,4 @@
+::ng-deep .custom-dialog-container {
+  width: 100vw !important;  /* 80% of viewport width */
+  max-width: 1200px !important; /* or any max width */
+}

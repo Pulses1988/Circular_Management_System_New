@@ -175,6 +175,13 @@ exports.getEmployeesByHeadOfficeWithoutBranch = (hoId) => {
   );
 };
 
+// Get employees by department ID
+exports.getEmployeesByDepartment = (departmentId) => {
+  return db.query("SELECT * FROM employees WHERE department_id = ?", [
+    departmentId,
+  ]);
+};
+
 // Get employees for a specific branch
 exports.getEmployeesByBranch = (branchId) => {
   return db.query(
@@ -192,6 +199,35 @@ exports.getEmployeesByBranch = (branchId) => {
   `,
     [branchId]
   );
+};
+
+// employee get based on the department id and branch id
+exports.filterEmployees = (department_id, branch_id) => {
+  let query = `
+    SELECT 
+      e.id, e.employee_id, e.first_name, e.middle_name, e.last_name, e.phone_no, e.email,
+      e.can_create_circular, e.can_approve_circular, e.created_at,
+      r.id AS role_id, r.name AS role_name,
+      d.id AS department_id, d.name AS department_name,
+      b.id AS branch_id, b.name AS branch_name,
+      h.id AS head_office_id, h.name AS head_office_name
+    FROM employees e
+    LEFT JOIN roles r ON e.role_id = r.id
+    LEFT JOIN departments d ON e.department_id = d.id
+    LEFT JOIN branches b ON e.branch_id = b.id
+    LEFT JOIN head_office h ON e.head_office_id = h.id
+    WHERE 1=1
+  `;
+  const params = [];
+  if (department_id) {
+    query += " AND e.department_id = ?";
+    params.push(department_id);
+  }
+  if (branch_id) {
+    query += " AND e.branch_id = ?";
+    params.push(branch_id);
+  }
+  return db.query(query, params);
 };
 
 // Get employees who have approve authority
