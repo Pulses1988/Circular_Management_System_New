@@ -3,6 +3,7 @@ const router = express.Router();
 const departmentController = require("../controllers/departmentController");
 const authenticateToken = require("../authMiddleware")
 
+router.get('/',authenticateToken,departmentController.getAllDepartments);
 router.get("/head-office/:headOfficeId",authenticateToken, departmentController.getDepartmentsByHeadOffice);
 router.get("/branch/:branchId",authenticateToken, departmentController.getDepartmentsByBranch);
 router.post("/",authenticateToken, departmentController.createDepartment);

@@ -94,29 +94,6 @@ CREATE TABLE IF NOT EXISTS roles (
 );
 `;
 
-const createCircularQuery = `
-CREATE TABLE IF NOT EXISTS circulars (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  title VARCHAR(512) ,
-  content TEXT,
-  creator_employee_id INT ,
-  circular_pdf LONGBLOB ,
-  reference_circular_id INT NULL,
-  circular_code VARCHAR(100) ,             
-  source_type_id INT ,                     
-  effective_from TIMESTAMP ,                
-  send_type ENUM('INTERNAL','CONFIDENTIAL','RESTRICTED','PUBLIC') ,
-  status ENUM('DRAFT','PENDING_APPROVAL','REJECTED','APPROVED','PUBLISHED','ARCHIVED') ,
-  repeat_cycle ENUM('ONE_TIME','WEEKLY','QUARTERLY','ANNUALLY')  ,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  published_at TIMESTAMP NULL,
-
-  FOREIGN KEY (creator_employee_id) REFERENCES employees(id),
-  FOREIGN KEY (reference_circular_id) REFERENCES circulars(id) ON DELETE SET NULL,
-  FOREIGN KEY (source_type_id) REFERENCES source_types(id)
-);
-`;
-
 const createSourceTypeQuery = `CREATE TABLE IF NOT EXISTS source_types (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL UNIQUE
@@ -154,6 +131,30 @@ WHERE NOT EXISTS (
 );
 `;
 
+const createCircularQuery = `
+CREATE TABLE IF NOT EXISTS circulars (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(512) ,
+  content TEXT,
+  creator_employee_id INT ,
+  circular_pdf LONGBLOB ,
+  reference_circular_id INT NULL,
+  circular_code VARCHAR(100) ,             
+  source_type_id INT ,                     
+  effective_from TIMESTAMP ,                
+  send_type ENUM('INTERNAL','CONFIDENTIAL','RESTRICTED','PUBLIC') ,
+  status ENUM('DRAFT','PENDING_APPROVAL','REJECTED','APPROVED','PUBLISHED') ,
+  repeat_cycle_id INT ,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  published_at TIMESTAMP NULL,
+
+  FOREIGN KEY (creator_employee_id) REFERENCES employees(id),
+  FOREIGN KEY (reference_circular_id) REFERENCES circulars(id) ON DELETE SET NULL,
+  FOREIGN KEY (source_type_id) REFERENCES source_types(id),
+  FOREIGN KEY (repeat_cycle_id) REFERENCES repeat_cycles(id)
+);
+`;
+
 async function initializeDatabase() {
   try {
     await db.query(createHeadOfficeTableQuery);
@@ -177,18 +178,17 @@ async function initializeDatabase() {
     await db.query(createSourceTypeQuery);
     console.log("Source type is ready");
 
-    await db.query(createCircularQuery);
-    console.log("Circular table is ready");
-
-    await db.query(createCircularApprovalsQuery);
-    console.log("Circular Approvals table is ready");
-
-    // Repeat Cycle Table
     await db.query(createRepeatCycleTableQuery);
     console.log("Repeat Cycles table is ready");
 
     await db.query(insertDefaultRepeatCycleQuery);
     console.log("Default 'Once' repeat cycle added");
+
+    await db.query(createCircularQuery);
+    console.log("Circular table is ready");
+
+    await db.query(createCircularApprovalsQuery);
+    console.log("Circular Approvals table is ready");
   } catch (err) {
     console.error("Error initializing database:", err);
   }

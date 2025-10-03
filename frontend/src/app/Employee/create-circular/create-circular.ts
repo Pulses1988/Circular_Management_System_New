@@ -14,6 +14,8 @@ import { CommonModule, TitleCasePipe } from '@angular/common';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 import { CircularService } from '../../services/circular-service';
+import { MatDialog } from '@angular/material/dialog';
+import { SelectEmployeeModal } from '../select-employee-modal/select-employee-modal';
 
 export interface Circular {
   id: number;
@@ -30,8 +32,8 @@ export interface Circular {
   created_at: string; // ISO date string
   published_at: string | null; // ISO date string or null
   send_type: 'INTERNAL' | 'CONFIDENTIAL' | 'RESTRICTED' | 'PUBLIC';
-  status: 'DRAFT' | 'PENDING_APPROVAL' | 'REJECTED' | 'APPROVED' | 'PUBLISHED' | 'ARCHIVED';
-  repeat_cycle: 'ONE_TIME' | 'WEEKLY' | 'QUARTERLY' | 'ANNUALLY';
+  status: 'DRAFT' | 'PENDING_APPROVAL' | 'REJECTED' | 'APPROVED' | 'PUBLISHED';
+  repeat_cycle: number;
 }
 
 interface SourceType {
@@ -59,6 +61,13 @@ export interface Approver {
   can_create_circular: 0 | 1; // MySQL tinyint returns as number
   can_approve_circular: 0 | 1;
   created_at: string; // ISO timestamp
+}
+
+export interface repeatCycle {
+  id: number;
+  name: string;
+  duration_days: number;
+  created_at: string;
 }
 
 interface AttachedFile {
@@ -92,6 +101,7 @@ export class CreateCircular {
   sourceTypes: SourceType[] = [];
   departments: Department[] = [];
   availableApprovers: Approver[] = [];
+  repeatCycleData: repeatCycle[] = [];
 
   confidentialityLevels = [
     { value: 'PUBLIC', label: 'Public', description: 'Available to all employees' },
@@ -100,19 +110,13 @@ export class CreateCircular {
     { value: 'RESTRICTED', label: 'Restricted', description: 'Highly sensitive information' },
   ];
 
-  repeatCycles = [
-    { value: 'ONE_TIME', label: 'One Time' },
-    { value: 'WEEKLY', label: 'Weekly' },
-    { value: 'QUARTERLY', label: 'Quarterly' },
-    { value: 'ANNUALLY', label: 'Annually' },
-  ];
-
   constructor(
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
     private router: Router,
     private circularService: CircularService,
-    private employeeService: EmployeeService
+    private employeeService: EmployeeService,
+    private dialog: MatDialog
   ) {
     this.initializeForm();
     this.detectSystemTheme();
@@ -131,11 +135,33 @@ export class CreateCircular {
     this.loadEmployeeData();
     this.loadData();
     this.setupAutoSave();
+
+    this.circularForm.get('confidentiality')?.valueChanges.subscribe((value) => {
+      if (value === 'CONFIDENTIAL' || value === 'RESTRICTED') {
+        this.openEmployeeModal();
+      }
+    });
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  openEmployeeModal(): void {
+    const dialogRef = this.dialog.open(SelectEmployeeModal, {
+      width: '600px',
+      panelClass:'custom-dialog-container',
+      data: {}, // pass any extra data if needed
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result && result.length > 0) {
+        console.log('Selected employees:', result);
+        // 👉 You can patch into form if needed
+        // this.circularForm.patchValue({ approvers: result });
+      }
+    });
   }
 
   private loadEmployeeData(): void {
@@ -233,10 +259,9 @@ export class CreateCircular {
       this.availableApprovers = data as Approver[];
     });
 
-    
-
-    // this.loadSourceTypes();
-    this.loadDepartments();
+    this.circularService.getReapetCycleDataForEmployee().subscribe((data) => {
+      this.repeatCycleData = data as repeatCycle[];
+    });
   }
 
   private loadDepartments(): void {

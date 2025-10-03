@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 
@@ -56,9 +56,12 @@ export class EmployeeService {
         last_name: employee.last_name,
         role_name: employee.role_name,
         head_office_name: employee.head_office_name,
+        head_office_id: employee.head_office_id,
         bank_name: employee.head_office_bank_name,
         department_name: employee.department_name,
+        department_id: employee.department_id,
         branch_name: employee.branch_name,
+        branch_id: employee.branch_id,
         can_create_circular: employee.can_create_circular,
         can_approve_circular: employee.can_approve_circular,
       };
@@ -187,8 +190,55 @@ export class EmployeeService {
     return this.http.get(`${this.apiUrl}/api/employees/approvers`, { headers: this.getHeaders() });
   }
 
-  // --------------------------get repeat cycle data-----------------------------------
-  getReapetCycleData() {
-    return this.http.get(`${this.apiUrl}/api/repeat-cycle/`, { headers: this.getHeaders() });
+  // --------------------------get employee----------------------------
+
+  // get employe by head office and null branch id
+  getEmployeeByHeadOfficeId(id: number) {
+    return this.http.get(`${this.apiUrl}/api/employees/employee-by-headoffice/${id}`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  getEmployeeByBranchId(id: number) {
+    return this.http.get(`${this.apiUrl}/api/employees/employee-by-branch/${id}`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  getEmployeeByBranchAndDepartment(branchId: number, deptId: number) {
+    let params = new HttpParams();
+    if (deptId) params = params.set('department_id', deptId);
+    if (branchId) params = params.set('branch_id', branchId);
+    return this.http.get(`${this.apiUrl}/api/employees/getByDeptAndBranch`, { params });
+  }
+
+  // get employee by the department
+  getEmployeesByDepartment(deptId: number) {
+    return this.http.get(`${this.apiUrl}/api/employees/department/${deptId}`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  // -------------------get branches----------------
+
+  fetchAllBranches() {
+    return this.http.get(`${environment.apiUrl}/api/branches/`, { headers: this.getHeaders() });
+  }
+
+  // --------------------------get department----------------------
+  getDepartmentsByHeadOffice(headOfficeId: number) {
+    return this.http.get<any[]>(`${this.apiUrl}/api/departments/head-office/${headOfficeId}`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  getDepartmentsByBranch(branchId: number) {
+    return this.http.get<any[]>(`${this.apiUrl}/api/departments/branch/${branchId}`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  getAllDepartment() {
+    return this.http.get(`${this.apiUrl}/api/departments/`, { headers: this.getHeaders() });
   }
 }

@@ -128,15 +128,14 @@
           <!-- Confidentiality -->
           <div class="form-field">
             <label>Confidentiality <span class="required">*</span></label>
-            <div class="confidentiality-options">
-              <label class="radio-option" *ngFor="let level of confidentialityLevels">
-                <input type="radio" [value]="level.value" formControlName="confidentiality" />
-                <div class="radio-custom"></div>
-                <div class="radio-content">
-                  <span class="radio-title">{{ level.label }}</span>
-                  <span class="radio-desc">{{ level.description }}</span>
-                </div>
-              </label>
+            <div class="select-wrapper">
+              <select formControlName="confidentiality" class="form-select">
+                <option value="" disabled selected>Select confidentiality level</option>
+                <option *ngFor="let level of confidentialityLevels" [value]="level.value">
+                  {{ level.label }} - {{ level.description }}
+                </option>
+              </select>
+              <mat-icon class="select-icon">expand_more</mat-icon>
             </div>
           </div>
 
@@ -153,8 +152,8 @@
               <div class="select-wrapper">
                 <select formControlName="repeat_cycle" class="form-select">
                   <option value="">Select repeat cycle</option>
-                  <option *ngFor="let cycle of repeatCycles" [value]="cycle.value">
-                    {{ cycle.label }}
+                  <option *ngFor="let cycle of repeatCycleData" [value]="cycle.id">
+                    {{ cycle.name }}
                   </option>
                 </select>
                 <mat-icon class="select-icon">expand_more</mat-icon>
@@ -282,7 +281,14 @@
                     {{ approver.first_name }} {{ approver.middle_name }} {{ approver.last_name }}
                   </div>
                   <div class="reviewer-dept">
-                    {{ approver.department_name! }} {{ approver.branch_name! }}
+                    @if (approver.head_office_name) {
+                    <div>{{ approver.head_office_name }}</div>
+                    } @if (approver.branch_name) {
+                    <div>{{ approver.branch_name }}</div>
+                    } @if (approver.department_name) {
+                    <div><strong>Dept:</strong> {{ approver.department_name }}</div>
+                    }
+                    <div><strong>Role:</strong> {{ approver.role_name }}</div>
                   </div>
                 </div>
               </label>
