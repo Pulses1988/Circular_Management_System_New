@@ -13,6 +13,7 @@ const circularRoutes = require("./routes/circularRoutes");
 const sourceTypeRoutes = require("./routes/sourceTypesRoutes");
 const circularApprovalRoutes = require("./routes/CircularApprovalsRoutes");
 const repeatCycleRoutes = require("./routes/repeatCycleRoutes");
+const circularVisibilityRoutes = require("./routes/circularVisibilityRoutes")
 
 // Allow cross-origin requests from your Angular app
 app.use(
@@ -36,6 +37,7 @@ app.use("/api/circular", circularRoutes);
 app.use("/api/source-type", express.json(), sourceTypeRoutes);
 app.use("/api/circular-approvals", express.json(), circularApprovalRoutes);
 app.use("/api/repeat-cycle", express.json(), repeatCycleRoutes);
+app.use("/api/circular-visibility",express.json(),circularVisibilityRoutes);
 
 const PORT = 3000;
 app.listen(PORT, () => {

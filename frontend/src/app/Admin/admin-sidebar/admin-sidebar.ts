@@ -1,5 +1,5 @@
 import { CommonModule, NgIf } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterModule } from '@angular/router';
@@ -19,14 +19,20 @@ interface NavItem {
   templateUrl: './admin-sidebar.html',
   styleUrl: './admin-sidebar.scss',
 })
-export class AdminSidebar {
+export class AdminSidebar implements OnInit {
   isSidebarOpen = false; // desktop hover
   isMobileOpen = false; // mobile overlay toggle
 
-  role: string | null = localStorage.getItem('role');
+  role?: string | null;
 
   constructor( private dialog: MatDialog,
   private authService: AdminAuth){}
+
+  ngOnInit(){
+    if (typeof window !== 'undefined') {
+      this.role= localStorage.getItem('role');
+    }
+  }
 
   navItems: NavItem[] = [
     { label: 'Dashboard', icon: 'home', route: '/admin/admin-dashboard' },
@@ -51,6 +57,12 @@ export class AdminSidebar {
       label: 'Employee Management',
       icon: 'manage_accounts',
       route: '/admin/admin-employee-management',
+      roles: ['HO_ADMIN','BRANCH_ADMIN'],
+    },
+    {
+      label: 'Circular Settings',
+      icon: 'edit_document',
+      route: '/admin/admin-circular-settings',
       roles: ['HO_ADMIN','BRANCH_ADMIN'],
     },
   ];

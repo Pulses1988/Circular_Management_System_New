@@ -27,6 +27,16 @@ export class CircularService {
       Authorization: this.token ? `Bearer ${this.token}` : '',
     });
   }
+   private getHeadersForAdmin(): HttpHeaders {
+    if (typeof window !== 'undefined') {
+      this.token = localStorage.getItem('authToken');
+    }
+    // Adjust based on your auth implementation
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      Authorization: this.token ? `Bearer ${this.token}` : '',
+    });
+  }
 
   isBrowser(): boolean {
     return typeof window !== 'undefined' && typeof localStorage !== 'undefined';
@@ -77,7 +87,7 @@ export class CircularService {
       return '';
     }
   }
-  // -------------------------------------------------------------
+  // ---------------------------------Circular Approval--------------------------------------------------
   uploadCircular(formdata: FormData): Observable<any> {
     let headers = new HttpHeaders();
 
@@ -91,7 +101,28 @@ export class CircularService {
   getAllCircular() {
     return this.http.get(`${this.apiUrl}/api/circular/`, { headers: this.getHeaders() });
   }
+  getAssingedCircularForApproval(approver_id:number){
+    return this.http.get(`${this.apiUrl}/api/circular-approvals/${approver_id}/assigned`, { headers: this.getHeaders() })
+  }
 
+
+// Mark circular as seen
+markCircularAsSeen(circularId: number, approverId:number): Observable<any> {
+  return this.http.put(`${this.apiUrl}/api/circular-approvals/${circularId}/${approverId}/mark-seen`,{}, { headers: this.getHeaders() });
+}
+
+// Approve circular
+approveCircular(circularId: number, approverId:number): Observable<any> {
+  return this.http.put(`${this.apiUrl}/api/circular-approvals/${circularId}/${approverId}/approve`, {},{ headers: this.getHeaders() });
+}
+
+// Reject circular with comment
+rejectCircular(circularId: number,approverId:number, comments: string): Observable<any> {
+  return this.http.put(`${this.apiUrl}/api/circular-approvals/${circularId}/${approverId}/reject`, { comments },{ headers: this.getHeaders() });
+}
+ getCircularApprovalDataById(approver_id:number):Observable<any>{
+  return this.http.get(`${this.apiUrl}/api/circular-approvals/${approver_id}/get-circular-by-emp`,{ headers: this.getHeaders() })
+ }
   // ----------------------Source Type---------------------------------
   getSourceTypes() {
     return this.http.get(`${this.apiUrl}/api/source-type/`, { headers: this.getHeaders() });
@@ -101,4 +132,38 @@ export class CircularService {
   getReapetCycleDataForEmployee() {
     return this.http.get(`${this.apiUrl}/api/repeat-cycle/`, { headers: this.getHeaders() });
   }
+  getSourceTypesForAdmin() {
+    return this.http.get(`${this.apiUrl}/api/source-type/`, { headers: this.getHeadersForAdmin() });
+  }
+
+  addSourceType(name:any){
+    return this.http.post(`${this.apiUrl}/api/source-type/`,name,{ headers: this.getHeadersForAdmin() })
+
+  }
+  updateSourceType(id:number,name:any){
+    return this.http.put(`${this.apiUrl}/api/source-type/${id}`,name,{ headers: this.getHeadersForAdmin() })
+  }
+
+  // -----------------------------------------Repeat Cycle-----------------------------------------------------
+  // Get all repeat cycles
+getRepeatCycles(): Observable<any> {
+  return this.http.get(`${this.apiUrl}/api/repeat-cycle/`,{ headers: this.getHeadersForAdmin() });
+}
+
+// Add a new repeat cycle
+addRepeatCycle(data: { name: string; duration_days: number }): Observable<any> {
+  return this.http.post(`${this.apiUrl}/api/repeat-cycle`, data,{ headers: this.getHeadersForAdmin() });
+}
+
+// Update a repeat cycle
+updateRepeatCycle(id: number, data: { name: string; duration_days: number }): Observable<any> {
+  return this.http.put(`${this.apiUrl}/api/repeat-cycle/${id}`, data,{ headers: this.getHeadersForAdmin() });
+}
+
+// Delete a repeat cycle (optional - if you want to add delete functionality later)
+deleteRepeatCycle(id: number): Observable<any> {
+  return this.http.delete(`${this.apiUrl}/api/repeat-cycle/${id}`,{ headers: this.getHeadersForAdmin() });
+}
+
+
 }

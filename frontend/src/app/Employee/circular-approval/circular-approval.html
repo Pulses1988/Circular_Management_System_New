@@ -1,0 +1,497 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 p-6">
+  <div class="max-w-7xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+            <div
+              class="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg"
+            >
+              <i class="material-icons text-white">task_alt</i>
+            </div>
+            Circular Approvals
+          </h1>
+          <p class="text-gray-600">Review and approve pending circulars</p>
+        </div>
+        <!-- <div class="flex items-center gap-3">
+          <select class="px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option>All Priorities</option>
+            <option>High Priority</option>
+            <option>Medium Priority</option>
+            <option>Low Priority</option>
+          </select>
+          <button class="px-4 py-2 bg-white border-2 border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-2">
+            <i class="material-icons text-sm">filter_list</i>
+            Filters
+          </button>
+        </div> -->
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div
+        class="bg-gradient-to-br from-orange-500 to-red-500 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform cursor-pointer"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <i class="material-icons text-4xl opacity-80">pending_actions</i>
+          <span class="text-3xl font-bold">{{ pendingCount }}</span>
+        </div>
+        <p class="text-orange-100 text-sm font-medium">Pending Approvals</p>
+      </div>
+
+      <div
+        class="bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform cursor-pointer"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <i class="material-icons text-4xl opacity-80">check_circle</i>
+          <span class="text-3xl font-bold">{{ approvedTodayCount }}</span>
+        </div>
+        <p class="text-green-100 text-sm font-medium">Approved</p>
+      </div>
+
+      <div
+        class="bg-gradient-to-br from-red-500 to-pink-500 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform cursor-pointer"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <i class="material-icons text-4xl opacity-80">cancel</i>
+          <span class="text-3xl font-bold">{{ rejectedTodayCount }}</span>
+        </div>
+        <p class="text-red-100 text-sm font-medium">Rejected</p>
+      </div>
+
+      <div
+        class="bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform cursor-pointer"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <i class="material-icons text-4xl opacity-80">description</i>
+          <span class="text-3xl font-bold">{{ circulars.length }}</span>
+        </div>
+        <p class="text-blue-100 text-sm font-medium">Total Circulars</p>
+      </div>
+    </div>
+
+    <!-- View Toggle -->
+    <!-- <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-2 mb-6 inline-flex gap-2">
+      <button class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium transition-all flex items-center gap-2">
+        <i class="material-icons text-sm">view_list</i>
+        List View
+      </button>
+      <button class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-all flex items-center gap-2">
+        <i class="material-icons text-sm">view_module</i>
+        Card View
+      </button>
+      <button class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-all flex items-center gap-2">
+        <i class="material-icons text-sm">timeline</i>
+        Timeline View
+      </button>
+    </div> -->
+
+    <!-- Main Content Area -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Circulars List -->
+      <!-- Circulars List -->
+      <div class="lg:col-span-2 space-y-4">
+        @if (loading) {
+        <div class="text-center py-12">
+          <i class="material-icons text-6xl text-blue-600 animate-spin">autorenew</i>
+          <p class="text-gray-600 mt-4">Loading circulars...</p>
+        </div>
+        } @if (!loading && filteredCirculars.length === 0) {
+        <div class="bg-white rounded-2xl shadow-lg p-12 text-center">
+          <i class="material-icons text-6xl text-gray-400">inbox</i>
+          <h3 class="text-xl font-bold text-gray-700 mt-4">No Circulars Found</h3>
+          <p class="text-gray-500 mt-2">There are no circulars pending for approval</p>
+        </div>
+        } @for (circular of filteredCirculars; track circular.id) {
+        <div
+          class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all"
+          [class.border-2]="getPriorityClass(circular) === 'urgent'"
+          [class.border-orange-200]="getPriorityClass(circular) === 'urgent'"
+        >
+          <div
+            class="px-6 py-4 border-b"
+            [class.bg-gradient-to-r]="true"
+            [class.from-orange-50]="getPriorityClass(circular) === 'urgent'"
+            [class.to-red-50]="getPriorityClass(circular) === 'urgent'"
+            [class.from-blue-50]="getPriorityClass(circular) === 'normal'"
+            [class.to-indigo-50]="getPriorityClass(circular) === 'normal'"
+          >
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-2 flex-wrap">
+                  @if (getPriorityClass(circular) === 'urgent') {
+                  <span
+                    class="px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full flex items-center gap-1"
+                  >
+                    <i class="material-icons" style="font-size: 14px">priority_high</i>
+                    URGENT
+                  </span>
+                  }
+
+                  <span
+                    class="px-3 py-1 text-xs font-semibold rounded-full"
+                    [class.bg-orange-100]="circular.status === 'PENDING_APPROVAL'"
+                    [class.text-orange-700]="circular.status === 'PENDING_APPROVAL'"
+                    [class.bg-green-100]="circular.status === 'APPROVED'"
+                    [class.text-green-700]="circular.status === 'APPROVED'"
+                    [class.bg-red-100]="circular.status === 'REJECTED'"
+                    [class.text-red-700]="circular.status === 'REJECTED'"
+                  >
+                    {{ circular.status || 'PENDING' }}
+                  </span>
+
+                  <span
+                    class="px-3 py-1 text-xs font-semibold rounded-full"
+                    [class.bg-purple-100]="circular.send_type === 'CONFIDENTIAL'"
+                    [class.text-purple-700]="circular.send_type === 'CONFIDENTIAL'"
+                    [class.bg-green-100]="circular.send_type === 'INTERNAL'"
+                    [class.text-green-700]="circular.send_type === 'INTERNAL'"
+                    [class.bg-blue-100]="circular.send_type === 'PUBLIC'"
+                    [class.text-blue-700]="circular.send_type === 'PUBLIC'"
+                    [class.bg-red-100]="circular.send_type === 'RESTRICTED'"
+                    [class.text-red-700]="circular.send_type === 'RESTRICTED'"
+                  >
+                    {{ circular.send_type }}
+                  </span>
+                </div>
+
+                <h3 class="text-lg font-bold text-gray-800 mb-1">{{ circular.title }}</h3>
+                <p class="text-sm text-gray-600">Code: {{ circular.circular_code }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-6">
+            @if (circular.has_seen) {
+            <div
+              class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 flex items-center gap-2"
+            >
+              <i class="material-icons text-blue-600 text-sm">info</i>
+              <p class="text-xs text-blue-800 font-medium">
+                You viewed this circular on {{ circular.seen_at | date : 'MMM dd, yyyy' }}
+              </p>
+            </div>
+            }
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <i class="material-icons text-blue-600 text-sm">person</i>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500">Created By</p>
+                  <p class="text-sm font-semibold text-gray-800">
+                    {{ circular.creator_name || 'N/A' }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <i class="material-icons text-green-600 text-sm">calendar_today</i>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500">Effective From</p>
+                  <p class="text-sm font-semibold text-gray-800">
+                    {{ circular.effective_from | date : 'MMM dd, yyyy' }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <i class="material-icons text-purple-600 text-sm">schedule</i>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500">Submitted</p>
+                  <p class="text-sm font-semibold text-gray-800">
+                    {{ getTimeAgo(circular.created_at) }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <i class="material-icons text-orange-600 text-sm">repeat</i>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500">Repeat Cycle</p>
+                  <p class="text-sm font-semibold text-gray-800">
+                    {{ circular.repeat_cycle || 'No Repeat' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-gray-50 rounded-xl p-4 mb-4">
+              <p class="text-sm text-gray-700 leading-relaxed line-clamp-3">
+                {{ circular.content }}
+              </p>
+            </div>
+
+            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+              <div class="flex gap-2">
+                <button
+                  (click)="viewCircularDetails(circular.id)"
+                  class="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all text-sm font-medium flex items-center gap-2"
+                >
+                  <i class="material-icons text-sm">visibility</i>
+                  View Details
+                </button>
+                <button
+                  (click)="downloadPDF(circular)"
+                  class="px-4 py-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-all text-sm font-medium flex items-center gap-2"
+                >
+                  <i class="material-icons text-sm">picture_as_pdf</i>
+                  View PDF
+                </button>
+              </div>
+
+              @if (circular.status === 'PENDING_APPROVAL') {
+              <div class="flex gap-2">
+                <button
+                  (click)="approveCircular(circular.id)"
+                  class="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all text-sm font-semibold shadow-md flex items-center gap-2"
+                >
+                  <i class="material-icons text-sm">check</i>
+                  Approve
+                </button>
+                <button
+                  (click)="rejectCircular(circular.id)"
+                  class="px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg hover:from-red-700 hover:to-pink-700 transition-all text-sm font-semibold shadow-md flex items-center gap-2"
+                >
+                  <i class="material-icons text-sm">close</i>
+                  Reject
+                </button>
+              </div>
+              }
+              @if(circular.status==='REJECTED'){
+                @for (circularData of ApprovalDataByEmpId; track circularData.id) {
+                <p class="text-lx bg-red-100 p-2 rounded-2xl truncate w-auto text-red-600">{{circularData.comments}}</p>
+                }
+              
+              }
+            </div>
+            <!-- Replace the old PDF viewer with this -->
+            <div *ngIf="showPdfViewer" class="pdf-overlay" (click)="closePDF()">
+              <div class="pdf-container" (click)="$event.stopPropagation()">
+                <!-- Header -->
+                <div class="pdf-header">
+                  <div class="pdf-title">
+                    <i class="material-icons">picture_as_pdf</i>
+                    <span>{{ selectedCircularTitle || 'Circular Document' }}</span>
+                  </div>
+
+                  <div class="pdf-actions">
+                    <button (click)="downloadPDFFile()" title="Download PDF">
+                      <i class="material-icons">download</i>
+                      <span>Download</span>
+                    </button>
+
+                    <button (click)="printPDF()" title="Print PDF">
+                      <i class="material-icons">print</i>
+                      <span>Print</span>
+                    </button>
+
+                    <button class="close-btn" (click)="closePDF()" title="Close">
+                      <i class="material-icons">close</i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- PDF Content -->
+                <div class="pdf-content">
+                  <iframe *ngIf="pdfUrl" [src]="pdfUrl" class="pdf-frame" title="PDF Viewer">
+                  </iframe>
+
+                  <div *ngIf="!pdfUrl" class="pdf-loading">
+                    <i class="material-icons">autorenew</i>
+                    <p>Loading PDF...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+
+      <!-- Right Sidebar - Quick Actions & History -->
+      <div class="lg:col-span-1 space-y-6">
+        <!-- Recent Activity -->
+        <div class="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden">
+          <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <i class="material-icons text-gray-600">timeline</i>
+              Recent Activity
+            </h3>
+          </div>
+
+          <div class="p-4 space-y-4 max-h-96 overflow-y-auto">
+            <div class="flex items-start gap-3 pb-4 border-b border-gray-100">
+              <div
+                class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0"
+              >
+                <i class="material-icons text-green-600 text-sm">check</i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-gray-800">Approved Circular</p>
+                <p class="text-xs text-gray-600 mt-1">Safety Protocol Updates - CIR/2025/004</p>
+                <p class="text-xs text-gray-400 mt-1">10 minutes ago</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3 pb-4 border-b border-gray-100">
+              <div
+                class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0"
+              >
+                <i class="material-icons text-blue-600 text-sm">visibility</i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-gray-800">Viewed Circular</p>
+                <p class="text-xs text-gray-600 mt-1">IT Security Guidelines - CIR/2025/005</p>
+                <p class="text-xs text-gray-400 mt-1">1 hour ago</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3 pb-4 border-b border-gray-100">
+              <div
+                class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0"
+              >
+                <i class="material-icons text-red-600 text-sm">close</i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-gray-800">Rejected Circular</p>
+                <p class="text-xs text-gray-600 mt-1">Parking Policy Draft - CIR/2025/006</p>
+                <p class="text-xs text-gray-400 mt-1">3 hours ago</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <div
+                class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0"
+              >
+                <i class="material-icons text-purple-600 text-sm">comment</i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-gray-800">Added Comment</p>
+                <p class="text-xs text-gray-600 mt-1">Training Schedule - CIR/2025/007</p>
+                <p class="text-xs text-gray-400 mt-1">5 hours ago</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Approval Statistics -->
+        <div class="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden">
+          <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <i class="material-icons text-gray-600">analytics</i>
+              Your Statistics
+            </h3>
+          </div>
+
+          <div class="p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-600">This Month</span>
+              <span class="text-lg font-bold text-gray-800">87 Approved</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div
+                class="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full"
+                style="width: 75%"
+              ></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-4">
+              <div class="text-center p-3 bg-green-50 rounded-lg">
+                <p class="text-2xl font-bold text-green-600">87</p>
+                <p class="text-xs text-gray-600 mt-1">Approved</p>
+              </div>
+              <div class="text-center p-3 bg-red-50 rounded-lg">
+                <p class="text-2xl font-bold text-red-600">5</p>
+                <p class="text-xs text-gray-600 mt-1">Rejected</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Reject Modal -->
+<div *ngIf="showRejectModal" 
+     class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+     (click)="closeRejectModal()">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="bg-gradient-to-r from-red-600 to-pink-600 p-6 text-white rounded-t-2xl">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+            <i class="material-icons text-2xl">cancel</i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold">Reject Circular</h2>
+            <p class="text-red-100 text-sm mt-1">Please provide a reason for rejection</p>
+          </div>
+        </div>
+        <button (click)="closeRejectModal()" 
+                class="w-8 h-8 bg-white/20 rounded-lg hover:bg-white/30 transition-all flex items-center justify-center">
+          <i class="material-icons text-xl">close</i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="p-6">
+      <div class="mb-4">
+        <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+          <div class="flex items-start gap-3">
+            <i class="material-icons text-red-600 text-xl">info</i>
+            <div>
+              <p class="text-sm font-semibold text-red-900">Circular Details</p>
+              <p class="text-sm text-red-700 mt-1">{{ selectedCircularForAction?.title }}</p>
+              <p class="text-xs text-red-600 mt-1">Code: {{ selectedCircularForAction?.circular_code }}</p>
+            </div>
+          </div>
+        </div>
+
+        <label class="block text-sm font-bold text-gray-700 mb-2">
+          Reason for Rejection <span class="text-red-500">*</span>
+        </label>
+        <textarea
+          [(ngModel)]="rejectionComment"
+          rows="5"
+          placeholder="Please provide a detailed reason for rejecting this circular..."
+          class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+          [class.border-red-500]="!rejectionComment.trim() && rejectionComment.length > 0"
+        ></textarea>
+        <p class="mt-2 text-xs text-gray-500">
+          <i class="material-icons text-xs align-middle">info</i>
+          This comment will be sent to the circular creator
+        </p>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="px-6 pb-6 flex items-center gap-3">
+      <button
+        (click)="closeRejectModal()"
+        class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-semibold"
+      >
+        Cancel
+      </button>
+      <button
+        (click)="submitRejection()"
+        [disabled]="!rejectionComment.trim()"
+        class="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl hover:from-red-700 hover:to-pink-700 transition-all font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      >
+        <i class="material-icons text-xl">cancel</i>
+        Reject Circular
+      </button>
+    </div>
+  </div>
+</div>
+</div>

@@ -9,6 +9,7 @@ import { AdminRolesManegement } from './admin-roles-manegement/admin-roles-maneg
 import { AuthGuard } from '../Authentication/auth.guard';
 import { RoleGuard } from '../Authentication/role.guard';
 import { UnauthorizedPage } from './unauthorized-page/unauthorized-page';
+import { AdminCircularSettings } from './admin-circular-settings/admin-circular-settings';
 
 export const ADMIN_ROUTS: Routes = [
   { path: '', redirectTo: 'admin-login', pathMatch: 'full' },
@@ -42,6 +43,12 @@ export const ADMIN_ROUTS: Routes = [
     component: AdminRolesManegement,
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: ['HO_ADMIN', 'BRANCH_ADMIN'] }
+  },
+  { 
+    path: 'admin-circular-settings', 
+    component: AdminCircularSettings,
+    // canActivate: [AuthGuard, RoleGuard],
+    // data: { roles: ['HO_ADMIN', 'BRANCH_ADMIN'] }
   },
   // Add unauthorized route
   { 
