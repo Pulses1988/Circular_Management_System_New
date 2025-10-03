@@ -1,0 +1,455 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
+  <div class="max-w-7xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">Circular Settings</h1>
+          <p class="text-gray-600">Configure and manage circular document settings</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Navigation Tabs -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
+      <div class="flex border-b border-gray-200">
+        <button
+          (click)="activeTab = 'sourceTypes'"
+          [class.text-indigo-600]="activeTab === 'sourceTypes'"
+          [class.border-indigo-600]="activeTab === 'sourceTypes'"
+          [class.bg-indigo-50]="activeTab === 'sourceTypes'"
+          [class.text-gray-600]="activeTab !== 'sourceTypes'"
+          class="flex-1 px-6 py-4 text-sm font-semibold border-b-2 border-transparent hover:bg-gray-50 transition-colors"
+        >
+          <i class="material-icons text-sm mr-2 align-middle">source</i>
+          Source Types
+        </button>
+        <button
+          (click)="activeTab = 'repeatCycles'"
+          [class.text-indigo-600]="activeTab === 'repeatCycles'"
+          [class.border-indigo-600]="activeTab === 'repeatCycles'"
+          [class.bg-indigo-50]="activeTab === 'repeatCycles'"
+          [class.text-gray-600]="activeTab !== 'repeatCycles'"
+          class="flex-1 px-6 py-4 text-sm font-semibold border-b-2 border-transparent hover:bg-gray-50 transition-colors"
+        >
+          <i class="material-icons text-sm mr-2 align-middle">autorenew</i>
+          Repeat Cycles
+        </button>
+        <button
+          class="flex-1 px-6 py-4 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+        >
+          <i class="material-icons text-sm mr-2 align-middle">category</i>
+          Categories
+          <span class="ml-2 text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">Coming Soon</span>
+        </button>
+        <button
+          class="flex-1 px-6 py-4 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+        >
+          <i class="material-icons text-sm mr-2 align-middle">schedule</i>
+          Workflow Rules
+          <span class="ml-2 text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">Coming Soon</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Source Types Section -->
+    <div *ngIf="activeTab === 'sourceTypes'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Left Panel - Add New Source Type -->
+      <div class="lg:col-span-1">
+        <div
+          class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden sticky top-6"
+        >
+          <div class="bg-gradient-to-r from-indigo-600 to-blue-600 p-6 text-white">
+            <div
+              class="flex items-center justify-center w-14 h-14 bg-white/20 rounded-xl mb-4 backdrop-blur-sm"
+            >
+              <i class="material-icons text-3xl">add_circle</i>
+            </div>
+            <h2 class="text-xl font-bold mb-2">Add Source Type</h2>
+            <p class="text-indigo-100 text-sm">Create a new source type for circulars</p>
+          </div>
+
+          <div class="p-6">
+            <form class="space-y-6">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  Source Type Name
+                  <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                  <input
+                    type="text"
+                    name="sourceType"
+                    [(ngModel)]="newSourceTypeName"
+                    placeholder="e.g., Government Order, Internal Memo"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    required
+                  />
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <i class="material-icons text-gray-400 text-lg">label</i>
+                  </div>
+                </div>
+                <p class="mt-2 text-xs text-gray-500">
+                  Enter a clear, descriptive name for the source type
+                </p>
+              </div>
+              <div class="pt-4 border-t border-gray-200 space-y-3">
+                <button
+                  type="button"
+                  (click)="addSourceType()"
+                  [disabled]="!newSourceTypeName.trim()"
+                  class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-indigo-700 hover:to-blue-700 transform hover:scale-[1.02] transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <i class="material-icons text-sm mr-2 align-middle">add</i>
+                  Add Source Type
+                </button>
+                <button
+                  type="button"
+                  (click)="newSourceTypeName = ''"
+                  class="w-full bg-gray-100 text-gray-700 font-semibold py-3 px-6 rounded-xl hover:bg-gray-200 transition-colors"
+                >
+                  <i class="material-icons text-sm mr-2 align-middle">refresh</i>
+                  Reset Form
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel - Existing Source Types -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+          <div class="p-6 border-b border-gray-200 bg-gray-50">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-xl font-bold text-gray-800">Existing Source Types</h3>
+                <p class="text-sm text-gray-600 mt-1">Manage and organize your source types</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span
+                  class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-lg text-sm font-semibold"
+                >
+                  {{ sourceType?.length || 0 }} Types
+                </span>
+              </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="relative">
+              <input
+                type="text"
+                name="search"
+                [(ngModel)]="searchQuery"
+                placeholder="Search source types..."
+                class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <i class="material-icons absolute left-3 top-3.5 text-gray-400">search</i>
+            </div>
+          </div>
+
+          <!-- Source Types List -->
+          <div class="divide-y divide-gray-200">
+            @for (st of filteredSourceTypes; track st.id; let i = $index) {
+            <div class="p-5 hover:bg-gray-50 transition-colors group">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4 flex-1">
+                  <div
+                    class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl group-hover:scale-110 transition-transform"
+                  >
+                    <i class="material-icons text-indigo-600">description</i>
+                  </div>
+                  <div class="flex-1">
+                    @if (editingSourceTypeId === st.id) {
+                    <input
+                      type="text"
+                      [(ngModel)]="editingSourceTypeName"
+                      class="w-full px-3 py-2 border-2 border-indigo-500 rounded-lg font-semibold"
+                    />
+                    } @else {
+                    <h4 class="font-semibold text-gray-800">{{ st.name }}</h4>
+                    }
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  @if (editingSourceTypeId === st.id) {
+                  <button
+                    (click)="saveEdit()"
+                    class="p-2 text-green-600 hover:bg-green-50 rounded-lg"
+                  >
+                    <i class="material-icons text-sm">check</i>
+                  </button>
+                  <button
+                    (click)="cancelEdit()"
+                    class="p-2 text-gray-600 hover:bg-gray-50 rounded-lg"
+                  >
+                    <i class="material-icons text-sm">close</i>
+                  </button>
+                  } @else {
+                  <button
+                    (click)="startEdit(st)"
+                    class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                  >
+                    <i class="material-icons text-sm">edit</i>
+                  </button>
+                  }
+                </div>
+              </div>
+            </div>
+            } @if (filteredSourceTypes?.length === 0) {
+            <div class="p-12 text-center">
+              <div
+                class="flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mx-auto mb-4"
+              >
+                <i class="material-icons text-gray-400 text-4xl">inbox</i>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-700 mb-2">No Source Types Found</h3>
+              <p class="text-gray-500">Add your first source type to get started</p>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Repeat Cycles Section -->
+    <div *ngIf="activeTab === 'repeatCycles'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Left Panel - Add New Repeat Cycle -->
+      <div class="lg:col-span-1">
+        <div
+          class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden sticky top-6"
+        >
+          <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
+            <div
+              class="flex items-center justify-center w-14 h-14 bg-white/20 rounded-xl mb-4 backdrop-blur-sm"
+            >
+              <i class="material-icons text-3xl">add_circle</i>
+            </div>
+            <h2 class="text-xl font-bold mb-2">Add Repeat Cycle</h2>
+            <p class="text-purple-100 text-sm">Create a new repeat cycle for circulars</p>
+          </div>
+
+          <div class="p-6">
+            <form class="space-y-6">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  Cycle Name
+                  <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                  <input
+                    type="text"
+                    name="cycleName"
+                    [(ngModel)]="newRepeatCycleName"
+                    placeholder="e.g., Weekly, Monthly, Quarterly"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                    required
+                  />
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <i class="material-icons text-gray-400 text-lg">label</i>
+                  </div>
+                </div>
+                <p class="mt-2 text-xs text-gray-500">
+                  Enter a descriptive name for the cycle
+                </p>
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  Duration (Days)
+                  <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                  <input
+                    type="number"
+                    name="cycleDuration"
+                    [(ngModel)]="newRepeatCycleDuration"
+                    placeholder="e.g., 7, 30, 90"
+                    min="1"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                    required
+                  />
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <i class="material-icons text-gray-400 text-lg">calendar_today</i>
+                  </div>
+                </div>
+                <p class="mt-2 text-xs text-gray-500">
+                  Enter the number of days for this cycle
+                </p>
+              </div>
+
+              <!-- Quick Duration Buttons -->
+              <div class="space-y-2">
+                <label class="block text-sm font-semibold text-gray-700">Quick Select</label>
+                <div class="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    (click)="newRepeatCycleDuration = 7; newRepeatCycleName = newRepeatCycleName || 'Weekly'"
+                    class="px-3 py-2 text-xs font-semibold bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors"
+                  >
+                    7 Days
+                  </button>
+                  <button
+                    type="button"
+                    (click)="newRepeatCycleDuration = 30; newRepeatCycleName = newRepeatCycleName || 'Monthly'"
+                    class="px-3 py-2 text-xs font-semibold bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors"
+                  >
+                    30 Days
+                  </button>
+                  <button
+                    type="button"
+                    (click)="newRepeatCycleDuration = 90; newRepeatCycleName = newRepeatCycleName || 'Quarterly'"
+                    class="px-3 py-2 text-xs font-semibold bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors"
+                  >
+                    90 Days
+                  </button>
+                </div>
+              </div>
+
+              <div class="pt-4 border-t border-gray-200 space-y-3">
+                <button
+                  type="button"
+                  (click)="addRepeatCycle()"
+                  [disabled]="!newRepeatCycleName.trim() || !newRepeatCycleDuration || newRepeatCycleDuration <= 0"
+                  class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-purple-700 hover:to-pink-700 transform hover:scale-[1.02] transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <i class="material-icons text-sm mr-2 align-middle">add</i>
+                  Add Repeat Cycle
+                </button>
+                <button
+                  type="button"
+                  (click)="resetCycleForm()"
+                  class="w-full bg-gray-100 text-gray-700 font-semibold py-3 px-6 rounded-xl hover:bg-gray-200 transition-colors"
+                >
+                  <i class="material-icons text-sm mr-2 align-middle">refresh</i>
+                  Reset Form
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel - Existing Repeat Cycles -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+          <div class="p-6 border-b border-gray-200 bg-gray-50">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-xl font-bold text-gray-800">Existing Repeat Cycles</h3>
+                <p class="text-sm text-gray-600 mt-1">Manage your circular repeat cycles</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span
+                  class="bg-purple-100 text-purple-700 px-3 py-1 rounded-lg text-sm font-semibold"
+                >
+                  {{ repeatCycles?.length || 0 }} Cycles
+                </span>
+              </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="relative">
+              <input
+                type="text"
+                name="searchCycle"
+                [(ngModel)]="searchCycleQuery"
+                placeholder="Search repeat cycles..."
+                class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+              <i class="material-icons absolute left-3 top-3.5 text-gray-400">search</i>
+            </div>
+          </div>
+
+          <!-- Repeat Cycles List -->
+          <div class="divide-y divide-gray-200">
+            @for (cycle of filteredRepeatCycles; track cycle.id) {
+            <div class="p-5 hover:bg-gray-50 transition-colors group">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4 flex-1">
+                  <div
+                    class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl group-hover:scale-110 transition-transform"
+                  >
+                    <i class="material-icons text-purple-600">autorenew</i>
+                  </div>
+                  <div class="flex-1">
+                    @if (editingRepeatCycleId === cycle.id) {
+                    <div class="space-y-2">
+                      <input
+                        type="text"
+                        [(ngModel)]="editingRepeatCycleName"
+                        class="w-full px-3 py-2 border-2 border-purple-500 rounded-lg font-semibold"
+                        placeholder="Cycle name"
+                      />
+                      <input
+                        type="number"
+                        [(ngModel)]="editingRepeatCycleDuration"
+                        min="1"
+                        class="w-full px-3 py-2 border-2 border-purple-500 rounded-lg"
+                        placeholder="Duration in days"
+                      />
+                    </div>
+                    } @else {
+                    <h4 class="font-semibold text-gray-800">{{ cycle.name }}</h4>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="inline-flex items-center gap-1 text-sm text-gray-600">
+                        <i class="material-icons text-xs">schedule</i>
+                        @if(cycle.duration_days>0){
+                        {{ cycle.duration_days }} days
+                        }@else {
+                            No Repeat
+                        }
+                      </span>
+                      <!-- <span class="text-gray-400">•</span>
+                      <span class="text-xs text-gray-500">
+                        {{ cycle.duration_days === 7 ? 'Weekly' : 
+                           cycle.duration_days === 30 ? 'Monthly' : 
+                           cycle.duration_days === 90 ? 'Quarterly' : 
+                           'Custom' }}
+                      </span> -->
+                    </div>
+                    }
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  @if (editingRepeatCycleId === cycle.id) {
+                  <button
+                    (click)="saveEditCycle()"
+                    class="p-2 text-green-600 hover:bg-green-50 rounded-lg"
+                  >
+                    <i class="material-icons text-sm">check</i>
+                  </button>
+                  <button
+                    (click)="cancelEditCycle()"
+                    class="p-2 text-gray-600 hover:bg-gray-50 rounded-lg"
+                  >
+                    <i class="material-icons text-sm">close</i>
+                  </button>
+                  } @else {
+                  <button
+                    (click)="startEditCycle(cycle)"
+                    class="p-2 text-purple-600 hover:bg-purple-50 rounded-lg"
+                  >
+                    <i class="material-icons text-sm">edit</i>
+                  </button>
+                  }
+                </div>
+              </div>
+            </div>
+            } @if (filteredRepeatCycles!.length === 0) {
+            <div class="p-12 text-center">
+              <div
+                class="flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mx-auto mb-4"
+              >
+                <i class="material-icons text-gray-400 text-4xl">inbox</i>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-700 mb-2">No Repeat Cycles Found</h3>
+              <p class="text-gray-500">Add your first repeat cycle to get started</p>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

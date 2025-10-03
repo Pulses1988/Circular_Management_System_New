@@ -15,6 +15,16 @@ router.get(
   circularApprovalController.getAllCircularApprovalsWithRelations
 );
 router.get(
+  "/:approver_id/assigned",
+  authenticateToken,
+  circularApprovalController.getAssignedCirculars
+);
+router.get(
+  "/:approver_id/get-circular-by-emp",
+  authenticateToken,
+  circularApprovalController.getCircularApprovalByEmpId
+);
+router.get(
   "/:id",
   authenticateToken,
   circularApprovalController.getCircularApprovalById
@@ -33,6 +43,25 @@ router.delete(
   "/:id",
   authenticateToken,
   circularApprovalController.deleteCircularApproval
+);
+router.put(
+  "/:circularId/:approverId/mark-seen",
+  authenticateToken,
+  circularApprovalController.markAsSeen
+);
+
+// Approve circular
+router.put(
+  "/:circularId/:approverId/approve",
+  authenticateToken,
+  circularApprovalController.approve
+);
+
+// Reject circular
+router.put(
+  "/:circularId/:approverId/reject",
+  authenticateToken,
+  circularApprovalController.reject
 );
 
 module.exports = router;

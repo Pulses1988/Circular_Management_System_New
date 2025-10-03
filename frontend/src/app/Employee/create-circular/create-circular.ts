@@ -165,6 +165,7 @@ export class CreateCircular {
   }
 
   private loadEmployeeData(): void {
+    
     const encryptedUser = localStorage.getItem('emp_user');
     if (encryptedUser) {
       const decryptedUser = this.decryptData(encryptedUser);

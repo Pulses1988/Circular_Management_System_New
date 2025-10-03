@@ -125,9 +125,24 @@ CREATE TABLE IF NOT EXISTS repeat_cycles (
 
 const insertDefaultRepeatCycleQuery = `
 INSERT INTO repeat_cycles (name, duration_days)
-SELECT 'Once', NULL
+SELECT 'Once', 0
 WHERE NOT EXISTS (
     SELECT 1 FROM repeat_cycles WHERE name = 'Once'
+);
+`;
+const createCircularVisibilityQuery=`
+CREATE TABLE IF NOT EXISTS circular_visibility (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    circular_id INT NOT NULL,
+    employee_id INT NOT NULL,
+
+    CONSTRAINT fk_circular FOREIGN KEY (circular_id) REFERENCES circulars(id) ON DELETE CASCADE,
+    CONSTRAINT fk_employee FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+
+    UNIQUE (circular_id, employee_id),
+
+    INDEX idx_employee (employee_id),
+    INDEX idx_circular (circular_id)
 );
 `;
 
@@ -189,6 +204,9 @@ async function initializeDatabase() {
 
     await db.query(createCircularApprovalsQuery);
     console.log("Circular Approvals table is ready");
+    await db.query(createCircularVisibilityQuery);
+    console.log('Circular Visibility table is ready');
+
   } catch (err) {
     console.error("Error initializing database:", err);
   }

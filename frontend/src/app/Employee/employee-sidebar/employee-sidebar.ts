@@ -71,7 +71,7 @@ export class EmployeeSidebar implements OnInit, OnDestroy {
     {
       label: 'Dashboard',
       icon: 'dashboard',
-      route: '/employee-dashboard',
+      route: '/employee/employee-dashboard',
       exact: true,
       badgeType: 'info',
     },

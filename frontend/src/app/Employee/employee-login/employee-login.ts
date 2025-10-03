@@ -65,7 +65,7 @@ export class EmployeeLogin {
               panelClass: ['success-snackbar'],
             });
 
-            this.router.navigate(['/employee-dashboard']);
+            this.router.navigate(['/employee/employee-dashboard']);
           }
           this.isLoading = false;
         },
