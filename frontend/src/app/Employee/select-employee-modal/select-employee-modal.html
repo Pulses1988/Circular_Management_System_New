@@ -1,11 +1,21 @@
-<h2 mat-dialog-title>Select Users</h2>
+<h2 mat-dialog-title class="text-2xl font-semibold border-b pb-4">Select Receivers</h2>
 
-<mat-dialog-content class="px-6">
-  <div class="grid grid-cols-2 gap-6"> <!-- Two-column grid -->
-    
+<mat-dialog-content class="px-6 py-6">
+  <div class="grid grid-cols-2 gap-8">
     <!-- Left Column: Department Section -->
-    <div class="flex flex-col space-y-4">
-      <h3 class="text-lg font-medium">Department</h3>
+    <div class="flex flex-col space-y-4 bg-gray-50 p-5 rounded-lg border border-gray-200">
+      <div class="flex items-center space-x-2 pb-2 border-b border-gray-300">
+        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+          />
+        </svg>
+        <h3 class="text-lg font-semibold text-gray-800">Department</h3>
+      </div>
+
       <form [formGroup]="form">
         <mat-form-field appearance="outline" class="w-full">
           <mat-label>Select Department</mat-label>
@@ -18,24 +28,51 @@
       </form>
 
       <!-- Department Employees -->
-      <div *ngIf="selectedDepartmentId" class="mt-4">
-        <h4 class="font-medium mb-2">{{ getDepartmentName(selectedDepartmentId) }} Employees</h4>
-        <mat-selection-list multiple class="w-full max-h-60 overflow-y-auto">
-          <mat-list-option
-            *ngFor="let emp of employees"
-            [value]="emp.id"
-            [selected]="isSelected(emp.id)"
-            (click)="toggleEmployee(emp)"
-          >
-            {{ emp.first_name }} {{ emp.last_name }}
-          </mat-list-option>
-        </mat-selection-list>
+      <div *ngIf="selectedDepartmentId" class="mt-2">
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="font-medium text-gray-700 text-sm">
+            {{ getDepartmentName(selectedDepartmentId) }} Employees
+          </h4>
+          <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">{{
+            employees.length
+          }}</span>
+        </div>
+        <div class="bg-white rounded-md border border-gray-200 shadow-sm">
+          <mat-selection-list multiple class="w-full max-h-60 overflow-y-auto">
+            <mat-list-option
+              *ngFor="let emp of employees"
+              [value]="emp.id"
+              [selected]="isSelected(emp.id)"
+              (click)="toggleEmployee(emp)"
+              class="hover:bg-blue-50 transition-colors"
+            >
+              {{ emp.first_name }} {{ emp.last_name }}
+            </mat-list-option>
+          </mat-selection-list>
+        </div>
       </div>
     </div>
 
     <!-- Right Column: Branch Section -->
-    <div class="flex flex-col space-y-4">
-      <h3 class="text-lg font-medium">Branch</h3>
+    <div class="flex flex-col space-y-4 bg-gray-50 p-5 rounded-lg border border-gray-200">
+      <div class="flex items-center space-x-2 pb-2 border-b border-gray-300">
+        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+          />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+        </svg>
+        <h3 class="text-lg font-semibold text-gray-800">Branch</h3>
+      </div>
+
       <form [formGroup]="form">
         <mat-form-field appearance="outline" class="w-full">
           <mat-label>Select Branch</mat-label>
@@ -57,44 +94,108 @@
       </form>
 
       <!-- Branch Employees -->
-      <div *ngIf="branchDepartmentsEmployee.length > 0" class="mt-4">
-        <h4 class="font-medium mb-2">Branch Employees</h4>
-        <mat-selection-list multiple class="w-full max-h-60 overflow-y-auto">
-          <mat-list-option
-            *ngFor="let emp of branchDepartmentsEmployee"
-            [value]="emp.id"
-            [selected]="isSelected(emp.id)"
-            (click)="toggleEmployee(emp)"
-          >
-            {{ emp.first_name }} {{ emp.last_name }}
-          </mat-list-option>
-        </mat-selection-list>
+      <div *ngIf="branchDepartmentsEmployee.length > 0" class="mt-2">
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="font-medium text-gray-700 text-sm">Branch Employees</h4>
+          <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">{{
+            branchDepartmentsEmployee.length
+          }}</span>
+        </div>
+        <div class="bg-white rounded-md border border-gray-200 shadow-sm">
+          <mat-selection-list multiple class="w-full max-h-60 overflow-y-auto">
+            <mat-list-option
+              *ngFor="let emp of branchDepartmentsEmployee"
+              [value]="emp.id"
+              [selected]="isSelected(emp.id)"
+              (click)="toggleEmployee(emp)"
+              class="hover:bg-green-50 transition-colors"
+            >
+              {{ emp.first_name }} {{ emp.last_name }}
+            </mat-list-option>
+          </mat-selection-list>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Selected Employees Chips -->
-  <div *ngIf="selectedEmployees.length > 0" class="mt-6 border-t pt-4">
-    <h4 class="font-medium mb-2">Selected Employees:</h4>
+  <div
+    *ngIf="selectedEmployees.length > 0"
+    class="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 p-5 rounded-lg border border-blue-200"
+  >
+    <div class="flex items-center justify-between mb-3">
+      <h4 class="font-semibold text-gray-800 flex items-center">
+        <svg
+          class="w-5 h-5 mr-2 text-blue-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        Selected Employees
+      </h4>
+      <span class="text-sm bg-blue-600 text-white px-3 py-1 rounded-full font-medium">{{
+        selectedEmployees.length
+      }}</span>
+    </div>
     <div class="flex flex-wrap gap-2">
       <span
         *ngFor="let emp of selectedEmployees"
-        class="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+        class="flex items-center bg-white border border-blue-300 text-gray-800 px-4 py-2 rounded-full text-sm shadow-sm hover:shadow-md transition-shadow"
       >
-        {{ emp.first_name }} {{ emp.last_name }} ({{ getDepartmentName(emp.department_id) }})
+        <span class="font-medium">{{ emp.first_name }} {{ emp.last_name }}</span>
+        <span class="mx-2 text-gray-400">•</span>
+        <span class="text-gray-600 text-xs">{{ getDepartmentName(emp.department_id) }}</span>
         <button
           type="button"
           (click)="removeEmployee(emp)"
-          class="ml-2 text-blue-600 hover:text-blue-800 font-bold focus:outline-none"
+          class="ml-3 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full p-1 focus:outline-none transition-colors"
+          title="Remove"
         >
-          ✕
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
         </button>
       </span>
     </div>
   </div>
 </mat-dialog-content>
 
-<mat-dialog-actions align="end" class="px-6 pb-4">
-  <button mat-button (click)="closeDialog()">Cancel</button>
-  <button mat-flat-button color="primary" (click)="confirmSelection()">Confirm</button>
+<mat-dialog-actions align="end" class="px-6 pb-4 pt-4 border-t bg-gray-50">
+  <!-- New Close button -->
+  <button
+    mat-button
+    (click)="closeOnly()"
+    *ngIf="selectedEmployees.length > 0 && initialSelection.length > 0"
+    class="mr-2 border border-gray-300"
+  >
+    Close
+  </button>
+
+  <!-- Old Cancel button renamed -->
+  <button mat-button (click)="cancelSelection()" class="mr-2 border border-gray-300">
+    {{ selectedEmployees.length > 0 && initialSelection.length > 0 ? 'Cancel & Reset' : 'Close' }}
+  </button>
+
+  <!-- Confirm button -->
+  <button
+    mat-flat-button
+    color="primary"
+    (click)="confirmSelection()"
+    class="px-6"
+    [disabled]="selectedEmployees.length === 0"
+  >
+    Confirm Selection ({{ selectedEmployees.length }})
+  </button>
 </mat-dialog-actions>

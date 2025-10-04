@@ -3,6 +3,7 @@ import { EmployeeLogin } from './employee-login/employee-login';
 import { EmployeeDashboard } from './employee-dashboard/employee-dashboard';
 import { CreateCircular } from './create-circular/create-circular';
 import { CircularApproval } from './circular-approval/circular-approval';
+import { CircularCreater } from './circular-creater/circular-creater';
 
 export const Employee_ROUTS: Routes = [
   { path: '', redirectTo: 'employee-login', pathMatch: 'full' },
@@ -19,5 +20,7 @@ export const Employee_ROUTS: Routes = [
     path: 'circular-approval',
     component: CircularApproval,
   },
+
+  { path: 'circular-creater', component: CircularCreater },
   { path: '**', component: EmployeeLogin },
 ];

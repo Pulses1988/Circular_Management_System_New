@@ -130,7 +130,7 @@ WHERE NOT EXISTS (
     SELECT 1 FROM repeat_cycles WHERE name = 'Once'
 );
 `;
-const createCircularVisibilityQuery=`
+const createCircularVisibilityQuery = `
 CREATE TABLE IF NOT EXISTS circular_visibility (
     id INT AUTO_INCREMENT PRIMARY KEY,
     circular_id INT NOT NULL,
@@ -157,7 +157,7 @@ CREATE TABLE IF NOT EXISTS circulars (
   circular_code VARCHAR(100) ,             
   source_type_id INT ,                     
   effective_from TIMESTAMP ,                
-  send_type ENUM('INTERNAL','CONFIDENTIAL','RESTRICTED','PUBLIC') ,
+  send_type ENUM('INTERNAL','CONFIDENTIAL','RESTRICTED','PUBLIC','CUSTOM') ,
   status ENUM('DRAFT','PENDING_APPROVAL','REJECTED','APPROVED','PUBLISHED') ,
   repeat_cycle_id INT ,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -205,8 +205,7 @@ async function initializeDatabase() {
     await db.query(createCircularApprovalsQuery);
     console.log("Circular Approvals table is ready");
     await db.query(createCircularVisibilityQuery);
-    console.log('Circular Visibility table is ready');
-
+    console.log("Circular Visibility table is ready");
   } catch (err) {
     console.error("Error initializing database:", err);
   }

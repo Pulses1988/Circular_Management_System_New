@@ -129,13 +129,54 @@
           <div class="form-field">
             <label>Confidentiality <span class="required">*</span></label>
             <div class="select-wrapper">
-              <select formControlName="confidentiality" class="form-select">
+              <select
+                formControlName="confidentiality"
+                class="form-select"
+                (click)="onConfidentialityDropdownClick()"
+              >
                 <option value="" disabled selected>Select confidentiality level</option>
-                <option *ngFor="let level of confidentialityLevels" [value]="level.value">
+                <option *ngFor="let level of filteredConfidentialityLevels" [value]="level.value">
                   {{ level.label }} - {{ level.description }}
                 </option>
               </select>
               <mat-icon class="select-icon">expand_more</mat-icon>
+
+              <div
+                class="field-error"
+                *ngIf="circularForm.get('confidentiality')?.errors?.['employeesRequired']"
+              >
+                Please select at least one employee for this confidentiality level
+              </div>
+            </div>
+
+            <!-- Show selected employees for modal-required levels -->
+            <div *ngIf="selectedEmployees.length > 0" class="selected-employees-preview mt-3">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-gray-700">
+                  Selected Employees ({{ selectedEmployees.length }})
+                </span>
+                <button
+                  type="button"
+                  class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  (click)="editSelectedEmployees()"
+                >
+                  Edit
+                </button>
+              </div>
+              <div class="mt-2 flex flex-wrap gap-1">
+                <span
+                  *ngFor="let emp of selectedEmployees.slice(0, 3)"
+                  class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
+                >
+                  {{ emp.first_name }} {{ emp.last_name }}
+                </span>
+                <span
+                  *ngIf="selectedEmployees.length > 3"
+                  class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600"
+                >
+                  +{{ selectedEmployees.length - 3 }} more
+                </span>
+              </div>
             </div>
           </div>
 
@@ -143,7 +184,21 @@
             <!-- Effective From -->
             <div class="form-field">
               <label>Effective From <span class="required">*</span></label>
-              <input type="datetime-local" formControlName="effective_from" class="form-input" />
+              <input
+                type="datetime-local"
+                formControlName="effective_from"
+                class="form-input"
+                [min]="getTodayDate()"
+                [class.error]="isFieldInvalid('effective_from')"
+              />
+              <div class="field-error" *ngIf="isFieldInvalid('effective_from')">
+                <span *ngIf="circularForm.get('effective_from')?.errors?.['required']">
+                  Effective date is required
+                </span>
+                <span *ngIf="circularForm.get('effective_from')?.errors?.['pastDate']">
+                  Effective date cannot be a past date
+                </span>
+              </div>
             </div>
 
             <!-- Repeat Cycle -->
@@ -344,33 +399,4 @@
       </div>
     </div>
   </div>
-
-  <!-- Smart Assistant (Floating) -->
-  <!-- <div class="smart-assistant" [class.expanded]="assistantExpanded">
-    <button class="assistant-toggle" (click)="toggleAssistant()">
-      <mat-icon>{{ assistantExpanded ? 'close' : 'smart_toy' }}</mat-icon>
-    </button>
-
-    <div class="assistant-content" *ngIf="assistantExpanded">
-      <div class="assistant-header">
-        <mat-icon>smart_toy</mat-icon>
-        <h4>Smart Assistant</h4>
-      </div>
-
-      <div class="assistant-suggestions">
-        <div class="suggestion" (click)="applySuggestion('template')">
-          <mat-icon>description</mat-icon>
-          <span>Use Template</span>
-        </div>
-        <div class="suggestion" (click)="applySuggestion('check')">
-          <mat-icon>spell_check</mat-icon>
-          <span>Grammar Check</span>
-        </div>
-        <div class="suggestion" (click)="applySuggestion('similar')">
-          <mat-icon>find_in_page</mat-icon>
-          <span>Find Similar</span>
-        </div>
-      </div>
-    </div>
-  </div> -->
 </div>

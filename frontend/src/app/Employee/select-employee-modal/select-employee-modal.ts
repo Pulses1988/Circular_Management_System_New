@@ -47,11 +47,14 @@ export class SelectEmployeeModal implements OnInit {
   employees: Employee[] = [];
   branchDepartmentsEmployee: Employee[] = [];
   allEmployees: Employee[] = [];
-  selectedEmployees: Employee[] = []; // Only array for selected employees
+  selectedEmployees: Employee[] = [];
   employee: any;
   selectedDepartmentId: number | null = null;
   selectedBranchId: number | null = null;
   hasBranchDepartments: boolean = false;
+
+  // Track initial selection for cancellation
+  initialSelection: Employee[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -66,6 +69,12 @@ export class SelectEmployeeModal implements OnInit {
       branch: [''],
       branchDepartment: [''],
     });
+
+    // Initialize with pre-selected employees
+    if (this.data?.preSelectedEmployees) {
+      this.selectedEmployees = [...this.data.preSelectedEmployees];
+      this.initialSelection = [...this.data.preSelectedEmployees];
+    }
 
     this.loadLoggedInEmployee();
 
@@ -97,8 +106,6 @@ export class SelectEmployeeModal implements OnInit {
               if (branchDeptId) {
                 this.employeeService.getEmployeesByDepartment(branchDeptId).subscribe((emps) => {
                   this.branchDepartmentsEmployee = emps as Employee[];
-                  console.log();
-                  
                 });
               } else {
                 this.branchDepartmentsEmployee = [];
@@ -108,7 +115,6 @@ export class SelectEmployeeModal implements OnInit {
             // Branch has no departments, fetch employees directly
             this.employeeService.getEmployeeByBranchId(branchId).subscribe((emps) => {
               this.branchDepartmentsEmployee = emps as Employee[];
-              console.log(emps);
             });
           }
         });
@@ -175,11 +181,19 @@ export class SelectEmployeeModal implements OnInit {
   }
 
   confirmSelection() {
-    this.dialogRef.close(this.selectedEmployees); // Only array of employees
+    // Return the selected employees
+    this.dialogRef.close(this.selectedEmployees);
   }
 
-  closeDialog() {
-    this.dialogRef.close();
+  closeOnly() {
+    this.dialogRef.close(null); // Parent will ignore null → no change
+  }
+
+  // Clears selection and resets everything
+  cancelSelection() {
+    this.selectedEmployees = []; // Clear selected employees
+
+    this.dialogRef.close([]); // Parent will treat empty array → reset
   }
 
   getDepartmentName(deptId: number): string {

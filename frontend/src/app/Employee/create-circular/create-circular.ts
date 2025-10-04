@@ -1,9 +1,11 @@
 import { Component } from '@angular/core';
 import {
+  AbstractControl,
   FormBuilder,
   FormGroup,
   FormsModule,
   ReactiveFormsModule,
+  ValidationErrors,
   Validators,
 } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -22,15 +24,15 @@ export interface Circular {
   title: string;
   content: string | null;
   circular_code: string;
-  circular_pdf: Buffer | null; // PDF as blob/buffer
+  circular_pdf: Buffer | null;
   creator_employee_id: number;
   creator_name: string;
   reference_circular_id: number | null;
   source_type_id: number;
   source_type: string;
-  effective_from: string; // ISO date string
-  created_at: string; // ISO date string
-  published_at: string | null; // ISO date string or null
+  effective_from: string;
+  created_at: string;
+  published_at: string | null;
   send_type: 'INTERNAL' | 'CONFIDENTIAL' | 'RESTRICTED' | 'PUBLIC';
   status: 'DRAFT' | 'PENDING_APPROVAL' | 'REJECTED' | 'APPROVED' | 'PUBLISHED';
   repeat_cycle: number;
@@ -58,9 +60,9 @@ export interface Approver {
   department_name: string | null;
   branch_name: string | null;
   head_office_name: string | null;
-  can_create_circular: 0 | 1; // MySQL tinyint returns as number
+  can_create_circular: 0 | 1;
   can_approve_circular: 0 | 1;
-  created_at: string; // ISO timestamp
+  created_at: string;
 }
 
 export interface repeatCycle {
@@ -95,6 +97,12 @@ export class CreateCircular {
 
   attachedFile: AttachedFile | null = null;
   selectedApprovers: number[] = [];
+  selectedEmployees: any[] = [];
+
+  // Track modal state
+  private isModalOpening = false;
+  private pendingConfidentialityChange: string | null = null;
+  private isManualDropdownClick = false;
 
   // Data arrays
   previousCirculars: Circular[] = [];
@@ -108,7 +116,14 @@ export class CreateCircular {
     { value: 'INTERNAL', label: 'Internal', description: 'Restricted to internal staff' },
     { value: 'CONFIDENTIAL', label: 'Confidential', description: 'Limited access only' },
     { value: 'RESTRICTED', label: 'Restricted', description: 'Highly sensitive information' },
+    {
+      value: 'CUSTOM',
+      label: 'Custom',
+      description: 'Visible only to selected employees or groups',
+    },
   ];
+
+  filteredConfidentialityLevels: { value: string; label: string; description: string }[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -136,10 +151,9 @@ export class CreateCircular {
     this.loadData();
     this.setupAutoSave();
 
+    // Confidentiality change handler
     this.circularForm.get('confidentiality')?.valueChanges.subscribe((value) => {
-      if (value === 'CONFIDENTIAL' || value === 'RESTRICTED') {
-        this.openEmployeeModal();
-      }
+      this.handleConfidentialityChange(value);
     });
   }
 
@@ -148,24 +162,134 @@ export class CreateCircular {
     this.destroy$.complete();
   }
 
+  // Handle dropdown click to detect manual selection
+  onConfidentialityDropdownClick(): void {
+    const currentValue = this.circularForm.get('confidentiality')?.value;
+
+    // If we already have a modal-required level selected AND we have employees, open modal
+    if (
+      (currentValue === 'CONFIDENTIAL' ||
+        currentValue === 'RESTRICTED' ||
+        currentValue === 'CUSTOM') &&
+      this.selectedEmployees.length > 0
+    ) {
+      // Use setTimeout to avoid interfering with the dropdown opening
+      setTimeout(() => {
+        this.openEmployeeModal();
+      }, 100);
+    }
+  }
+
+  private handleConfidentialityChange(value: string): void {
+    // Skip if modal is already opening
+    if (this.isModalOpening) {
+      this.isModalOpening = false;
+      return;
+    }
+
+    // Check if this is a modal-required confidentiality level
+    if (value === 'CONFIDENTIAL' || value === 'RESTRICTED' || value === 'CUSTOM') {
+      this.pendingConfidentialityChange = value;
+
+      setTimeout(() => {
+        this.openEmployeeModal();
+      });
+    } else {
+      // For non-modal levels, clear selected employees
+      this.selectedEmployees = [];
+      this.pendingConfidentialityChange = null;
+    }
+  }
+
+  // Open employee modal with proper state management
   openEmployeeModal(): void {
+    // Prevent multiple modals from opening
+    if (this.isModalOpening) {
+      return;
+    }
+
+    this.isModalOpening = true;
+
     const dialogRef = this.dialog.open(SelectEmployeeModal, {
-      width: '600px',
-      panelClass:'custom-dialog-container',
-      data: {}, // pass any extra data if needed
+      width: '800px',
+      panelClass: 'custom-dialog-container',
+      data: {
+        preSelectedEmployees: [...this.selectedEmployees],
+      },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result && result.length > 0) {
-        console.log('Selected employees:', result);
-        // 👉 You can patch into form if needed
-        // this.circularForm.patchValue({ approvers: result });
+      this.isModalOpening = false;
+      if (result === null) {
+        return;
+      } else if (result && Array.isArray(result)) {
+        if (result.length > 0) {
+          // User confirmed selection
+          this.selectedEmployees = result;
+          console.log('Selected employees:', this.selectedEmployees);
+
+          // Ensure the confidentiality level stays as selected
+          if (this.pendingConfidentialityChange) {
+            this.circularForm.patchValue(
+              {
+                confidentiality: this.pendingConfidentialityChange,
+              },
+              { emitEvent: false }
+            );
+            this.pendingConfidentialityChange = null;
+          }
+        } else {
+          // User cancelled with empty array - remove employees and reset confidentiality
+          this.handleModalCancellation();
+        }
+      } else {
+        // User cancelled (undefined result) - remove employees and reset confidentiality
+        this.handleModalCancellation();
       }
     });
   }
 
+  // Handle modal cancellation
+  private handleModalCancellation(): void {
+    // Clear selected employees
+    this.selectedEmployees = [];
+
+    // Revert to default confidentiality level
+    const defaultLevel = 'INTERNAL';
+    this.circularForm.patchValue(
+      {
+        confidentiality: defaultLevel,
+      },
+      { emitEvent: false }
+    );
+
+    this.pendingConfidentialityChange = null;
+    console.log('Modal cancelled - reverted to default confidentiality');
+  }
+
+  // Method to manually open modal for existing selection
+  editSelectedEmployees(): void {
+    this.openEmployeeModal();
+  }
+
+  private filterConfidentialityOptions(): void {
+    if (this.employee!.branch_id) {
+      this.filteredConfidentialityLevels = this.confidentialityLevels.filter(
+        (level) => level.value === 'INTERNAL'
+      );
+    } else {
+      this.filteredConfidentialityLevels = [...this.confidentialityLevels];
+    }
+
+    const current = this.circularForm.get('confidentiality')?.value;
+    if (!this.filteredConfidentialityLevels.some((lvl) => lvl.value === current)) {
+      this.circularForm.patchValue({
+        confidentiality: this.filteredConfidentialityLevels[0].value,
+      });
+    }
+  }
+
   private loadEmployeeData(): void {
-    
     const encryptedUser = localStorage.getItem('emp_user');
     if (encryptedUser) {
       const decryptedUser = this.decryptData(encryptedUser);
@@ -175,10 +299,46 @@ export class CreateCircular {
       const fullName = `${this.employee.first_name} ${this.employee.last_name}`.trim();
 
       this.circularForm.patchValue({
-        originator: fullName, // visible
-        originator_id: this.employee.id, // hidden
+        originator: fullName,
+        originator_id: this.employee.id,
       });
+      this.filterConfidentialityOptions();
     }
+  }
+
+  // validator for select employee when the confidentiality is CONFIDENTIAL ,RESTRICTED ,CUSTOM
+  private confidentialityValidator(control: AbstractControl): ValidationErrors | null {
+    const value = control.value;
+    const requiresEmployees = ['CONFIDENTIAL', 'RESTRICTED', 'CUSTOM'];
+
+    if (requiresEmployees.includes(value) && this.selectedEmployees.length === 0) {
+      return { employeesRequired: true };
+    }
+
+    return null;
+  }
+
+  // Custom validator for today or future dates
+  private todayOrFutureDateValidator(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) {
+      return null;
+    }
+
+    const selectedDate = new Date(control.value);
+    const today = new Date();
+
+    const selectedDateOnly = new Date(
+      selectedDate.getFullYear(),
+      selectedDate.getMonth(),
+      selectedDate.getDate()
+    );
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    if (selectedDateOnly < todayOnly) {
+      return { pastDate: true };
+    }
+
+    return null;
   }
 
   private initializeForm(): void {
@@ -189,11 +349,19 @@ export class CreateCircular {
       source_type_id: ['', Validators.required],
       originator: ['', Validators.required],
       originator_id: [''],
-      confidentiality: ['INTERNAL', Validators.required],
-      effective_from: ['', Validators.required],
+      confidentiality: [
+        'INTERNAL',
+        [Validators.required, this.confidentialityValidator.bind(this)],
+      ],
+      effective_from: ['', [Validators.required, this.todayOrFutureDateValidator.bind(this)]],
       repeat_cycle: ['', Validators.required],
       content: ['', [Validators.required, Validators.minLength(10)]],
     });
+  }
+
+  getTodayDate(): string {
+    const today = new Date();
+    return today.toISOString().slice(0, 16);
   }
 
   private detectSystemTheme(): void {
@@ -201,7 +369,6 @@ export class CreateCircular {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       this.isDarkMode = mediaQuery.matches;
 
-      // Listen for system theme changes
       mediaQuery.addEventListener('change', (e) => {
         this.isDarkMode = e.matches;
       });
@@ -231,7 +398,7 @@ export class CreateCircular {
 
   // Navigation
   goBack(): void {
-    this.router.navigate(['/employee-dashboard']);
+    this.router.navigate(['/employee/employee-dashboard']);
   }
 
   // Data loading
@@ -240,7 +407,6 @@ export class CreateCircular {
     this.circularService.getSourceTypes().subscribe((data) => {
       this.sourceTypes = data as SourceType[];
 
-      // Set default value if editing existing circular
       if (this.circularForm.value.source_type_id) {
         this.circularForm.patchValue({
           source_type_id: this.circularForm.value.source_type_id,
@@ -265,20 +431,10 @@ export class CreateCircular {
     });
   }
 
-  private loadDepartments(): void {
-    this.departments = [
-      { id: 1, name: 'Human Resources' },
-      { id: 2, name: 'Information Technology' },
-      { id: 3, name: 'Finance' },
-      { id: 4, name: 'Operations' },
-      { id: 5, name: 'Marketing' },
-    ];
-  }
-
   // File management
   onFileSelect(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const file = input.files ? input.files[0] : null; // Get only the first file
+    const file = input.files ? input.files[0] : null;
 
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
@@ -286,25 +442,24 @@ export class CreateCircular {
           duration: 3000,
           panelClass: ['error-snackbar'],
         });
-        input.value = ''; // Clear the input so the same file can be selected again
+        input.value = '';
         return;
       }
 
       this.attachedFile = {
-        id: this.generateId(), // Still useful for tracking if needed
+        id: this.generateId(),
         name: file.name,
         size: file.size,
         file: file,
       };
     } else {
-      this.attachedFile = null; // Clear if no file is selected
+      this.attachedFile = null;
     }
 
-    input.value = ''; // Clear the input value to allow re-selection of the same file
+    input.value = '';
   }
 
   removeFile(): void {
-    // Simply set the attachedFile to null to remove it
     this.attachedFile = null;
   }
 
@@ -380,20 +535,15 @@ export class CreateCircular {
   }
 
   private clearForm(): void {
-    // Reset the main form and its state
     this.circularForm.reset();
-
-    // Clear file attachment
     this.attachedFile = null;
-
-    // Clear selected approvers
     this.selectedApprovers = [];
-
-    // Reset specific fields to initial values if needed
+    this.selectedEmployees = [];
     this.circularForm.patchValue({
       confidentiality: 'INTERNAL',
-      // Add other fields you want to reset to default values
     });
+    this.isModalOpening = false;
+    this.pendingConfidentialityChange = null;
   }
 
   private applyTemplate(): void {
@@ -430,18 +580,7 @@ export class CreateCircular {
   // Actions
   autoSave(): void {
     this.lastSaved = new Date();
-    // Implement actual auto-save logic here
   }
-
-  // saveDraft(): void {
-  //   if (this.circularForm.value.title || this.circularForm.value.content) {
-  //     this.lastSaved = new Date();
-  //     this.snackBar.open('Draft saved successfully', 'Close', {
-  //       duration: 2000,
-  //       panelClass: ['success-snackbar'],
-  //     });
-  //   }
-  // }
 
   previewCircular(): void {
     this.snackBar.open('Preview feature coming soon', 'Close', { duration: 2000 });
@@ -449,10 +588,8 @@ export class CreateCircular {
 
   discardDraft(): void {
     if (confirm('Are you sure you want to discard this draft? All changes will be lost.')) {
-      this.circularForm.reset();
-      // this.attachedFiles = [];
-      this.selectedApprovers = [];
-      this.router.navigate(['/employee-dashboard']);
+      this.clearForm();
+      this.router.navigate(['/employee/employee-dashboard']);
     }
   }
 
@@ -492,7 +629,6 @@ export class CreateCircular {
 
     this.isProcessing = true;
 
-    // Your existing formData code here...
     const formData = new FormData();
     formData.append('title', this.circularForm.value.title || '');
     formData.append('content', this.circularForm.value.content || '');
@@ -513,6 +649,19 @@ export class CreateCircular {
       formData.append('approvers', JSON.stringify(this.selectedApprovers));
     }
 
+    if (status === 'PENDING_APPROVAL') {
+      const employeeIds = this.selectedEmployees.map((e) => e.id);
+      formData.append('visiblityEmployee', JSON.stringify(employeeIds));
+    }
+
+    if (status === 'PENDING_APPROVAL') {
+      if (this.circularForm.value.confidentiality === 'INTERNAL') {
+        formData.append('headOfficeId', this.employee.head_office_id || '');
+        formData.append('branchId', this.employee.branch_id || '');
+        formData.append('departmentId', this.employee.department_id || '');
+      }
+    }
+
     this.circularService.uploadCircular(formData).subscribe({
       next: (res) => {
         this.isProcessing = false;
@@ -520,12 +669,11 @@ export class CreateCircular {
         this.snackBar.open(message, 'Close', { duration: 3000 });
 
         this.clearForm();
-
         this.loadEmployeeData();
 
         if (status === 'PENDING_APPROVAL') {
           setTimeout(() => {
-            this.router.navigate(['/employee-dashboard']);
+            this.router.navigate(['/employee/employee-dashboard']);
           }, 1500);
         }
       },
