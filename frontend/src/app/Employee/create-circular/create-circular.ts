@@ -290,6 +290,7 @@ export class CreateCircular {
   }
 
   private loadEmployeeData(): void {
+     if (typeof window !== 'undefined') {
     const encryptedUser = localStorage.getItem('emp_user');
     if (encryptedUser) {
       const decryptedUser = this.decryptData(encryptedUser);
@@ -304,6 +305,7 @@ export class CreateCircular {
       });
       this.filterConfidentialityOptions();
     }
+  }
   }
 
   // validator for select employee when the confidentiality is CONFIDENTIAL ,RESTRICTED ,CUSTOM

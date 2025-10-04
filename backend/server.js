@@ -44,14 +44,32 @@ initializeDatabase();
 
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
+   let currentApproverId = null;
 
   socket.on('subscribe-circulars', (approver_id) => {
+    currentApproverId = approver_id;
+    const roomName = `approver-${approver_id}`;
     console.log(`Approver ${approver_id} subscribed for circular updates`);
     socket.join(`approver-${approver_id}`);
+    socket.rooms.forEach(room => {
+      if (room !== socket.id && room.startsWith('approver-')) {
+        socket.leave(room);
+        console.log(`Left old room: ${room}`);
+      }
+    });
+    socket.join(roomName);
+    console.log(`Approver ${approver_id} (socket: ${socket.id}) joined room: ${roomName}`);
+    console.log(`Total clients in room ${roomName}:`, io.sockets.adapter.rooms.get(roomName)?.size || 0);
+    
+    // Send confirmation back to client
+    socket.emit('subscription-confirmed', { approver_id, roomName });
   });
 
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
+     if (currentApproverId) {
+      console.log(`Approver ${currentApproverId} disconnected`);
+    }
   });
 });
 
