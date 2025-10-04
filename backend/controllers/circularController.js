@@ -29,8 +29,10 @@ exports.createCircular = async (req, res) => {
     const approvers = req.body.approvers ? JSON.parse(req.body.approvers) : [];
     if (Array.isArray(approvers) && approvers.length > 0) {
       const io = req.app.get('io');
+      console.log('IO instance:', io ? 'Available' : 'Not available');
       const [circularRows] = await circularModal.getCircularById(circularId);
       const circularDetails = circularRows[0]
+      console.log('Circular details fetched:', circularDetails ? 'Yes' : 'No');
       
       for (const approverId of approvers) {
         await circularApprovalModal.createCircularApproval({
@@ -39,6 +41,9 @@ exports.createCircular = async (req, res) => {
           status: "PENDING",
         });
         if (io) {
+          const roomName = `approver-${approverId}`;
+          console.log(`Emitting to room: ${roomName}`);
+          console.log(`Clients in room:`, io.sockets.adapter.rooms.get(roomName)?.size || 0);
           io.to(`approver-${approverId}`).emit('new-circular-assigned', {
             circular: circularDetails,
             message: 'New circular has been assigned to you',

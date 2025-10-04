@@ -10,80 +10,82 @@ import { io, Socket } from 'socket.io-client';
 })
 export class CircularService {
   private apiUrl = environment.apiUrl;
-   private socket!: Socket;
-   private socketInitialized = false;
+  private socket!: Socket;
+  private socketInitialized = false;
   private currentEmployeeSubject = new BehaviorSubject<any>(null);
   private readonly USER_KEY = 'emp_user';
   private readonly TOKEN_KEY = 'emp_token';
   private readonly EXPIRY_KEY = 'emp_token_expiry';
-   private newCircularSubject = new Subject<any>();
+  private newCircularSubject = new Subject<any>();
   private statusUpdateSubject = new Subject<any>();
 
   // Observables for components to subscribe
   public newCircular$ = this.newCircularSubject.asObservable();
   public statusUpdate$ = this.statusUpdateSubject.asObservable();
 
-  constructor(private http: HttpClient, private router: Router) {
-  }
+  constructor(private http: HttpClient, private router: Router) {}
   token!: string | null;
 
-   private initializeSocket() {
-    // Only initialize once
-    if (this.socketInitialized) {
-      console.log('Socket already initialized, skipping...');
-      return;
-    }
-
-    console.log('Initializing WebSocket connection...');
-    this.socket = io(this.apiUrl, {
-      transports: ['websocket'], // Force WebSocket only
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000
-    });
-
-    this.socket.on('connect', () => {
-      console.log('WebSocket connected:', this.socket.id);
-    });
-
-    this.socket.on('new-circular-assigned', (data) => {
-      console.log('New circular received:', data);
-      this.newCircularSubject.next(data);
-    });
-
-    this.socket.on('circular-status-updated', (data) => {
-      console.log('Circular status updated:', data);
-      this.statusUpdateSubject.next(data);
-    });
-
-    this.socket.on('disconnect', () => {
-      console.log('WebSocket disconnected');
-    });
-
-    this.socket.on('connect_error', (error) => {
-      console.error('WebSocket connection error:', error);
-    });
-
-    this.socketInitialized = true;
+ private initializeSocket() {
+  if (this.socketInitialized) {
+    console.log('Socket already initialized, skipping...');
+    return;
   }
 
-  subscribeToCircularUpdates(approver_id: number) {
-    // Initialize socket only when needed
-    if (!this.socketInitialized) {
-      this.initializeSocket();
-    }
-    
+  console.log('Initializing WebSocket connection...');
+  this.socket = io(this.apiUrl, {
+    transports: ['websocket'],
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000
+  });
+
+  this.socket.on('connect', () => {
+    console.log('WebSocket connected:', this.socket.id);
+  });
+
+  this.socket.on('subscription-confirmed', (data) => {
+    console.log('Subscription confirmed:', data);
+  });
+
+  this.socket.on('new-circular-assigned', (data) => {
+    console.log('New circular received:', data);
+    this.newCircularSubject.next(data);
+  });
+
+  this.socket.on('circular-status-updated', (data) => {
+    console.log('Circular status updated:', data);
+    this.statusUpdateSubject.next(data);
+  });
+
+  this.socket.on('disconnect', () => {
+    console.log('WebSocket disconnected');
+  });
+
+  this.socket.on('connect_error', (error) => {
+    console.error('WebSocket connection error:', error);
+  });
+
+  this.socketInitialized = true;
+}
+
+subscribeToCircularUpdates(approver_id: number) {
+  if (!this.socketInitialized) {
+    this.initializeSocket();
+  }
+  
+  const trySubscribe = () => {
     if (this.socket && this.socket.connected) {
       console.log('Subscribing to updates for approver:', approver_id);
       this.socket.emit('subscribe-circulars', approver_id);
     } else {
-      // Wait for connection then subscribe
-      this.socket.once('connect', () => {
-        console.log('Socket connected, now subscribing for approver:', approver_id);
-        this.socket.emit('subscribe-circulars', approver_id);
-      });
+      console.log('Socket not ready, retrying in 500ms...');
+      setTimeout(trySubscribe, 500);
     }
-  }
+  };
+  
+  trySubscribe();
+}
 
   unsubscribeFromCircularUpdates() {
     if (this.socket && this.socket.connected) {
@@ -102,7 +104,7 @@ export class CircularService {
       Authorization: this.token ? `Bearer ${this.token}` : '',
     });
   }
-   private getHeadersForAdmin(): HttpHeaders {
+  private getHeadersForAdmin(): HttpHeaders {
     if (typeof window !== 'undefined') {
       this.token = localStorage.getItem('authToken');
     }
@@ -176,31 +178,47 @@ export class CircularService {
   getAllCircular() {
     return this.http.get(`${this.apiUrl}/api/circular/`, { headers: this.getHeaders() });
   }
-  getAssingedCircularForApproval(approver_id:number){
-    return this.http.get(`${this.apiUrl}/api/circular-approvals/${approver_id}/assigned`, { headers: this.getHeaders() })
+  getAssingedCircularForApproval(approver_id: number) {
+    return this.http.get(`${this.apiUrl}/api/circular-approvals/${approver_id}/assigned`, {
+      headers: this.getHeaders(),
+    });
   }
-  getCircularById(id:number){
-    return this.http.get(`${this.apiUrl}/api/circular/${id}`,{headers:this.getHeaders()});
+  getCircularById(id: number) {
+    return this.http.get(`${this.apiUrl}/api/circular/${id}`, { headers: this.getHeaders() });
   }
 
+  // Mark circular as seen
+  markCircularAsSeen(circularId: number, approverId: number): Observable<any> {
+    return this.http.put(
+      `${this.apiUrl}/api/circular-approvals/${circularId}/${approverId}/mark-seen`,
+      {},
+      { headers: this.getHeaders() }
+    );
+  }
 
-// Mark circular as seen
-markCircularAsSeen(circularId: number, approverId:number): Observable<any> {
-  return this.http.put(`${this.apiUrl}/api/circular-approvals/${circularId}/${approverId}/mark-seen`,{}, { headers: this.getHeaders() });
-}
+  // Approve circular
+  approveCircular(circularId: number, approverId: number): Observable<any> {
+    return this.http.put(
+      `${this.apiUrl}/api/circular-approvals/${circularId}/${approverId}/approve`,
+      {},
+      { headers: this.getHeaders() }
+    );
+  }
 
-// Approve circular
-approveCircular(circularId: number, approverId:number): Observable<any> {
-  return this.http.put(`${this.apiUrl}/api/circular-approvals/${circularId}/${approverId}/approve`, {},{ headers: this.getHeaders() });
-}
-
-// Reject circular with comment
-rejectCircular(circularId: number,approverId:number, comments: string): Observable<any> {
-  return this.http.put(`${this.apiUrl}/api/circular-approvals/${circularId}/${approverId}/reject`, { comments },{ headers: this.getHeaders() });
-}
- getCircularApprovalDataById(approver_id:number):Observable<any>{
-  return this.http.get(`${this.apiUrl}/api/circular-approvals/${approver_id}/get-circular-by-emp`,{ headers: this.getHeaders() })
- }
+  // Reject circular with comment
+  rejectCircular(circularId: number, approverId: number, comments: string): Observable<any> {
+    return this.http.put(
+      `${this.apiUrl}/api/circular-approvals/${circularId}/${approverId}/reject`,
+      { comments },
+      { headers: this.getHeaders() }
+    );
+  }
+  getCircularApprovalDataById(approver_id: number): Observable<any> {
+    return this.http.get(
+      `${this.apiUrl}/api/circular-approvals/${approver_id}/get-circular-by-emp`,
+      { headers: this.getHeaders() }
+    );
+  }
   // ----------------------Source Type---------------------------------
   getSourceTypes() {
     return this.http.get(`${this.apiUrl}/api/source-type/`, { headers: this.getHeaders() });
@@ -214,34 +232,43 @@ rejectCircular(circularId: number,approverId:number, comments: string): Observab
     return this.http.get(`${this.apiUrl}/api/source-type/`, { headers: this.getHeadersForAdmin() });
   }
 
-  addSourceType(name:any){
-    return this.http.post(`${this.apiUrl}/api/source-type/`,name,{ headers: this.getHeadersForAdmin() })
-
+  addSourceType(name: any) {
+    return this.http.post(`${this.apiUrl}/api/source-type/`, name, {
+      headers: this.getHeadersForAdmin(),
+    });
   }
-  updateSourceType(id:number,name:any){
-    return this.http.put(`${this.apiUrl}/api/source-type/${id}`,name,{ headers: this.getHeadersForAdmin() })
+  updateSourceType(id: number, name: any) {
+    return this.http.put(`${this.apiUrl}/api/source-type/${id}`, name, {
+      headers: this.getHeadersForAdmin(),
+    });
   }
 
   // -----------------------------------------Repeat Cycle-----------------------------------------------------
   // Get all repeat cycles
-getRepeatCycles(): Observable<any> {
-  return this.http.get(`${this.apiUrl}/api/repeat-cycle/`,{ headers: this.getHeadersForAdmin() });
-}
+  getRepeatCycles(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/api/repeat-cycle/`, {
+      headers: this.getHeadersForAdmin(),
+    });
+  }
 
-// Add a new repeat cycle
-addRepeatCycle(data: { name: string; duration_days: number }): Observable<any> {
-  return this.http.post(`${this.apiUrl}/api/repeat-cycle`, data,{ headers: this.getHeadersForAdmin() });
-}
+  // Add a new repeat cycle
+  addRepeatCycle(data: { name: string; duration_days: number }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/api/repeat-cycle`, data, {
+      headers: this.getHeadersForAdmin(),
+    });
+  }
 
-// Update a repeat cycle
-updateRepeatCycle(id: number, data: { name: string; duration_days: number }): Observable<any> {
-  return this.http.put(`${this.apiUrl}/api/repeat-cycle/${id}`, data,{ headers: this.getHeadersForAdmin() });
-}
+  // Update a repeat cycle
+  updateRepeatCycle(id: number, data: { name: string; duration_days: number }): Observable<any> {
+    return this.http.put(`${this.apiUrl}/api/repeat-cycle/${id}`, data, {
+      headers: this.getHeadersForAdmin(),
+    });
+  }
 
-// Delete a repeat cycle (optional - if you want to add delete functionality later)
-deleteRepeatCycle(id: number): Observable<any> {
-  return this.http.delete(`${this.apiUrl}/api/repeat-cycle/${id}`,{ headers: this.getHeadersForAdmin() });
-}
-
-
+  // Delete a repeat cycle (optional - if you want to add delete functionality later)
+  deleteRepeatCycle(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/api/repeat-cycle/${id}`, {
+      headers: this.getHeadersForAdmin(),
+    });
+  }
 }
