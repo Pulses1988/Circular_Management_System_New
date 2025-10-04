@@ -1,7 +1,22 @@
 const express = require("express");
 const cors = require("cors");
 const initializeDatabase = require("./config/init_db");
+const { Server } = require("socket.io");
+const http = require("http");
+
+
 const app = express();
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:4200",
+    methods: ["GET", "POST"]
+  }
+});
+
+app.set('io', io);
+
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const headOfficeRoutes = require("./routes/headOfficeRoutes");
@@ -27,6 +42,19 @@ app.use(
 
 initializeDatabase();
 
+io.on('connection', (socket) => {
+  console.log('Client connected:', socket.id);
+
+  socket.on('subscribe-circulars', (approver_id) => {
+    console.log(`Approver ${approver_id} subscribed for circular updates`);
+    socket.join(`approver-${approver_id}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
+
 app.use("/api/admins", express.json(), adminRoutes);
 app.use("/api/head-office", express.json(), headOfficeRoutes);
 app.use("/api/branches", express.json(), branchRoutes);
@@ -40,6 +68,8 @@ app.use("/api/repeat-cycle", express.json(), repeatCycleRoutes);
 app.use("/api/circular-visibility",express.json(),circularVisibilityRoutes);
 
 const PORT = 3000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+module.exports = { io };

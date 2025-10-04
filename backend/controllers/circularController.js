@@ -28,12 +28,24 @@ exports.createCircular = async (req, res) => {
 
     const approvers = req.body.approvers ? JSON.parse(req.body.approvers) : [];
     if (Array.isArray(approvers) && approvers.length > 0) {
+      const io = req.app.get('io');
+      const [circularRows] = await circularModal.getCircularById(circularId);
+      const circularDetails = circularRows[0]
+      
       for (const approverId of approvers) {
         await circularApprovalModal.createCircularApproval({
           circular_id: circularId,
           approver_id: approverId,
           status: "PENDING",
         });
+        if (io) {
+          io.to(`approver-${approverId}`).emit('new-circular-assigned', {
+            circular: circularDetails,
+            message: 'New circular has been assigned to you',
+            circular_id: circularId
+          });
+          console.log(`Socket event emitted to approver ${approverId}`);
+        }
       }
     }
 

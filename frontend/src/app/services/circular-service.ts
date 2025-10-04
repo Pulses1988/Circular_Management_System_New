@@ -1,21 +1,96 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { Router } from '@angular/router';
+import { io, Socket } from 'socket.io-client';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CircularService {
   private apiUrl = environment.apiUrl;
+   private socket!: Socket;
+   private socketInitialized = false;
   private currentEmployeeSubject = new BehaviorSubject<any>(null);
   private readonly USER_KEY = 'emp_user';
   private readonly TOKEN_KEY = 'emp_token';
   private readonly EXPIRY_KEY = 'emp_token_expiry';
+   private newCircularSubject = new Subject<any>();
+  private statusUpdateSubject = new Subject<any>();
 
-  constructor(private http: HttpClient, private router: Router) {}
+  // Observables for components to subscribe
+  public newCircular$ = this.newCircularSubject.asObservable();
+  public statusUpdate$ = this.statusUpdateSubject.asObservable();
+
+  constructor(private http: HttpClient, private router: Router) {
+  }
   token!: string | null;
+
+   private initializeSocket() {
+    // Only initialize once
+    if (this.socketInitialized) {
+      console.log('Socket already initialized, skipping...');
+      return;
+    }
+
+    console.log('Initializing WebSocket connection...');
+    this.socket = io(this.apiUrl, {
+      transports: ['websocket'], // Force WebSocket only
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    });
+
+    this.socket.on('connect', () => {
+      console.log('WebSocket connected:', this.socket.id);
+    });
+
+    this.socket.on('new-circular-assigned', (data) => {
+      console.log('New circular received:', data);
+      this.newCircularSubject.next(data);
+    });
+
+    this.socket.on('circular-status-updated', (data) => {
+      console.log('Circular status updated:', data);
+      this.statusUpdateSubject.next(data);
+    });
+
+    this.socket.on('disconnect', () => {
+      console.log('WebSocket disconnected');
+    });
+
+    this.socket.on('connect_error', (error) => {
+      console.error('WebSocket connection error:', error);
+    });
+
+    this.socketInitialized = true;
+  }
+
+  subscribeToCircularUpdates(approver_id: number) {
+    // Initialize socket only when needed
+    if (!this.socketInitialized) {
+      this.initializeSocket();
+    }
+    
+    if (this.socket && this.socket.connected) {
+      console.log('Subscribing to updates for approver:', approver_id);
+      this.socket.emit('subscribe-circulars', approver_id);
+    } else {
+      // Wait for connection then subscribe
+      this.socket.once('connect', () => {
+        console.log('Socket connected, now subscribing for approver:', approver_id);
+        this.socket.emit('subscribe-circulars', approver_id);
+      });
+    }
+  }
+
+  unsubscribeFromCircularUpdates() {
+    if (this.socket && this.socket.connected) {
+      this.socket.disconnect();
+      this.socketInitialized = false;
+    }
+  }
 
   private getHeaders(): HttpHeaders {
     if (typeof window !== 'undefined') {
@@ -103,6 +178,9 @@ export class CircularService {
   }
   getAssingedCircularForApproval(approver_id:number){
     return this.http.get(`${this.apiUrl}/api/circular-approvals/${approver_id}/assigned`, { headers: this.getHeaders() })
+  }
+  getCircularById(id:number){
+    return this.http.get(`${this.apiUrl}/api/circular/${id}`,{headers:this.getHeaders()});
   }
 
 
