@@ -104,7 +104,7 @@
           <h3 class="text-xl font-bold text-gray-700 mt-4">No Circulars Found</h3>
           <p class="text-gray-500 mt-2">There are no circulars pending for approval</p>
         </div>
-        } @for (circular of filteredCirculars; track circular.id) {
+        } @for (circular of filteredCirculars; track circular.circular_id) {
         <div
           class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all"
           [class.border-2]="getPriorityClass(circular) === 'urgent'"
@@ -132,14 +132,14 @@
 
                   <span
                     class="px-3 py-1 text-xs font-semibold rounded-full"
-                    [class.bg-orange-100]="circular.status === 'PENDING_APPROVAL'"
-                    [class.text-orange-700]="circular.status === 'PENDING_APPROVAL'"
-                    [class.bg-green-100]="circular.status === 'APPROVED'"
-                    [class.text-green-700]="circular.status === 'APPROVED'"
-                    [class.bg-red-100]="circular.status === 'REJECTED'"
-                    [class.text-red-700]="circular.status === 'REJECTED'"
+                    [class.bg-orange-100]="circular.circular_status === 'PENDING_APPROVAL'"
+                    [class.text-orange-700]="circular.circular_status === 'PENDING_APPROVAL'"
+                    [class.bg-green-100]="circular.circular_status === 'APPROVED'"
+                    [class.text-green-700]="circular.circular_status === 'APPROVED'"
+                    [class.bg-red-100]="circular.circular_status === 'REJECTED'"
+                    [class.text-red-700]="circular.circular_status === 'REJECTED'"
                   >
-                    {{ circular.status || 'PENDING' }}
+                    {{ circular.circular_status || 'PENDING' }}
                   </span>
 
                   <span
@@ -152,9 +152,14 @@
                     [class.text-blue-700]="circular.send_type === 'PUBLIC'"
                     [class.bg-red-100]="circular.send_type === 'RESTRICTED'"
                     [class.text-red-700]="circular.send_type === 'RESTRICTED'"
+                    [class.bg-gray-600]="circular.send_type === 'CUSTOM'"
+                    [class.text-blue-100]="circular.send_type === 'CUSTOM'"
                   >
                     {{ circular.send_type }}
                   </span>
+                  <span class="px-3 py-1 text-xs bg-white text-black font-semibold rounded-full"
+                    >Source: {{ circular.source_type_name }}</span
+                  >
                 </div>
 
                 <h3 class="text-lg font-bold text-gray-800 mb-1">{{ circular.title }}</h3>
@@ -183,7 +188,7 @@
                 <div>
                   <p class="text-xs text-gray-500">Created By</p>
                   <p class="text-sm font-semibold text-gray-800">
-                    {{ circular.creator_name || 'N/A' }}
+                    {{ circular.creator_first_name || 'N/A' }}  {{ circular.creator_last_name || 'N/A' }}
                   </p>
                 </div>
               </div>
@@ -225,16 +230,40 @@
               </div>
             </div>
 
-            <div class="bg-gray-50 rounded-xl p-4 mb-4">
+            <!-- <div class="bg-gray-50 rounded-xl p-4 mb-4">
               <p class="text-sm text-gray-700 leading-relaxed line-clamp-3">
                 {{ circular.content }}
               </p>
+            </div> -->
+            @if (circular.receiver_departments) {
+            <div class="flex flex-wrap gap-2 mt-2 mb-2">
+              <p class="text-sm font-semibold mt-1 text-gray-800">Reciver Departments:</p>
+              @for (dept of getDepartments(circular.receiver_departments); track dept) {
+              <span
+                class="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full shadow-sm"
+              >
+                {{ dept }}
+              </span>
+              }
             </div>
+          }
+          @if (circular.receiver_branches) {
+            <div class="flex flex-wrap gap-2 mt-2 mb-2">
+              <p class="text-sm font-semibold mt-1 text-gray-800">Reciver Branches:</p>
+              @for (branch of circular.receiver_branches.split(','); track branch) {
+              <span
+                class="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full shadow-sm"
+              >
+                {{ branch.trim() }}
+              </span>
+              }
+            </div>
+          }
 
             <div class="flex items-center justify-between pt-4 border-t border-gray-200">
               <div class="flex gap-2">
                 <button
-                  (click)="viewCircularDetails(circular.id)"
+                  (click)="viewCircularDetails(circular.circular_id)"
                   class="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all text-sm font-medium flex items-center gap-2"
                 >
                   <i class="material-icons text-sm">visibility</i>
@@ -249,29 +278,29 @@
                 </button>
               </div>
 
-              @if (circular.status === 'PENDING_APPROVAL') {
+              @if (circular.circular_status === 'PENDING_APPROVAL') {
               <div class="flex gap-2">
                 <button
-                  (click)="approveCircular(circular.id)"
+                  (click)="approveCircular(circular.circular_id)"
                   class="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all text-sm font-semibold shadow-md flex items-center gap-2"
                 >
                   <i class="material-icons text-sm">check</i>
                   Approve
                 </button>
                 <button
-                  (click)="rejectCircular(circular.id)"
+                  (click)="rejectCircular(circular.circular_id)"
                   class="px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg hover:from-red-700 hover:to-pink-700 transition-all text-sm font-semibold shadow-md flex items-center gap-2"
                 >
                   <i class="material-icons text-sm">close</i>
                   Reject
                 </button>
               </div>
-              }
-              @if(circular.status==='REJECTED'){
-                @for (circularData of ApprovalDataByEmpId; track circularData.id) {
-                <p class="text-lx bg-red-100 p-2 rounded-2xl truncate w-auto text-red-600">{{circularData.comments}}</p>
-                }
-              
+              } @if(circular.circular_status==='REJECTED'){
+
+              <p class="text-lx bg-red-100 p-2 rounded-2xl truncate w-auto text-red-600">
+                {{ circular.comments }}
+              </p>
+
               }
             </div>
             <!-- Replace the old PDF viewer with this -->
@@ -421,24 +450,446 @@
     </div>
   </div>
   <!-- Reject Modal -->
-<div *ngIf="showRejectModal" 
-     class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6"
-     (click)="closeRejectModal()">
-  <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full" (click)="$event.stopPropagation()">
+  <div
+    *ngIf="showRejectModal"
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+    (click)="closeRejectModal()"
+  >
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full" (click)="$event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="bg-gradient-to-r from-red-600 to-pink-600 p-6 text-white rounded-t-2xl">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div
+              class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm"
+            >
+              <i class="material-icons text-2xl">cancel</i>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold">Reject Circular</h2>
+              <p class="text-red-100 text-sm mt-1">Please provide a reason for rejection</p>
+            </div>
+          </div>
+          <button
+            (click)="closeRejectModal()"
+            class="w-8 h-8 bg-white/20 rounded-lg hover:bg-white/30 transition-all flex items-center justify-center"
+          >
+            <i class="material-icons text-xl">close</i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6">
+        <div class="mb-4">
+          <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+            <div class="flex items-start gap-3">
+              <i class="material-icons text-red-600 text-xl">info</i>
+              <div>
+                <p class="text-sm font-semibold text-red-900">Circular Details</p>
+                <p class="text-sm text-red-700 mt-1">{{ selectedCircularForAction?.title }}</p>
+                <p class="text-xs text-red-600 mt-1">
+                  Code: {{ selectedCircularForAction?.circular_code }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <label class="block text-sm font-bold text-gray-700 mb-2">
+            Reason for Rejection <span class="text-red-500">*</span>
+          </label>
+          <textarea
+            [(ngModel)]="rejectionComment"
+            rows="5"
+            placeholder="Please provide a detailed reason for rejecting this circular..."
+            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+            [class.border-red-500]="!rejectionComment.trim() && rejectionComment.length > 0"
+          ></textarea>
+          <p class="mt-2 text-xs text-gray-500">
+            <i class="material-icons text-xs align-middle">info</i>
+            This comment will be sent to the circular creator
+          </p>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 pb-6 flex items-center gap-3">
+        <button
+          (click)="closeRejectModal()"
+          class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-semibold"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="submitRejection()"
+          [disabled]="!rejectionComment.trim()"
+          class="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl hover:from-red-700 hover:to-pink-700 transition-all font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          <i class="material-icons text-xl">cancel</i>
+          Reject Circular
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- Circular Details Modal -->
+<div
+  *ngIf="showDetailsModal"
+  class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+  (click)="closeDetailsModal()"
+>
+  <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden" (click)="$event.stopPropagation()">
     <!-- Modal Header -->
-    <div class="bg-gradient-to-r from-red-600 to-pink-600 p-6 text-white rounded-t-2xl">
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-            <i class="material-icons text-2xl">cancel</i>
+            <i class="material-icons text-2xl">description</i>
           </div>
           <div>
-            <h2 class="text-xl font-bold">Reject Circular</h2>
-            <p class="text-red-100 text-sm mt-1">Please provide a reason for rejection</p>
+            <h2 class="text-xl font-bold">Circular Details</h2>
+            <p class="text-blue-100 text-sm mt-1">{{ selectedCircularForDetails?.circular_code }}</p>
           </div>
         </div>
-        <button (click)="closeRejectModal()" 
-                class="w-8 h-8 bg-white/20 rounded-lg hover:bg-white/30 transition-all flex items-center justify-center">
+        <button
+          (click)="closeDetailsModal()"
+          class="w-8 h-8 bg-white/20 rounded-lg hover:bg-white/30 transition-all flex items-center justify-center"
+        >
+          <i class="material-icons text-xl">close</i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+      <div *ngIf="selectedCircularForDetails">
+        <!-- Title -->
+        <div class="mb-6">
+          <h3 class="text-2xl font-bold text-gray-800 mb-2">{{ selectedCircularForDetails.title }}</h3>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <span
+              class="px-3 py-1 text-xs font-semibold rounded-full"
+              [class.bg-orange-100]="selectedCircularForDetails.circular_status === 'PENDING_APPROVAL'"
+              [class.text-orange-700]="selectedCircularForDetails.circular_status === 'PENDING_APPROVAL'"
+              [class.bg-green-100]="selectedCircularForDetails.circular_status === 'APPROVED'"
+              [class.text-green-700]="selectedCircularForDetails.circular_status === 'APPROVED'"
+              [class.bg-red-100]="selectedCircularForDetails.circular_status === 'REJECTED'"
+              [class.text-red-700]="selectedCircularForDetails.circular_status === 'REJECTED'"
+            >
+              {{ selectedCircularForDetails.circular_status || 'PENDING' }}
+            </span>
+
+            <span
+              class="px-3 py-1 text-xs font-semibold rounded-full"
+              [class.bg-purple-100]="selectedCircularForDetails.send_type === 'CONFIDENTIAL'"
+              [class.text-purple-700]="selectedCircularForDetails.send_type === 'CONFIDENTIAL'"
+              [class.bg-green-100]="selectedCircularForDetails.send_type === 'INTERNAL'"
+              [class.text-green-700]="selectedCircularForDetails.send_type === 'INTERNAL'"
+              [class.bg-blue-100]="selectedCircularForDetails.send_type === 'PUBLIC'"
+              [class.text-blue-700]="selectedCircularForDetails.send_type === 'PUBLIC'"
+              [class.bg-red-100]="selectedCircularForDetails.send_type === 'RESTRICTED'"
+              [class.text-red-700]="selectedCircularForDetails.send_type === 'RESTRICTED'"
+            >
+              {{ selectedCircularForDetails.send_type }}
+            </span>
+
+            <span class="px-3 py-1 text-xs bg-gray-100 text-gray-700 font-semibold rounded-full">
+              Source: {{ selectedCircularForDetails.source_type_name }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Information Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div class="bg-blue-50 rounded-xl p-4 border border-blue-100">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <i class="material-icons text-blue-600 text-sm">person</i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-600">Created By</p>
+                <p class="text-sm font-bold text-gray-800">
+                  {{ selectedCircularForDetails.creator_first_name }} {{ selectedCircularForDetails.creator_last_name }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-green-50 rounded-xl p-4 border border-green-100">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <i class="material-icons text-green-600 text-sm">calendar_today</i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-600">Effective From</p>
+                <p class="text-sm font-bold text-gray-800">
+                  {{ selectedCircularForDetails.effective_from | date : 'MMM dd, yyyy' }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-purple-50 rounded-xl p-4 border border-purple-100">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <i class="material-icons text-purple-600 text-sm">schedule</i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-600">Created On</p>
+                <p class="text-sm font-bold text-gray-800">
+                  {{ selectedCircularForDetails.created_at | date : 'MMM dd, yyyy, hh:mm a' }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-orange-50 rounded-xl p-4 border border-orange-100">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <i class="material-icons text-orange-600 text-sm">repeat</i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-600">Repeat Cycle</p>
+                <p class="text-sm font-bold text-gray-800">
+                  {{ selectedCircularForDetails.repeat_cycle || 'No Repeat' }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="selectedCircularForDetails.circular_code || selectedCircularForDetails.reference_circular_title" class="mb-4">
+          <h4 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+            <i class="material-icons text-gray-600 text-sm">link</i>
+            Reference Circular
+          </h4>
+          <div 
+    class="bg-indigo-50 rounded-xl p-4 border border-indigo-200 cursor-pointer hover:bg-indigo-100 transition-all"
+    (click)="viewReferenceCircular(selectedCircularForDetails.reference_circular_id)"
+  >
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <i class="material-icons text-indigo-600 text-sm">description</i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-indigo-900 mb-1">
+                  {{ selectedCircularForDetails.reference_circular_title || 'Referenced Document' }}
+                </p>
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded">
+                    {{ selectedCircularForDetails.reference_circular_code }}
+                  </span>
+                  <span class="text-xs text-indigo-600">Reference Code</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="mb-6">
+          <h4 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+            <i class="material-icons text-gray-600 text-sm">subject</i>
+            Circular Content
+          </h4>
+          <div class="bg-gray-50 rounded-xl p-5 border border-gray-200">
+            <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line" [innerHTML]="selectedCircularForDetails.content">
+              
+            </p>
+          </div>
+        </div>
+
+        <!-- Receiver Departments -->
+        <div *ngIf="selectedCircularForDetails.receiver_departments" class="mb-4">
+          <h4 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+            <i class="material-icons text-gray-600 text-sm">business</i>
+            Receiver Departments
+          </h4>
+          <div class="flex flex-wrap gap-2">
+            @for (dept of getDepartments(selectedCircularForDetails.receiver_departments); track dept) {
+              <span class="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
+                {{ dept }}
+              </span>
+            }
+          </div>
+        </div>
+
+        <!-- Receiver Branches -->
+        <div *ngIf="selectedCircularForDetails.receiver_branches" class="mb-4">
+          <h4 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+            <i class="material-icons text-gray-600 text-sm">location_on</i>
+            Receiver Branches
+          </h4>
+          <div class="flex flex-wrap gap-2">
+            @for (branch of selectedCircularForDetails.receiver_branches.split(','); track branch) {
+              <span class="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
+                {{ branch.trim() }}
+              </span>
+            }
+          </div>
+        </div>
+
+        <!-- Rejection Comment if applicable -->
+        <div *ngIf="selectedCircularForDetails.circular_status === 'REJECTED' && selectedCircularForDetails.comments" class="mb-4">
+          <h4 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+            <i class="material-icons text-gray-600 text-sm">comment</i>
+            Rejection Reason
+          </h4>
+          <div class="bg-red-50 rounded-xl p-4 border border-red-200">
+            <p class="text-sm text-red-700">{{ selectedCircularForDetails.comments }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="px-6 pb-6 flex items-center gap-3 border-t border-gray-200 pt-4">
+      <button
+        (click)="downloadPDF(selectedCircularForDetails)"
+        class="flex-1 px-6 py-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all font-semibold flex items-center justify-center gap-2"
+      >
+        <i class="material-icons text-xl">picture_as_pdf</i>
+        View PDF
+      </button>
+      <button
+        (click)="closeDetailsModal()"
+        class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-semibold"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+<!-- Reference Circular Modal (Read-Only) -->
+<div
+  *ngIf="showReferenceModal"
+  class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+  (click)="closeReferenceModal()"
+>
+  <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+            <i class="material-icons text-2xl">link</i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold">Reference Circular</h2>
+            <p class="text-indigo-100 text-sm mt-1">Read-only view</p>
+          </div>
+        </div>
+        <button
+          (click)="closeReferenceModal()"
+          class="w-8 h-8 bg-white/20 rounded-lg hover:bg-white/30 transition-all flex items-center justify-center"
+        >
+          <i class="material-icons text-xl">close</i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+      <!-- Loading State -->
+      <div *ngIf="loadingReference" class="text-center py-12">
+        <i class="material-icons text-6xl text-indigo-600 animate-spin">autorenew</i>
+        <p class="text-gray-600 mt-4">Loading reference circular...</p>
+      </div>
+
+      <!-- Content -->
+      <div *ngIf="!loadingReference && referenceCircularData">
+        <!-- Info Banner -->
+        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+          <i class="material-icons text-indigo-600">info</i>
+          <div>
+            <p class="text-sm font-semibold text-indigo-900">Reference Document</p>
+            <p class="text-xs text-indigo-700 mt-1">
+              This is a referenced circular for information purposes only. No actions required.
+            </p>
+          </div>
+        </div>
+
+        <!-- Title -->
+        <div class="mb-6">
+          <h3 class="text-2xl font-bold text-gray-800 mb-2">{{ referenceCircularData.title }}</h3>
+          <p class="text-sm text-gray-600">Code: {{ referenceCircularData.circular_code }}</p>
+        </div>
+
+        <!-- Content Section -->
+        <div class="mb-6">
+          <h4 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+            <i class="material-icons text-gray-600 text-sm">subject</i>
+            Circular Content
+          </h4>
+          <div class="bg-gray-50 rounded-xl p-5 border border-gray-200">
+            <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line" [innerHTML]="referenceCircularData.content">
+            </p>
+          </div>
+        </div>
+
+        <!-- PDF Section (if available) -->
+        <div *ngIf="referenceCircularData.circular_pdf" class="mb-6">
+          <h4 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+            <i class="material-icons text-gray-600 text-sm">picture_as_pdf</i>
+            Attached Document
+          </h4>
+          <div class="bg-red-50 rounded-xl p-4 border border-red-200">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                  <i class="material-icons text-red-600">picture_as_pdf</i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-gray-800">{{ referenceCircularData.title }}.pdf</p>
+                  <p class="text-xs text-gray-600">Click to view the PDF document</p>
+                </div>
+              </div>
+              <button
+                (click)="downloadReferencePDF()"
+                class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all text-sm font-semibold flex items-center gap-2"
+              >
+                <i class="material-icons text-sm">visibility</i>
+                View PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="px-6 pb-6 flex items-center justify-end gap-3 border-t border-gray-200 pt-4">
+      <button
+        (click)="closeReferenceModal()"
+        class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-semibold"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Approve Confirmation Modal -->
+<div
+  *ngIf="showApproveModal"
+  class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+  (click)="closeApproveModal()"
+>
+  <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="bg-gradient-to-r from-green-600 to-emerald-600 p-6 text-white rounded-t-2xl">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+            <i class="material-icons text-2xl">check_circle</i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold">Approve Circular</h2>
+            <p class="text-green-100 text-sm mt-1">Confirm your approval</p>
+          </div>
+        </div>
+        <button
+          (click)="closeApproveModal()"
+          class="w-8 h-8 bg-white/20 rounded-lg hover:bg-white/30 transition-all flex items-center justify-center"
+        >
           <i class="material-icons text-xl">close</i>
         </button>
       </div>
@@ -446,50 +897,49 @@
 
     <!-- Modal Body -->
     <div class="p-6">
-      <div class="mb-4">
-        <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
-          <div class="flex items-start gap-3">
-            <i class="material-icons text-red-600 text-xl">info</i>
-            <div>
-              <p class="text-sm font-semibold text-red-900">Circular Details</p>
-              <p class="text-sm text-red-700 mt-1">{{ selectedCircularForAction?.title }}</p>
-              <p class="text-xs text-red-600 mt-1">Code: {{ selectedCircularForAction?.circular_code }}</p>
-            </div>
+      <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
+        <div class="flex items-start gap-3">
+          <i class="material-icons text-green-600 text-xl">info</i>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-green-900 mb-2">Circular Details</p>
+            <p class="text-sm text-green-700 font-medium">{{ selectedCircularForApproval?.title }}</p>
+            <p class="text-xs text-green-600 mt-1">
+              Code: {{ selectedCircularForApproval?.circular_code }}
+            </p>
+            <p class="text-xs text-green-600 mt-1">
+              Effective From: {{ selectedCircularForApproval?.effective_from | date : 'MMM dd, yyyy' }}
+            </p>
           </div>
         </div>
+      </div>
 
-        <label class="block text-sm font-bold text-gray-700 mb-2">
-          Reason for Rejection <span class="text-red-500">*</span>
-        </label>
-        <textarea
-          [(ngModel)]="rejectionComment"
-          rows="5"
-          placeholder="Please provide a detailed reason for rejecting this circular..."
-          class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
-          [class.border-red-500]="!rejectionComment.trim() && rejectionComment.length > 0"
-        ></textarea>
-        <p class="mt-2 text-xs text-gray-500">
-          <i class="material-icons text-xs align-middle">info</i>
-          This comment will be sent to the circular creator
-        </p>
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <div class="flex items-start gap-3">
+          <i class="material-icons text-blue-600 text-xl">verified</i>
+          <div>
+            <p class="text-sm font-semibold text-blue-900">Confirmation Required</p>
+            <p class="text-sm text-blue-700 mt-1">
+              Are you sure you want to approve this circular? This action will make it effective from the specified date.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Modal Footer -->
     <div class="px-6 pb-6 flex items-center gap-3">
       <button
-        (click)="closeRejectModal()"
+        (click)="closeApproveModal()"
         class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-semibold"
       >
         Cancel
       </button>
       <button
-        (click)="submitRejection()"
-        [disabled]="!rejectionComment.trim()"
-        class="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl hover:from-red-700 hover:to-pink-700 transition-all font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        (click)="confirmApproval()"
+        class="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all font-semibold shadow-lg flex items-center justify-center gap-2"
       >
-        <i class="material-icons text-xl">cancel</i>
-        Reject Circular
+        <i class="material-icons text-xl">check_circle</i>
+        Confirm Approval
       </button>
     </div>
   </div>

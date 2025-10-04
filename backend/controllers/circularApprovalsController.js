@@ -1,5 +1,12 @@
 const circularApprovalModel = require("../models/circularApprovalsModel");
 
+const emitCircularUpdate = (req, approver_id, eventType, data) => {
+  const io = req.app.get('io');
+  if (io) {
+    io.to(`approver-${approver_id}`).emit(eventType, data);
+  }
+};
+
 // Get all approvals
 exports.getAllCircularApprovals = async (req, res) => {
   try {
@@ -127,6 +134,12 @@ exports.markAsSeen= async(req, res)=> {
           message: 'Approval record not found' 
         });
       }
+ // Emit socket event to approver
+      emitCircularUpdate(req, approverId, 'circular-status-updated', {
+      circular_id: circularId,
+      status: 'APPROVED',
+      message: 'Circular has been approved'
+    });
 
       res.json({ 
         success: true, 
@@ -162,6 +175,11 @@ exports.markAsSeen= async(req, res)=> {
           message: 'Approval record not found' 
         });
       }
+      emitCircularUpdate(req, approverId, 'circular-status-updated', {
+      circular_id: circularId,
+      status: 'REJECTED',
+      message: 'Circular has been rejected'
+    });
 
       res.json({ 
         success: true, 
@@ -179,8 +197,7 @@ exports.markAsSeen= async(req, res)=> {
 
   exports.getAssignedCirculars=async(req, res) =>{
     try {
-      const approver_id = req.params; // Assuming user info is in req.user from auth middleware
-      
+      const {approver_id} = req.params; // Assuming user info is in req.user from auth middleware
       const filters = {
         status: req.query.status, // PENDING, APPROVED, REJECTED
         has_seen: req.query.has_seen === 'true' ? true : req.query.has_seen === 'false' ? false : undefined,
@@ -191,7 +208,6 @@ exports.markAsSeen= async(req, res)=> {
       
       const circulars = await circularApprovalModel.getAssignedCirculars(approver_id, filters);
       // const total = await CircularApprovalModel.getAssignedCircularsCount(employeeId, filters);
-      
       res.status(200).json({
         success: true,
         data: circulars,

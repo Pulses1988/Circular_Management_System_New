@@ -127,70 +127,100 @@ exports.deleteCircularApproval = (id) => {
 };
 
 
-exports.getAssignedCirculars=async(approver_id, filters = {})=> {
-    try {
-      let query = `
-        SELECT 
-          c.id AS circular_id,
-          c.title,
-          c.content,
-          c.circular_code,
-          c.send_type,
-          c.status AS circular_status,
-          c.effective_from,
-          c.created_at,
-          c.published_at,
-          ca.id AS approval_id,
-          ca.has_seen,
-          ca.seen_at,
-          ca.status AS approval_status,
-          ca.comments,
-          ca.updated_at AS approval_updated_at,
-          creator.id AS creator_id,
-         
-          st.id AS source_type_id,
-          st.name AS source_type_name
-        FROM circular_approvals ca
-        INNER JOIN circulars c ON ca.circular_id = c.id
-        INNER JOIN employees creator ON c.creator_employee_id = creator.id
-        LEFT JOIN source_types st ON c.source_type_id = st.id
-        WHERE ca.approver_id = ?
-      `;
-      
-      const params = [approver_id];
-      
-      // Add filters
-      if (filters.status) {
-        query += ` AND ca.status = ?`;
-        params.push(filters.status);
-      }
-      
-      if (filters.has_seen !== undefined) {
-        query += ` AND ca.has_seen = ?`;
-        params.push(filters.has_seen);
-      }
-      
-      if (filters.circular_status) {
-        query += ` AND c.status = ?`;
-        params.push(filters.circular_status);
-      }
-      
-      query += ` ORDER BY c.created_at DESC`;
-      
-      // Add pagination
-      if (filters.limit) {
-        query += ` LIMIT ?`;
-        params.push(parseInt(filters.limit));
-        
-        if (filters.offset) {
-          query += ` OFFSET ?`;
-          params.push(parseInt(filters.offset));
-        }
-      }
-      
-      const [rows] = await db.query(query, params);
-      return rows;
-    } catch (error) {
-      throw error;
+exports.getAssignedCirculars = async (approver_id, filters = {}) => {
+  try {
+    let query = `
+      SELECT 
+        c.id AS circular_id,
+        c.title,
+        c.content,
+        c.circular_code,
+        c.send_type,
+        c.status AS circular_status,
+        c.effective_from,
+        c.circular_pdf,
+        c.created_at,
+        c.published_at,
+        c.reference_circular_id,
+        ref_c.title AS reference_circular_title,
+        ref_c.circular_code AS reference_circular_code,
+
+        ca.id AS approval_id,
+        ca.has_seen,
+        ca.seen_at,
+        ca.status AS approval_status,
+        ca.comments,
+        ca.updated_at AS approval_updated_at,
+
+        creator.id AS creator_id,
+        creator.first_name AS creator_first_name,
+        creator.last_name AS creator_last_name,
+
+        st.id AS source_type_id,
+        st.name AS source_type_name,
+
+        -- aggregate receivers
+        GROUP_CONCAT(DISTINCT CONCAT(recv.first_name, ' ', recv.last_name) SEPARATOR ', ') AS receiver_names,
+        GROUP_CONCAT(DISTINCT b.name SEPARATOR ', ') AS receiver_branches,
+        GROUP_CONCAT(DISTINCT d.name SEPARATOR ', ') AS receiver_departments
+
+      FROM circular_approvals ca
+      INNER JOIN circulars c ON ca.circular_id = c.id
+      LEFT JOIN circulars ref_c ON c.reference_circular_id = ref_c.id
+      INNER JOIN employees creator ON c.creator_employee_id = creator.id
+      LEFT JOIN source_types st ON c.source_type_id = st.id
+
+      LEFT JOIN circular_visibility cv ON cv.circular_id = c.id
+      LEFT JOIN employees recv ON cv.employee_id = recv.id
+      LEFT JOIN branches b ON recv.branch_id = b.id
+      LEFT JOIN departments d ON recv.department_id = d.id
+
+      WHERE ca.approver_id = ?
+    `;
+
+    const params = [approver_id];
+
+    // filters
+    if (filters.status) {
+      query += ` AND ca.status = ?`;
+      params.push(filters.status);
     }
+
+    if (filters.has_seen !== undefined) {
+      query += ` AND ca.has_seen = ?`;
+      params.push(filters.has_seen);
+    }
+
+    if (filters.circular_status) {
+      query += ` AND c.status = ?`;
+      params.push(filters.circular_status);
+    }
+
+    // group by (all non-aggregated columns)
+    query += `
+      GROUP BY 
+        c.id, c.title, c.content, c.circular_code, c.send_type, 
+        c.status, c.effective_from, c.circular_pdf, c.created_at, c.published_at,
+        ca.id, ca.has_seen, ca.seen_at, ca.status, ca.comments, ca.updated_at,
+        creator.id,
+        st.id, st.name
+      ORDER BY c.created_at DESC
+    `;
+
+    // pagination
+    if (filters.limit) {
+      query += ` LIMIT ?`;
+      params.push(parseInt(filters.limit, 10));
+
+      if (filters.offset) {
+        query += ` OFFSET ?`;
+        params.push(parseInt(filters.offset, 10));
+      }
+    }
+
+    const [rows] = await db.query(query, params);
+    return rows;
+  } catch (error) {
+    throw error;
   }
+};
