@@ -1,4 +1,15 @@
 ::ng-deep .custom-dialog-container {
   width: 100vw !important;  /* 80% of viewport width */
-  max-width: 1200px !important; /* or any max width */
+  max-width: 1300px !important; /* or any max width */
+}
+
+::ng-deep .mat-select-trigger {
+  display: inline-flex !important;   /* instead of flex with space-between */
+  justify-content: flex-start !important; /* keep content and arrow close */
+  gap: 4px; /* small gap between text and arrow */
+}
+
+::ng-deep .mat-select-arrow {
+  position: relative;
+  right: 0; /* remove default large spacing */
 }

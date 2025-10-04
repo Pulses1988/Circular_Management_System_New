@@ -1,5 +1,7 @@
 const circularModal = require("../models/circularModel");
 const circularApprovalModal = require("../models/circularApprovalsModel");
+const circularVisibilityModal = require("../models/circularVisibilityModel");
+const employeeModal = require("../models/employeesModal");
 
 exports.createCircular = async (req, res) => {
   try {
@@ -35,6 +37,69 @@ exports.createCircular = async (req, res) => {
       }
     }
 
+    // ✅ Save visibility employees
+    const visiblityEmployee = req.body.visiblityEmployee
+      ? JSON.parse(req.body.visiblityEmployee)
+      : [];
+    if (Array.isArray(visiblityEmployee) && visiblityEmployee.length > 0) {
+      await circularVisibilityModal.assignToEmployees(
+        circularId,
+        visiblityEmployee
+      );
+    }
+
+    if (req.body.send_type === "INTERNAL") {
+      if (req.body.headOfficeId && req.body.departmentId) {
+        const deptEmployee =
+          await circularVisibilityModal.getEmployeesByDepartment(
+            req.body.departmentId
+          );
+
+        if (deptEmployee.length > 0) {
+          await circularVisibilityModal.assignToEmployees(
+            circularId,
+            deptEmployee
+          );
+        }
+      }
+
+      if (req.body.branchId && req.body.departmentId) {
+        const branchEmployees =
+          await circularVisibilityModal.getEmployeesByDepartment(
+            req.body.departmentId
+          );
+        if (branchEmployees.length > 0) {
+          await circularVisibilityModal.assignToEmployees(
+            circularId,
+            branchEmployees
+          );
+        }
+      }
+
+      if (req.body.branchId) {
+        const branchDepartmentEmployees =
+          await circularVisibilityModal.getEmployeesByBranch(req.body.branchId);
+
+        if (branchDepartmentEmployees.length > 0) {
+          await circularVisibilityModal.assignToEmployees(
+            circularId,
+            branchDepartmentEmployees
+          );
+        }
+      }
+    }
+
+    // 4️⃣ Automatically assign all employees for PUBLIC circulars
+    if (req.body.send_type === "PUBLIC") {
+      const [allEmployees] = await employeeModal.getAllEmployees();
+      if (allEmployees.length > 0) {
+        const allEmployeeIds = allEmployees.map((e) => e.id);
+        await circularVisibilityModal.assignToEmployees(
+          circularId,
+          allEmployeeIds
+        );
+      }
+    }
     res.status(201).json({ message: "Circular created successfully" });
   } catch (err) {
     console.error(err);
