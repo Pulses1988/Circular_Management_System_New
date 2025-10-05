@@ -10,7 +10,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:4200",
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
@@ -33,7 +33,7 @@ const circularVisibilityRoutes = require("./routes/circularVisibilityRoutes")
 // Allow cross-origin requests from your Angular app
 app.use(
   cors({
-    origin: "http://localhost:4200",
+    origin: "*",
   })
 );
 
@@ -86,8 +86,11 @@ app.use("/api/repeat-cycle", express.json(), repeatCycleRoutes);
 app.use("/api/circular-visibility",express.json(),circularVisibilityRoutes);
 
 const PORT = 3000;
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
+  console.log(`Local: http://localhost:${PORT}`);
+  console.log(`Network: http://192.168.1.8:${PORT}`);
 });
 
 module.exports = { io };
