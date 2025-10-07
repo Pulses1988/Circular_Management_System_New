@@ -26,66 +26,66 @@ export class CircularService {
   constructor(private http: HttpClient, private router: Router) {}
   token!: string | null;
 
- private initializeSocket() {
-  if (this.socketInitialized) {
-    console.log('Socket already initialized, skipping...');
-    return;
-  }
-
-  console.log('Initializing WebSocket connection...');
-  this.socket = io(this.apiUrl, {
-    transports: ['websocket'],
-    reconnection: true,
-    reconnectionAttempts: 5,
-    reconnectionDelay: 1000
-  });
-
-  this.socket.on('connect', () => {
-    console.log('WebSocket connected:', this.socket.id);
-  });
-
-  this.socket.on('subscription-confirmed', (data) => {
-    console.log('Subscription confirmed:', data);
-  });
-
-  this.socket.on('new-circular-assigned', (data) => {
-    console.log('New circular received:', data);
-    this.newCircularSubject.next(data);
-  });
-
-  this.socket.on('circular-status-updated', (data) => {
-    console.log('Circular status updated:', data);
-    this.statusUpdateSubject.next(data);
-  });
-
-  this.socket.on('disconnect', () => {
-    console.log('WebSocket disconnected');
-  });
-
-  this.socket.on('connect_error', (error) => {
-    console.error('WebSocket connection error:', error);
-  });
-
-  this.socketInitialized = true;
-}
-
-subscribeToCircularUpdates(approver_id: number) {
-  if (!this.socketInitialized) {
-    this.initializeSocket();
-  }
-  
-  const trySubscribe = () => {
-    if (this.socket && this.socket.connected) {
-      console.log('Subscribing to updates for approver:', approver_id);
-      this.socket.emit('subscribe-circulars', approver_id);
-    } else {
-      console.log('Socket not ready, retrying in 500ms...');
-      setTimeout(trySubscribe, 500);
+  private initializeSocket() {
+    if (this.socketInitialized) {
+      console.log('Socket already initialized, skipping...');
+      return;
     }
-  };
-  
-  trySubscribe();
-}
+
+    console.log('Initializing WebSocket connection...');
+    this.socket = io(this.apiUrl, {
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
+
+    this.socket.on('connect', () => {
+      console.log('WebSocket connected:', this.socket.id);
+    });
+
+    this.socket.on('subscription-confirmed', (data) => {
+      console.log('Subscription confirmed:', data);
+    });
+
+    this.socket.on('new-circular-assigned', (data) => {
+      console.log('New circular received:', data);
+      this.newCircularSubject.next(data);
+    });
+
+    this.socket.on('circular-status-updated', (data) => {
+      console.log('Circular status updated:', data);
+      this.statusUpdateSubject.next(data);
+    });
+
+    this.socket.on('disconnect', () => {
+      console.log('WebSocket disconnected');
+    });
+
+    this.socket.on('connect_error', (error) => {
+      console.error('WebSocket connection error:', error);
+    });
+
+    this.socketInitialized = true;
+  }
+
+  subscribeToCircularUpdates(approver_id: number) {
+    if (!this.socketInitialized) {
+      this.initializeSocket();
+    }
+
+    const trySubscribe = () => {
+      if (this.socket && this.socket.connected) {
+        console.log('Subscribing to updates for approver:', approver_id);
+        this.socket.emit('subscribe-circulars', approver_id);
+      } else {
+        console.log('Socket not ready, retrying in 500ms...');
+        setTimeout(trySubscribe, 500);
+      }
+    };
+
+    trySubscribe();
+  }
 
   unsubscribeFromCircularUpdates() {
     if (this.socket && this.socket.connected) {
@@ -219,6 +219,15 @@ subscribeToCircularUpdates(approver_id: number) {
       { headers: this.getHeaders() }
     );
   }
+
+  // -----------------------circular rejection-----------------------------------
+
+  getCircularByCreaterId(createrId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/api/circular/creator/${createrId}`, {
+      headers: this.getHeaders(),
+    });
+  }
+
   // ----------------------Source Type---------------------------------
   getSourceTypes() {
     return this.http.get(`${this.apiUrl}/api/source-type/`, { headers: this.getHeaders() });

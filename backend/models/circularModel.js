@@ -64,6 +64,43 @@ exports.getCircularById = (id) => {
   );
 };
 
+// get circular by the creater id
+
+exports.getCircularByCreaterId = (createrId) => {
+  return db.query(
+    `SELECT 
+        c.*,  -- all circular fields
+        st.name AS source_type_name,  -- source type
+        rc.name AS repeat_cycle_name, -- repeat cycle
+        rc.duration_days AS repeat_cycle_duration, -- optional
+
+        e.first_name AS creator_first_name,
+        e.middle_name AS creator_middle_name,
+        e.last_name AS creator_last_name,
+        e.email AS creator_email,
+
+        a.id AS approval_id,
+        a.status AS approval_status,
+        a.comments,
+        a.updated_at AS approval_updated_at,
+
+        ae.first_name AS approver_first_name,
+        ae.middle_name AS approver_middle_name,
+        ae.last_name AS approver_last_name,
+        ae.email AS approver_email
+
+     FROM circulars c
+     JOIN employees e ON c.creator_employee_id = e.id
+     LEFT JOIN circular_approvals a ON c.id = a.circular_id
+     LEFT JOIN employees ae ON a.approver_id = ae.id
+     LEFT JOIN source_types st ON c.source_type_id = st.id
+     LEFT JOIN repeat_cycles rc ON c.repeat_cycle_id = rc.id
+     WHERE c.creator_employee_id = ?
+     ORDER BY c.created_at DESC, a.updated_at DESC`,
+    [createrId]
+  );
+};
+
 // ✅ Update Circular
 exports.updateCircular = async (req, res) => {
   try {

@@ -12,10 +12,8 @@ export const Employee_ROUTS: Routes = [
     path: 'employee-dashboard',
     component: EmployeeDashboard,
   },
-  {
-    path: 'create-circular',
-    component: CreateCircular,
-  },
+  { path: 'create-circular', component: CreateCircular },
+  { path: 'edit-circular/:id', component: CreateCircular },
   {
     path: 'circular-approval',
     component: CircularApproval,
