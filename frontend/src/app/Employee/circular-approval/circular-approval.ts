@@ -67,6 +67,10 @@ export class CircularApproval implements OnInit, OnDestroy {
   ApprovalDataByEmpId: any = [];
   showDetailsModal: boolean = false;
   selectedCircularForDetails: Circular | null = null;
+  activeTab: 'pending' | 'approved' | 'rejected' | 'all' = 'pending';
+  Math = Math;
+  showCircularViewModal: boolean = false;
+  selectedCircularForView: Circular | null = null;
 
   showApproveModal: boolean = false;
   selectedCircularForApproval: Circular | null = null;
@@ -78,6 +82,11 @@ export class CircularApproval implements OnInit, OnDestroy {
   pendingCount: number = 0;
   approvedTodayCount: number = 0;
   rejectedTodayCount: number = 0;
+
+  currentPage: number = 1;
+  itemsPerPage: number = 10;
+  totalPages: number = 1;
+  recentActivities: any[] = [];
 
   // Filters
   selectedPriority: string = 'all';
@@ -125,9 +134,8 @@ export class CircularApproval implements OnInit, OnDestroy {
       .subscribe({
         next: (res: any) => {
           this.circulars = res.data || [];
-          this.filteredCirculars = res.data || [];
-          console.log(this.filteredCirculars, 'circularssss');
           this.calculateStats();
+          this.filterCirculars();
           this.loading = false;
           console.log('Circulars loaded:', res);
 
@@ -141,30 +149,22 @@ export class CircularApproval implements OnInit, OnDestroy {
       });
   }
   setupWebSocketListeners(approver_id: number) {
-  // Subscribe to WebSocket updates
-  this.circularService.subscribeToCircularUpdates(approver_id);
+    // Subscribe to WebSocket updates
+    this.circularService.subscribeToCircularUpdates(approver_id);
 
-  // Listen for new circulars - add shareReplay to prevent multiple subscriptions
-  this.circularService.newCircular$
-    .pipe(
-      takeUntil(this.destroy$)
-    )
-    .subscribe((data: any) => {
+    // Listen for new circulars - add shareReplay to prevent multiple subscriptions
+    this.circularService.newCircular$.pipe(takeUntil(this.destroy$)).subscribe((data: any) => {
       console.log('New circular notification received', data);
       this.refreshCirculars();
       this.toast.show('New circular has been assigned to you!', 'info');
     });
 
-  // Listen for status updates
-  this.circularService.statusUpdate$
-    .pipe(
-      takeUntil(this.destroy$)
-    )
-    .subscribe((data: any) => {
+    // Listen for status updates
+    this.circularService.statusUpdate$.pipe(takeUntil(this.destroy$)).subscribe((data: any) => {
       console.log('Status update received', data);
       this.refreshCirculars();
     });
-}
+  }
   showNotification(message: string) {
     // You can use a toast library or simple alert
     alert(message);
@@ -184,6 +184,7 @@ export class CircularApproval implements OnInit, OnDestroy {
         next: (res: any) => {
           this.ApprovalDataByEmpId = res.data || res || [];
           console.log('Approval data loaded:', res);
+          this.loadRecentActivities();
         },
         error: (err) => {
           console.error('Error fetching approval data:', err);
@@ -210,20 +211,51 @@ export class CircularApproval implements OnInit, OnDestroy {
       .subscribe({
         next: (res: any) => {
           this.circulars = res.data || [];
-          this.filteredCirculars = [...this.circulars];
+          this.filterCirculars();
           this.calculateStats();
+          this.loadRecentActivities();
         },
         error: (err) => console.error('Error refreshing:', err),
       });
   }
 
   filterCirculars() {
-    this.filteredCirculars = this.circulars.filter((circular) => {
-      const matchesSearch =
-        circular.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        circular.circular_code.toLowerCase().includes(this.searchQuery.toLowerCase());
-      return matchesSearch;
-    });
+    let filtered = this.circulars;
+
+    // Filter by active tab
+    switch (this.activeTab) {
+      case 'pending':
+        filtered = filtered.filter((c) => c.circular_status === 'PENDING_APPROVAL');
+        break;
+      case 'approved':
+        filtered = filtered.filter((c) => c.circular_status === 'APPROVED');
+        break;
+      case 'rejected':
+        filtered = filtered.filter((c) => c.circular_status === 'REJECTED');
+        break;
+      case 'all':
+        // Show all circulars
+        break;
+    }
+
+    // Apply search filter
+    if (this.searchQuery.trim()) {
+      filtered = filtered.filter((circular) => {
+        const matchesSearch =
+          circular.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+          circular.circular_code.toLowerCase().includes(this.searchQuery.toLowerCase());
+        return matchesSearch;
+      });
+    }
+
+    this.filteredCirculars = filtered;
+    this.currentPage = 1; // Reset to first page
+    this.calculatePagination();
+  }
+
+  switchTab(tab: 'pending' | 'approved' | 'rejected' | 'all') {
+    this.activeTab = tab;
+    this.filterCirculars();
   }
   getDepartments(departments: string): string[] {
     return departments ? departments.split(',') : [];
@@ -363,6 +395,7 @@ export class CircularApproval implements OnInit, OnDestroy {
 
       if (!circular.has_seen) {
         this.markCircularAsSeen(circularId);
+        this.loadRecentActivities();
       }
     }
   }
@@ -375,6 +408,7 @@ export class CircularApproval implements OnInit, OnDestroy {
     try {
       if (!circular.has_seen) {
         this.markCircularAsSeen(circular.circular_id);
+        this.loadRecentActivities();
       }
 
       const byteArray = new Uint8Array(circular.circular_pdf.data);
@@ -506,5 +540,95 @@ export class CircularApproval implements OnInit, OnDestroy {
       console.error('Error loading reference PDF:', error);
       this.toast.show('Error loading PDF. Please try again.', 'error');
     }
+  }
+  // Add method to view circular from tabs
+  viewCircularFromTab(circular: Circular) {
+    this.selectedCircularForView = circular;
+    this.showCircularViewModal = true;
+  }
+
+  // Add method to close view modal
+  closeCircularViewModal() {
+    this.showCircularViewModal = false;
+    this.selectedCircularForView = null;
+  }
+
+  calculatePagination() {
+    this.totalPages = Math.ceil(this.filteredCirculars.length / this.itemsPerPage);
+    if (this.currentPage > this.totalPages) {
+      this.currentPage = 1;
+    }
+  }
+
+  // Add method to get paginated circulars
+  getPaginatedCirculars(): Circular[] {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    return this.filteredCirculars.slice(startIndex, endIndex);
+  }
+
+  // Add pagination methods
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+  }
+  loadRecentActivities() {
+    if (!this.reviewerData?.id) return;
+
+    // Get last 10 activities from ApprovalDataByEmpId
+    const activities = this.circulars
+      .map((approval: any) => {
+        const circular = this.circulars.find((c) => c.circular_id === approval.circular_id);
+
+        if (!circular) return null;
+
+        let actionType = '';
+        let actionIcon = '';
+        let actionColor = '';
+
+        if (approval.circular_status === 'APPROVED') {
+          actionType = 'Approved Circular';
+          actionIcon = 'check';
+          actionColor = 'green';
+        } else if (approval.circular_status === 'REJECTED') {
+          actionType = 'Rejected Circular';
+          actionIcon = 'close';
+          actionColor = 'red';
+        } else if (approval.has_seen) {
+          actionType = 'Viewed Circular';
+          actionIcon = 'visibility';
+          actionColor = 'blue';
+        } else {
+          return null;
+        }
+
+        return {
+          type: actionType,
+          icon: actionIcon,
+          color: actionColor,
+          title: circular.title,
+          code: circular.circular_code,
+          timestamp: approval.updated_at || approval.seen_at,
+          circular_id: circular.circular_id,
+        };
+      })
+      .filter((activity: any) => activity !== null)
+      .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, 10);
+
+    this.recentActivities = activities;
   }
 }
