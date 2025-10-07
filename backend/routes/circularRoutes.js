@@ -16,6 +16,9 @@ router.get("/", circularController.getAllCirculars);
 // Get by ID
 router.get("/:id", circularController.getCircularById);
 
+// Get by creater Id
+router.get("/creator/:createrId", circularController.getCircularByCreaterId);
+
 // Update
 router.put("/:id", upload.single("pdfFile"), circularController.updateCircular);
 

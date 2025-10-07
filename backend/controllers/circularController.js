@@ -28,12 +28,12 @@ exports.createCircular = async (req, res) => {
 
     const approvers = req.body.approvers ? JSON.parse(req.body.approvers) : [];
     if (Array.isArray(approvers) && approvers.length > 0) {
-      const io = req.app.get('io');
-      console.log('IO instance:', io ? 'Available' : 'Not available');
+      const io = req.app.get("io");
+      console.log("IO instance:", io ? "Available" : "Not available");
       const [circularRows] = await circularModal.getCircularById(circularId);
-      const circularDetails = circularRows[0]
-      console.log('Circular details fetched:', circularDetails ? 'Yes' : 'No');
-      
+      const circularDetails = circularRows[0];
+      console.log("Circular details fetched:", circularDetails ? "Yes" : "No");
+
       for (const approverId of approvers) {
         await circularApprovalModal.createCircularApproval({
           circular_id: circularId,
@@ -43,11 +43,14 @@ exports.createCircular = async (req, res) => {
         if (io) {
           const roomName = `approver-${approverId}`;
           console.log(`Emitting to room: ${roomName}`);
-          console.log(`Clients in room:`, io.sockets.adapter.rooms.get(roomName)?.size || 0);
-          io.to(`approver-${approverId}`).emit('new-circular-assigned', {
+          console.log(
+            `Clients in room:`,
+            io.sockets.adapter.rooms.get(roomName)?.size || 0
+          );
+          io.to(`approver-${approverId}`).emit("new-circular-assigned", {
             circular: circularDetails,
-            message: 'New circular has been assigned to you',
-            circular_id: circularId
+            message: "New circular has been assigned to you",
+            circular_id: circularId,
           });
           console.log(`Socket event emitted to approver ${approverId}`);
         }
@@ -145,6 +148,75 @@ exports.getCircularById = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch circular" });
+  }
+};
+
+// get circular by creater id
+
+exports.getCircularByCreaterId = async (req, res) => {
+  try {
+    const [rows] = await circularModal.getCircularByCreaterId(
+      req.params.createrId
+    );
+
+    if (rows.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "No circulars found for this creator" });
+    }
+
+    // Aggregate circulars by circular id
+    const circularMap = new Map();
+
+    rows.forEach((row) => {
+      if (!circularMap.has(row.id)) {
+        circularMap.set(row.id, {
+          id: row.id,
+          title: row.title,
+          content: row.content,
+          circular_code: row.circular_code,
+          send_type: row.send_type,
+          status: row.status,
+          effective_from: row.effective_from,
+          published_at: row.published_at,
+          created_at: row.created_at,
+          source_type_name: row.source_type_name,
+          repeat_cycle_name: row.repeat_cycle_name,
+          repeat_cycle_duration: row.repeat_cycle_duration,
+          creator: {
+            first_name: row.creator_first_name,
+            middle_name: row.creator_middle_name,
+            last_name: row.creator_last_name,
+            email: row.creator_email,
+          },
+          approvals: [],
+        });
+      }
+
+      // Add approval if it exists
+      if (row.approval_id) {
+        circularMap.get(row.id).approvals.push({
+          id: row.approval_id,
+          status: row.approval_status,
+          comments: row.comments,
+          updated_at: row.approval_updated_at,
+          approver: {
+            first_name: row.approver_first_name,
+            middle_name: row.approver_middle_name,
+            last_name: row.approver_last_name,
+            email: row.approver_email,
+          },
+        });
+      }
+    });
+
+    // Convert map to array
+    const circulars = Array.from(circularMap.values());
+
+    res.json(circulars);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch circulars" });
   }
 };
 
