@@ -36,6 +36,8 @@ export interface Circular {
   send_type: 'INTERNAL' | 'CONFIDENTIAL' | 'RESTRICTED' | 'PUBLIC';
   status: 'DRAFT' | 'PENDING_APPROVAL' | 'REJECTED' | 'APPROVED' | 'PUBLISHED';
   repeat_cycle: number;
+  priority: 'LOW' | 'URGENT' | 'HIGH' | 'MEDIUM';
+  specialKeyword: string;
 }
 
 interface SourceType {
@@ -290,22 +292,22 @@ export class CreateCircular {
   }
 
   private loadEmployeeData(): void {
-     if (typeof window !== 'undefined') {
-    const encryptedUser = localStorage.getItem('emp_user');
-    if (encryptedUser) {
-      const decryptedUser = this.decryptData(encryptedUser);
-      this.employee = JSON.parse(decryptedUser);
-      console.log('Logged in employee:', this.employee);
+    if (typeof window !== 'undefined') {
+      const encryptedUser = localStorage.getItem('emp_user');
+      if (encryptedUser) {
+        const decryptedUser = this.decryptData(encryptedUser);
+        this.employee = JSON.parse(decryptedUser);
+        console.log('Logged in employee:', this.employee);
 
-      const fullName = `${this.employee.first_name} ${this.employee.last_name}`.trim();
+        const fullName = `${this.employee.first_name} ${this.employee.last_name}`.trim();
 
-      this.circularForm.patchValue({
-        originator: fullName,
-        originator_id: this.employee.id,
-      });
-      this.filterConfidentialityOptions();
+        this.circularForm.patchValue({
+          originator: fullName,
+          originator_id: this.employee.id,
+        });
+        this.filterConfidentialityOptions();
+      }
     }
-  }
   }
 
   // validator for select employee when the confidentiality is CONFIDENTIAL ,RESTRICTED ,CUSTOM
@@ -358,6 +360,8 @@ export class CreateCircular {
       effective_from: ['', [Validators.required, this.todayOrFutureDateValidator.bind(this)]],
       repeat_cycle: ['', Validators.required],
       content: ['', [Validators.required, Validators.minLength(10)]],
+      priority: ['MEDIUM', Validators.required],
+      specialKeyword: [''],
     });
   }
 
@@ -642,7 +646,8 @@ export class CreateCircular {
     formData.append('repeat_cycle', this.circularForm.value.repeat_cycle);
     formData.append('status', status);
     formData.append('reference_circular_id', this.circularForm.value.previous_circular_id || '');
-
+    formData.append('priority', this.circularForm.value.priority || '');
+    formData.append('specialKeyword', this.circularForm.value.specialKeyword || '');
     if (this.attachedFile) {
       formData.append('pdfFile', this.attachedFile.file, this.attachedFile.name);
     }

@@ -29,8 +29,8 @@
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center justify-between">
+      <div class="bg-white rounded-lg shadow p-6 cursor-pointer">
+        <div class="flex items-center justify-between" (click)="filterStatus.set('all')">
           <div>
             <p class="text-sm text-gray-600">Total Circulars</p>
             <p class="text-3xl font-bold text-gray-900 mt-1">{{ stats.total }}</p>
@@ -53,8 +53,11 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center justify-between">
+      <div class="bg-white rounded-lg shadow p-6 cursor-pointer">
+        <div
+          class="flex items-center justify-between"
+          (click)="filterStatus.set('PENDING_APPROVAL')"
+        >
           <div>
             <p class="text-sm text-gray-600">Pending Approval</p>
             <p class="text-3xl font-bold text-yellow-600 mt-1">{{ stats.pending }}</p>
@@ -77,8 +80,8 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center justify-between">
+      <div class="bg-white rounded-lg shadow p-6 cursor-pointer">
+        <div class="flex items-center justify-between" (click)="filterStatus.set('APPROVED')">
           <div>
             <p class="text-sm text-gray-600">Approved</p>
             <p class="text-3xl font-bold text-green-600 mt-1">{{ stats.approved }}</p>
@@ -101,8 +104,8 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center justify-between">
+      <div class="bg-white rounded-lg shadow p-6 cursor-pointer">
+        <div class="flex items-center justify-between" (click)="filterStatus.set('REJECTED')">
           <div>
             <p class="text-sm text-gray-600">Rejected</p>
             <p class="text-3xl font-bold text-red-600 mt-1">{{ stats.rejected }}</p>
@@ -271,15 +274,21 @@
                 >
                   Send for Approval
                 </button>
-                }
+                } @if (circular.status === 'REJECTED' || circular.status==='DRAFT') {
                 <button
+                  (click)="editCircular(circular)"
+                  class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Edit
+                </button>
+                }
+                <!-- <button
                   (click)="viewDetails(circular)"
                   class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
                   View Details
-                </button>
+                </button> -->
 
-                
                 <button
                   (click)="deleteCircular(circular.id)"
                   class="text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors"
@@ -304,7 +313,7 @@
   </main>
 
   <!-- Create Circular Modal -->
-  @if (showCreateModal()) {
+  <!-- @if (showCreateModal()) {
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
       <div class="p-6 border-b border-gray-200">
@@ -421,10 +430,10 @@
       </div>
     </div>
   </div>
-  }
+  } -->
 
   <!-- View Details Modal -->
-  @if (selectedCircular()) {
+  <!-- @if (selectedCircular()) {
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
       <div class="p-6 border-b border-gray-200">
@@ -468,18 +477,18 @@
           <div class="border-t pt-4 grid grid-cols-2 gap-4">
             <div>
               <h4 class="text-sm font-medium text-gray-700">Category</h4>
-              <!-- <p class="text-gray-600">{{ selectedCircular()!.category }}</p> -->
+              <p class="text-gray-600">{{ selectedCircular()!.category }}</p>
             </div>
             <div>
               <h4 class="text-sm font-medium text-gray-700">Priority</h4>
               <p class="font-medium">
-                <!-- [class]="getPriorityColor(selectedCircular()!.priority)" P CLASS -->
-                <!-- {{ selectedCircular()!.priority }} -->
+                [class]="getPriorityColor(selectedCircular()!.priority)" P CLASS
+                {{ selectedCircular()!.priority }}
               </p>
             </div>
             <div>
               <h4 class="text-sm font-medium text-gray-700">Approver</h4>
-              <!-- <p class="text-gray-600">{{ selectedCircular()!.approver }}</p> -->
+              <p class="text-gray-600">{{ selectedCircular()!.approver }}</p>
             </div>
             <div>
               <h4 class="text-sm font-medium text-gray-700">Created Date</h4>
@@ -487,12 +496,12 @@
             </div>
           </div>
 
-          <!-- @if (selectedCircular()!.remarks) {
+          @if (selectedCircular()!.remarks) {
               <div class="border-t pt-4">
                 <h4 class="text-sm font-medium text-gray-700 mb-2">Remarks</h4>
                 <p class="text-gray-600">{{ selectedCircular()!.remarks }}</p>
               </div>
-            } -->
+            } 
         </div>
 
         <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
@@ -506,5 +515,5 @@
       </div>
     </div>
   </div>
-  }
+  } -->
 </div>

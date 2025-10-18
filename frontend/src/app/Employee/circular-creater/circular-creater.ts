@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CircularService } from '../../services/circular-service';
+import { Router } from '@angular/router';
 
 // interface Circular {
 //   id: number;
@@ -63,7 +64,7 @@ export class CircularCreater implements OnInit {
   circulars = signal<Circular[]>([]);
   employee: any;
 
-  constructor(private circularService: CircularService) {}
+  constructor(private circularService: CircularService, private router: Router) {}
 
   private decryptData(encryptedData: string): string {
     try {
@@ -219,6 +220,12 @@ export class CircularCreater implements OnInit {
     if (confirm('Are you sure you want to delete this circular?')) {
       this.circulars.update((circs) => circs.filter((c) => c.id !== id));
     }
+  }
+
+  editCircular(circular: Circular) {
+    this.router.navigate(['/employee/edit-circular'], {
+      queryParams: { id: circular.id, status: 'edit' },
+    });
   }
 
   getStatusColor(status: string): string {

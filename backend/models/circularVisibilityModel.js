@@ -3,7 +3,7 @@ const db = require("../config/db");
 exports.assignToEmployees = async (circularId, employeeIds) => {
   if (!employeeIds || employeeIds.length === 0) return { affectedRows: 0 };
 
-  const values = employeeIds.map(id => [circularId, id]);
+  const values = employeeIds.map((id) => [circularId, id]);
   const sql = `
     INSERT INTO circular_visibility (circular_id, employee_id)
     VALUES ?
@@ -16,21 +16,39 @@ exports.assignToEmployees = async (circularId, employeeIds) => {
 exports.getEmployeesByDepartment = async (departmentId) => {
   const sql = `SELECT id FROM employees WHERE department_id = ?`;
   const [rows] = await db.query(sql, [departmentId]);
-  return rows.map(r => r.id);
+  return rows.map((r) => r.id);
 };
 
 // Get employee IDs by branch
 exports.getEmployeesByBranch = async (branchId) => {
   const sql = `SELECT id FROM employees WHERE branch_id = ?`;
   const [rows] = await db.query(sql, [branchId]);
-  return rows.map(r => r.id);
+  return rows.map((r) => r.id);
 };
 
 // Get employee IDs by head office
 exports.getEmployeesByHeadOffice = async (headOfficeId) => {
   const sql = `SELECT id FROM employees WHERE head_office_id = ?`;
   const [rows] = await db.query(sql, [headOfficeId]);
-  return rows.map(r => r.id);
+  return rows.map((r) => r.id);
+};
+
+exports.getEmployeesByCircularId = (circular_id) => {
+  return db.query("SELECT * FROM circular_visibility WHERE circular_id = ?", [
+    circular_id,
+  ]);
+};
+
+exports.removeEmployeesFromCircular = async (circularId, employeeIds) => {
+  if (!Array.isArray(employeeIds) || employeeIds.length === 0) return;
+  const placeholders = employeeIds.map(() => "?").join(",");
+  const sql = `DELETE FROM circular_visibility WHERE circular_id = ? AND employee_id IN (${placeholders})`;
+  return db.query(sql, [circularId, ...employeeIds]);
+};
+
+exports.removeAllEmployeesFromCircular = async (circularId) => {
+  const sql = `DELETE FROM circular_visibility WHERE circular_id = ?`;
+  return db.query(sql, [circularId]);
 };
 
 //get all assinged circular for Emp by Id

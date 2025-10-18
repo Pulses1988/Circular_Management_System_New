@@ -6,18 +6,23 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 router.post(
   "/upload",
-  upload.single("pdfFile"), // name of the file field in your form
+  upload.single("pdfFile"),
   circularController.createCircular
 );
 
-// Get All
-router.get("/", circularController.getAllCirculars);
+router.get(
+  "/getAllDataById/:id",
+  circularController.getCircularapproverandemployeeById
+);
 
-// Get by ID
+// Get by creater Id (specific first)
+router.get("/creator/:createrId", circularController.getCircularByCreaterId);
+
+// Get by ID (generic last)
 router.get("/:id", circularController.getCircularById);
 
-// Get by creater Id
-router.get("/creator/:createrId", circularController.getCircularByCreaterId);
+// Get All
+router.get("/", circularController.getAllCirculars);
 
 // Update
 router.put("/:id", upload.single("pdfFile"), circularController.updateCircular);
