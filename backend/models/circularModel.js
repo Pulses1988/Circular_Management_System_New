@@ -14,12 +14,14 @@ exports.createCircular = (data) => {
     repeat_cycle_id,
     status,
     published_at,
+    priority,
+    special_keyword,
   } = data;
 
   return db.query(
     `INSERT INTO circulars
-      (title, content, creator_employee_id, circular_pdf, reference_circular_id, circular_code, source_type_id, effective_from, send_type,repeat_cycle_id, status, published_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (title, content, creator_employee_id, circular_pdf, reference_circular_id, circular_code, source_type_id, effective_from, send_type,repeat_cycle_id, status, published_at, priority, special_keyword)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       title,
       content,
@@ -33,6 +35,8 @@ exports.createCircular = (data) => {
       repeat_cycle_id,
       status,
       published_at,
+      priority,
+      special_keyword,
     ]
   );
 };
@@ -102,31 +106,59 @@ exports.getCircularByCreaterId = (createrId) => {
 };
 
 // ✅ Update Circular
-exports.updateCircular = async (req, res) => {
-  try {
-    const data = {
-      title: req.body.title,
-      content: req.body.content || null,
-      reference_circular_id: req.body.reference_circular_id || null,
-      circular_code: req.body.circular_code,
-      source_type_id: req.body.source_type_id,
-      effective_from: req.body.effective_from,
-      send_type: req.body.send_type,
-      repeat_cycle_id: req.body.repeat_cycle_id,
-      status: req.body.status,
-      published_at: req.body.published_at || null,
-      pdfBuffer: req.file ? req.file.buffer : null, // optional update
-    };
+exports.updateCircular = (id, data) => {
+  const {
+    title,
+    content,
+    reference_circular_id,
+    circular_code,
+    source_type_id,
+    effective_from,
+    send_type,
+    repeat_cycle_id,
+    status,
+    published_at,
+    priority,
+    special_keyword,
+    pdfBuffer,
+  } = data;
 
-    const [result] = await circularModal.updateCircular(req.params.id, data);
-    if (result.affectedRows === 0)
-      return res.status(404).json({ error: "Circular not found" });
+  const sql = `
+    UPDATE circulars
+    SET title = ?,
+        content = ?,
+        reference_circular_id = ?,
+        circular_code = ?,
+        source_type_id = ?,
+        effective_from = ?,
+        send_type = ?,
+        repeat_cycle_id = ?,
+        status = ?,
+        published_at = ?,
+        priority = ?,
+        special_keyword = ?,
+        circular_pdf = COALESCE(?, circular_pdf)
+    WHERE id = ?
+  `;
 
-    res.json({ message: "Circular updated successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to update circular" });
-  }
+  const values = [
+    title,
+    content,
+    reference_circular_id,
+    circular_code,
+    source_type_id,
+    effective_from,
+    send_type,
+    repeat_cycle_id,
+    status,
+    published_at,
+    priority,
+    special_keyword,
+    pdfBuffer, // will only update if file is provided
+    id,
+  ];
+
+  return db.query(sql, values);
 };
 
 // ✅ Delete Circular

@@ -18,9 +18,11 @@ exports.createCircular = async (req, res) => {
       source_type_id: req.body.source_type_id || null,
       effective_from: req.body.effective_from || null,
       send_type: req.body.send_type,
-      repeat_cycle: req.body.repeat_cycle || "ONE_TIME",
+      repeat_cycle_id: req.body.repeat_cycle,
       status: req.body.status,
       published_at: req.body.published_at || null,
+      special_keyword: req.body.specialKeyword,
+      priority: req.body.priority,
     };
 
     const [result] = await circularModal.createCircular(data);
@@ -127,6 +129,35 @@ exports.createCircular = async (req, res) => {
   }
 };
 
+exports.getCircularapproverandemployeeById = async (req, res) => {
+  try {
+    const circularId = req.params.id;
+    const [circularRows] = await circularModal.getCircularById(circularId);
+    if (!circularRows.length)
+      return res.status(404).json({ error: "Circular not found" });
+
+    const circular = circularRows[0];
+    // Get approvers
+    const [approverRows] = await circularApprovalModal.getApproversByCircularId(
+      circularId
+    );
+    circular.selectedApprovers = approverRows.map((a) => a.approver_id);
+
+    // Get visibility employees
+    const [visibilityRows] =
+      await circularVisibilityModal.getEmployeesByCircularId(circularId);
+    circular.selectedEmployees = visibilityRows.map((e) => ({
+      id: e.employee_id,
+      name: e.employee_name,
+    }));
+
+    res.json(circular);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch circular" });
+  }
+};
+
 // ✅ Get All Circulars
 exports.getAllCirculars = async (req, res) => {
   try {
@@ -180,9 +211,12 @@ exports.getCircularByCreaterId = async (req, res) => {
           effective_from: row.effective_from,
           published_at: row.published_at,
           created_at: row.created_at,
+          reference_circular_id: row.reference_circular_id,
+          source_type_id: row.source_type_id,
           source_type_name: row.source_type_name,
+          repeat_cycle_id: row.repeat_cycle_id,
           repeat_cycle_name: row.repeat_cycle_name,
-          repeat_cycle_duration: row.repeat_cycle_duration,
+          // repeat_cycle_duration: row.repeat_cycle_duration,
           creator: {
             first_name: row.creator_first_name,
             middle_name: row.creator_middle_name,
@@ -223,27 +257,165 @@ exports.getCircularByCreaterId = async (req, res) => {
 // ✅ Update Circular
 exports.updateCircular = async (req, res) => {
   try {
+    const circularData = req.body.circular ? JSON.parse(req.body.circular) : {};
+
     const data = {
-      title: req.body.title,
-      content: req.body.content || null,
-      reference_circular_id: req.body.reference_circular_id || null,
-      circular_code: req.body.circular_code,
-      source_type_id: req.body.source_type_id,
-      effective_from: req.body.effective_from,
-      send_type: req.body.send_type,
-      repeat_cycle: req.body.repeat_cycle,
-      status: req.body.status,
-      published_at: req.body.published_at || null,
-      pdfBuffer: req.file ? req.file.buffer : null, // optional update
+      title: circularData.title,
+      content: circularData.content || null,
+      reference_circular_id: circularData.reference_circular_id || null,
+      circular_code: circularData.circular_code,
+      source_type_id: circularData.source_type_id,
+      effective_from: circularData.effective_from,
+      send_type: circularData.send_type,
+      repeat_cycle_id:
+        circularData.repeat_cycle_id || circularData.repeat_cycle,
+      status: circularData.status,
+      published_at: circularData.published_at || null,
+      pdfBuffer: req.file ? req.file.buffer : null,
+      special_keyword: circularData.specialKeyword,
+      priority: circularData.priority,
     };
 
     const [result] = await circularModal.updateCircular(req.params.id, data);
     if (result.affectedRows === 0)
       return res.status(404).json({ error: "Circular not found" });
 
+    console.log(circularData.selectedEmployees);
+
+    if (Array.isArray(circularData.selectedApprovers)) {
+      const newApprovers = circularData.approvers;
+      console.log("new approvers" + newApprovers);
+
+      const [existingApproversRows] =
+        await circularApprovalModal.getApproversByCircularId(req.params.id);
+      const existingApprovers = existingApproversRows.map((a) => a.approver_id);
+
+      const approversToAdd = newApprovers.filter(
+        (id) => !existingApprovers.includes(id)
+      );
+      const approversToRemove = existingApprovers.filter(
+        (id) => !newApprovers.includes(id)
+      );
+
+      for (const approverId of approversToAdd) {
+        await circularApprovalModal.createCircularApproval({
+          circular_id: req.params.id,
+          approver_id: approverId,
+          status: "PENDING",
+        });
+      }
+
+      if (approversToRemove.length > 0) {
+        await circularApprovalModal.removeApproversFromCircular(
+          req.params.id,
+          approversToRemove
+        );
+      }
+    }
+
+    if (circularData.send_type === "INTERNAL") {
+      await circularVisibilityModal.removeAllEmployeesFromCircular(
+        req.params.id
+      );
+
+      const createrId = circularData.creator_employee_id;
+      console.log(createrId);
+
+      const [rows] = await employeeModal.getEmployeeById(createrId);
+      const creatorData = rows[0]; // actual employee object
+
+      console.log("creator data:", creatorData);
+
+      if (creatorData.head_office_id && creatorData.department_id) {
+        const deptEmployee =
+          await circularVisibilityModal.getEmployeesByDepartment(
+            creatorData.department_id
+          );
+
+        if (deptEmployee.length > 0) {
+          await circularVisibilityModal.assignToEmployees(
+            req.params.id,
+            deptEmployee
+          );
+        }
+      }
+
+      if (creatorData.branch_id && creatorData.department_id) {
+        const branchEmployees =
+          await circularVisibilityModal.getEmployeesByDepartment(
+            creatorData.department_id
+          );
+
+        if (branchEmployees.length > 0) {
+          await circularVisibilityModal.assignToEmployees(
+            req.params.id,
+            branchEmployees
+          );
+        }
+      }
+
+      if (creatorData.branch_id) {
+        const branchDepartmentEmployees =
+          await circularVisibilityModal.getEmployeesByBranch(
+            creatorData.branch_id
+          );
+
+        if (branchDepartmentEmployees.length > 0) {
+          await circularVisibilityModal.assignToEmployees(
+            req.params.id,
+            branchDepartmentEmployees
+          );
+        }
+      }
+    } else if (circularData.send_type === "PUBLIC") {
+      await circularVisibilityModal.removeAllEmployeesFromCircular(
+        req.params.id
+      );
+      const [allEmployees] = await employeeModal.getAllEmployees();
+      if (allEmployees.length > 0) {
+        const allEmployeeIds = allEmployees.map((e) => e.id);
+        await circularVisibilityModal.assignToEmployees(
+          req.params.id,
+          allEmployeeIds
+        );
+      }
+    } else {
+      const newEmployees =
+        circularData.selectedEmployees?.map((e) => e.id) || [];
+
+      const [currentVisibilities] =
+        await circularVisibilityModal.getEmployeesByCircularId(req.params.id);
+      const existingEmployeeIds = currentVisibilities.map((e) => e.employee_id);
+      console.log(existingEmployeeIds);
+
+      const employeesToAdd = newEmployees.filter(
+        (id) => !existingEmployeeIds.includes(id)
+      );
+      console.log("employees to add " + employeesToAdd);
+
+      const employeesToRemove = existingEmployeeIds.filter(
+        (id) => !newEmployees.includes(id)
+      );
+      console.log("employees to remove" + employeesToRemove);
+
+      if (employeesToAdd.length > 0) {
+        await circularVisibilityModal.assignToEmployees(
+          req.params.id,
+          employeesToAdd
+        );
+      }
+
+      if (employeesToRemove.length > 0) {
+        await circularVisibilityModal.removeEmployeesFromCircular(
+          req.params.id,
+          employeesToRemove
+        );
+      }
+    }
+
     res.json({ message: "Circular updated successfully" });
   } catch (err) {
-    console.error(err);
+    console.error("Update circular error:", err);
     res.status(500).json({ error: "Failed to update circular" });
   }
 };

@@ -23,9 +23,26 @@ exports.getCircularApprovalById = (id) => {
   return db.query("SELECT * FROM circular_approvals WHERE id = ?", [id]);
 };
 
-exports.getcircularApprovalByEmpID=(approver_id )=>{
-  return db.query("select * from circular_approvals WHERE approver_id=?",[approver_id ])
-}
+exports.getApproversByCircularId = (circularId) => {
+  return db.query("SELECT * FROM circular_approvals WHERE circular_id = ?", [
+    circularId,
+  ]);
+};
+
+
+// ✅ Remove multiple approvers (bulk delete)
+exports.removeApproversFromCircular = async (circularId, approverIds) => {
+  if (!Array.isArray(approverIds) || approverIds.length === 0) return;
+  const placeholders = approverIds.map(() => "?").join(",");
+  const sql = `DELETE FROM circular_approvals WHERE circular_id = ? AND approver_id IN (${placeholders})`;
+  return db.query(sql, [circularId, ...approverIds]);
+};
+
+exports.getcircularApprovalByEmpID = (approver_id) => {
+  return db.query("select * from circular_approvals WHERE approver_id = ?", [
+    approver_id,
+  ]);
+};
 
 // Create circular approval
 exports.createCircularApproval = (data) => {
@@ -54,8 +71,8 @@ exports.updateCircularApproval = (id, data) => {
   );
 };
 
-  exports.markAsSeen= async(circularId, approverId)=> {
-    const query = `
+exports.markAsSeen = async (circularId, approverId) => {
+  const query = `
       UPDATE circular_approvals 
       SET has_seen = TRUE, 
           seen_at = NOW() 
@@ -63,41 +80,41 @@ exports.updateCircularApproval = (id, data) => {
         AND approver_id = ?
         AND has_seen = FALSE
     `;
-    
-    try {
-      const [result] = await db.query(query, [circularId, approverId]);
-      return result;
-    } catch (error) {
-      throw error;
-    }
-  }
 
-  exports.approve= async (circularId, approverId)=> {
-    const query = `
+  try {
+    const [result] = await db.query(query, [circularId, approverId]);
+    return result;
+  } catch (error) {
+    throw error;
+  }
+};
+
+exports.approve = async (circularId, approverId) => {
+  const query = `
       UPDATE circular_approvals 
       SET status = 'APPROVED',
           updated_at = NOW()
       WHERE circular_id = ? 
         AND approver_id = ?
     `;
-    
-    try {
-      const [result] = await db.query(query, [circularId, approverId]);
-      
-      // Also update circular status to APPROVED
-      await db.query(
-        'UPDATE circulars SET status = "APPROVED", published_at = NOW() WHERE id = ?',
-        [circularId]
-      );
-      
-      return result;
-    } catch (error) {
-      throw error;
-    }
-  }
 
-  exports.reject=async(circularId, approverId, comments) =>{
-    const query = `
+  try {
+    const [result] = await db.query(query, [circularId, approverId]);
+
+    // Also update circular status to APPROVED
+    await db.query(
+      'UPDATE circulars SET status = "APPROVED", published_at = NOW() WHERE id = ?',
+      [circularId]
+    );
+
+    return result;
+  } catch (error) {
+    throw error;
+  }
+};
+
+exports.reject = async (circularId, approverId, comments) => {
+  const query = `
       UPDATE circular_approvals 
       SET status = 'REJECTED',
           comments = ?,
@@ -105,27 +122,25 @@ exports.updateCircularApproval = (id, data) => {
       WHERE circular_id = ? 
         AND approver_id = ?
     `;
-    
-    try {
-      const [result] = await db.query(query, [comments, circularId, approverId]);
-      
-      // Also update circular status to REJECTED
-      await db.query(
-        'UPDATE circulars SET status = "REJECTED" WHERE id = ?',
-        [circularId]
-      );
-      
-      return result;
-    } catch (error) {
-      throw error;
-    }
+
+  try {
+    const [result] = await db.query(query, [comments, circularId, approverId]);
+
+    // Also update circular status to REJECTED
+    await db.query('UPDATE circulars SET status = "REJECTED" WHERE id = ?', [
+      circularId,
+    ]);
+
+    return result;
+  } catch (error) {
+    throw error;
   }
+};
 
 // Delete circular approval
 exports.deleteCircularApproval = (id) => {
   return db.query("DELETE FROM circular_approvals WHERE id = ?", [id]);
 };
-
 
 exports.getAssignedCirculars = async (approver_id, filters = {}) => {
   try {

@@ -219,6 +219,12 @@ export class EmployeeService {
     });
   }
 
+  getAllEmployees() {
+    return this.http.get(`${this.apiUrl}/api/employees/`, {
+      headers: this.getHeaders(),
+    });
+  }
+
   // -------------------get branches----------------
 
   fetchAllBranches() {
@@ -240,5 +246,22 @@ export class EmployeeService {
 
   getAllDepartment() {
     return this.http.get(`${this.apiUrl}/api/departments/`, { headers: this.getHeaders() });
+  }
+
+  // ----------------------------------CIRCULAR UPDATE--------------------------------
+  updateCircular(circularId: number, formData: FormData) {
+    let headers = new HttpHeaders();
+
+    // Only set Authorization, do NOT set Content-Type
+    if (this.token) {
+      headers = headers.set('Authorization', `Bearer ${this.token}`);
+    }
+    return this.http.put(`${this.apiUrl}/api/circular/${circularId}`, formData, { headers });
+  }
+
+  getCircularById(id: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/api/circular/getAllDataById/${id}`, {
+      headers: this.getHeaders(),
+    });
   }
 }

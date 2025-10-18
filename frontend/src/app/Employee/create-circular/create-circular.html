@@ -55,14 +55,24 @@
           <!-- Reference Code -->
           <div class="form-field">
             <label>Circular Code <span class="required">*</span></label>
-            <div class="input">
+            <div>
               <input
                 type="text"
                 formControlName="circular_code"
                 placeholder="Auto-generated"
-                class="form-input readonly"
+                class="form-input"
               />
             </div>
+          </div>
+
+          <div class="form-field">
+            <label>Special Keyword</label>
+            <input
+              type="text"
+              formControlName="specialKeyword"
+              placeholder="Enter special keyword"
+              class="form-input"
+            />
           </div>
 
           <!-- Previous Circular Reference -->
@@ -210,6 +220,19 @@
                   <option *ngFor="let cycle of repeatCycleData" [value]="cycle.id">
                     {{ cycle.name }}
                   </option>
+                </select>
+                <mat-icon class="select-icon">expand_more</mat-icon>
+              </div>
+            </div>
+
+            <div class="form-field mt-5">
+              <label>Priority <span class="required">*</span></label>
+              <div class="select-wrapper">
+                <select formControlName="priority" class="form-select">
+                  <option value="LOW">Low</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="HIGH">High</option>
+                  <option value="URGENT">Urgent</option>
                 </select>
                 <mat-icon class="select-icon">expand_more</mat-icon>
               </div>
