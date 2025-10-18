@@ -104,3 +104,28 @@ exports.assignByHeadOffice = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+exports.getCircularsByEmployee = async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+
+    if (!employeeId) {
+      return res.status(400).json({ error: "employeeId is required" });
+    }
+
+    const circulars = await CircularVisibility.getCircularsByEmployee(employeeId);
+
+    if (!circulars || circulars.length === 0) {
+      return res.json({ message: "No circulars found for this employee", data: [] });
+    }
+
+    return res.json({
+      message: "Circulars fetched successfully",
+      count: circulars.length,
+      data: circulars
+    });
+  } catch (err) {
+    console.error("getCircularsByEmployee Error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};

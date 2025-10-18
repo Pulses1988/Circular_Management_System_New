@@ -28,7 +28,9 @@ const circularRoutes = require("./routes/circularRoutes");
 const sourceTypeRoutes = require("./routes/sourceTypesRoutes");
 const circularApprovalRoutes = require("./routes/CircularApprovalsRoutes");
 const repeatCycleRoutes = require("./routes/repeatCycleRoutes");
-const circularVisibilityRoutes = require("./routes/circularVisibilityRoutes")
+const circularVisibilityRoutes = require("./routes/circularVisibilityRoutes");
+const circularTrackingRouter = require('./routes/circularTrackingRouter');
+const circularChatRoutes = require("./routes/circularChatRoutes");
 
 // Allow cross-origin requests from your Angular app
 app.use(
@@ -84,13 +86,15 @@ app.use("/api/source-type", express.json(), sourceTypeRoutes);
 app.use("/api/circular-approvals", express.json(), circularApprovalRoutes);
 app.use("/api/repeat-cycle", express.json(), repeatCycleRoutes);
 app.use("/api/circular-visibility",express.json(),circularVisibilityRoutes);
+app.use('/api/circular-tracking', express.json(),circularTrackingRouter);
+app.use("/api/circular-chats", express.json(),circularChatRoutes);
 
 const PORT = 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Server is running on port ${PORT}`);
   console.log(`Local: http://localhost:${PORT}`);
-  console.log(`Network: http://192.168.1.8:${PORT}`);
+  console.log(`Network: http://192.168.1.7:${PORT}`);
 });
 
 module.exports = { io };

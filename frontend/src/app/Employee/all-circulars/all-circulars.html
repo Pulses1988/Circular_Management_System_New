@@ -1,0 +1,271 @@
+<div class="circulars-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-content">
+      <div class="header-left">
+        <h1 class="page-title">
+          <mat-icon class="title-icon">article</mat-icon>
+          All Circulars
+        </h1>
+        <p class="page-subtitle">Browse and manage your circulars</p>
+      </div>
+      
+      <div class="header-stats">
+        <div class="stat-card">
+          <div class="stat-icon total">
+            <mat-icon>description</mat-icon>
+          </div>
+          <div class="stat-details">
+            <span class="stat-value">{{ totalCirculars }}</span>
+            <span class="stat-label">Total</span>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon unread">
+            <mat-icon>mark_email_unread</mat-icon>
+          </div>
+          <div class="stat-details">
+            <span class="stat-value">{{ unreadCount }}</span>
+            <span class="stat-label">Unread</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Add after header-section -->
+<div *ngIf="isLoading" class="loading-state">
+  <mat-icon>hourglass_empty</mat-icon>
+  <p>Loading circulars...</p>
+</div>
+
+<div *ngIf="errorMessage" class="error-state">
+  <mat-icon>error</mat-icon>
+  <p>{{ errorMessage }}</p>
+  <button (click)="loadCirculars()">Retry</button>
+</div>
+
+  <!-- Main Content Area -->
+  <div class="content-wrapper">
+    <!-- Left Sidebar - Filters -->
+    <aside class="sidebar">
+      <!-- Search Box -->
+      <div class="search-box">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input
+          type="text"
+          placeholder="Search circulars..."
+          class="search-input"
+          (input)="onSearchChange($event)"
+          [value]="searchQuery"
+        />
+        <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''; applyFilters()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Filter Section -->
+      <div class="filter-section">
+        <h3 class="filter-title">Filters</h3>
+        
+        <!-- Priority Filter -->
+        <div class="filter-group">
+          <label class="filter-label">Priority</label>
+          <div class="priority-chips">
+            <button
+              class="chip all"
+              [class.active]="selectedPriority === 'all'"
+              (click)="onPriorityChange('all')">
+              All
+            </button>
+            <button
+              class="chip priority-urgent"
+              [class.active]="selectedPriority === 'urgent'"
+              (click)="onPriorityChange('urgent')">
+              Urgent
+            </button>
+            <button
+              class="chip priority-high"
+              [class.active]="selectedPriority === 'high'"
+              (click)="onPriorityChange('high')">
+              High
+            </button>
+            <button
+              class="chip priority-medium"
+              [class.active]="selectedPriority === 'medium'"
+              (click)="onPriorityChange('medium')">
+              Medium
+            </button>
+            <button
+              class="chip priority-low"
+              [class.active]="selectedPriority === 'low'"
+              (click)="onPriorityChange('low')">
+              Low
+            </button>
+          </div>
+        </div>
+
+        <!-- Read Status Toggle -->
+        <div class="filter-group">
+          <button class="toggle-button" (click)="toggleReadCirculars()">
+            <mat-icon>{{ showReadCirculars ? 'visibility' : 'visibility_off' }}</mat-icon>
+            <span>{{ showReadCirculars ? 'Hide Read' : 'Show Read' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="quick-stats">
+        <div class="quick-stat-item">
+          <mat-icon>today</mat-icon>
+          <span>Year {{ selectedYear }}</span>
+        </div>
+        <div class="quick-stat-item" *ngIf="selectedMonth !== 'all'">
+          <mat-icon>event</mat-icon>
+          <span>{{ months[parseInt(selectedMonth) + 1].label }}</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Middle Content - Circulars List -->
+    <main class="main-content">
+      <!-- No Results State -->
+      <div *ngIf="groupedDates.length === 0" class="empty-state">
+        <mat-icon class="empty-icon">folder_open</mat-icon>
+        <h3 class="empty-title">No circulars found</h3>
+        <p class="empty-text">Try adjusting your filters or search query</p>
+      </div>
+
+      <!-- Circulars Grouped by Date -->
+      <div *ngFor="let date of groupedDates" class="date-group">
+        <div class="date-header">
+          <div class="date-badge">
+            <mat-icon>calendar_today</mat-icon>
+            <span>{{ date }}</span>
+          </div>
+          @if(groupedCirculars[date].length>1){
+          <div class="date-count">{{ groupedCirculars[date].length }} circular(s)</div>
+          }
+        </div>
+
+        <div class="circulars-grid">
+          <div
+            *ngFor="let circular of groupedCirculars[date]"
+            class="circular-card unread"
+           
+            (click)="viewCircular(circular)">
+            
+            <!-- Card Header -->
+            <div class="card-header">
+              <div class="card-badges">
+                <span class="priority-badge" [ngClass]="getPriorityClass(circular.priority)">
+                  <mat-icon class="badge-icon">{{ getPriorityIcon(circular.priority) }}</mat-icon>
+                  {{ circular.priority }}
+                </span>
+                <span *ngIf="!circular.isRead" class="unread-badge">
+                  <mat-icon>fiber_manual_record</mat-icon>
+                  New
+                </span>
+                <span *ngIf="circular.hasAttachment" class="attachment-badge" matTooltip="Has Attachment">
+                  <mat-icon>attach_file</mat-icon>
+                </span>
+              </div>
+              
+              <div class="card-time">
+                <mat-icon>schedule</mat-icon>
+                {{ formatTime(circular.published_at) }}
+              </div>
+            </div>
+
+            <!-- Card Body -->
+            <div class="card-body">
+              <h4 class="circular-title">{{ circular.title }}</h4>
+              <p class="circular-code">{{ circular.circular_code }}</p>
+              
+              <div class="circular-meta">
+                <div class="meta-item">
+                  <mat-icon>business</mat-icon>
+                  <span>{{ circular.department }}</span>
+                </div>
+                <div class="meta-item effective">
+                  <mat-icon>event_available</mat-icon>
+                  <span>Effective: {{ circular.effective_from | date:'MMM d, y' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Footer -->
+            <!-- <div class="card-footer">
+              <button class="action-btn primary" (click)="viewCircular(circular); $event.stopPropagation()">
+                <mat-icon>visibility</mat-icon>
+                View Details
+              </button>
+              
+              <button
+                *ngIf="circular.hasAttachment"
+                class="action-btn secondary"
+                (click)="downloadCircular(circular, $event)"
+                matTooltip="Download Attachment">
+                <mat-icon>download</mat-icon>
+              </button>
+              
+              <button
+                *ngIf="!circular.isRead"
+                class="action-btn secondary"
+                (click)="markAsRead(circular); $event.stopPropagation()"
+                matTooltip="Mark as Read">
+                <mat-icon>done</mat-icon>
+              </button>
+            </div> -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Right Sidebar - Years -->
+    <aside class="years-sidebar">
+      <div class="years-header">
+        <mat-icon>event_note</mat-icon>
+        <h3>Years</h3>
+      </div>
+      
+      <div class="years-list">
+        <button
+          *ngFor="let year of availableYears"
+          class="year-item"
+          [class.active]="selectedYear === year"
+          (click)="onYearChange(year)">
+          <div class="year-content">
+            <span class="year-label">{{ year }}</span>
+            <mat-icon *ngIf="selectedYear === year">check_circle</mat-icon>
+          </div>
+          <div class="year-indicator" *ngIf="selectedYear === year"></div>
+        </button>
+      </div>
+       <!-- Month Selector -->
+        <div class="filter-group">
+          <label class="filter-label"><strong>Months</strong></label>
+          <select class="month-select" [(ngModel)]="selectedMonth" (change)="onMonthChange(selectedMonth)">
+            <option *ngFor="let month of months" [value]="month.value">
+              {{ month.label }}
+            </option>
+          </select>
+        </div>
+     
+
+      <!-- Current Selection Info -->
+      <div class="selection-info">
+        <div class="info-card">
+          <mat-icon>filter_list</mat-icon>
+          <div class="info-content">
+            <span class="info-label">Active Filters</span>
+            <span class="info-value">
+              {{ selectedYear }}
+              <span *ngIf="selectedMonth !== 'all'"> • {{ months[parseInt(selectedMonth) + 1].label }}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>

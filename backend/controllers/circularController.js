@@ -2,6 +2,25 @@ const circularModal = require("../models/circularModel");
 const circularApprovalModal = require("../models/circularApprovalsModel");
 const circularVisibilityModal = require("../models/circularVisibilityModel");
 const employeeModal = require("../models/employeesModal");
+const circularTrackingModel = require('../models/circularTrackingModel');
+
+// helper function---------------
+async function createCircularTrackingEntries(circularId, employeeIds) {
+  if (!Array.isArray(employeeIds) || employeeIds.length === 0) return;
+
+  const trackingData = employeeIds.map(empId => ({
+    circular_id: circularId,
+    employee_id: empId,
+    is_seen: false,
+    seen_at: null,
+    is_completed: false,
+    completed_at: null
+  }));
+
+  await circularTrackingModel.bulkInsert(trackingData);
+}
+
+// -------------------------------
 
 exports.createCircular = async (req, res) => {
   try {
@@ -31,10 +50,8 @@ exports.createCircular = async (req, res) => {
     const approvers = req.body.approvers ? JSON.parse(req.body.approvers) : [];
     if (Array.isArray(approvers) && approvers.length > 0) {
       const io = req.app.get("io");
-      console.log("IO instance:", io ? "Available" : "Not available");
       const [circularRows] = await circularModal.getCircularById(circularId);
       const circularDetails = circularRows[0];
-      console.log("Circular details fetched:", circularDetails ? "Yes" : "No");
 
       for (const approverId of approvers) {
         await circularApprovalModal.createCircularApproval({
@@ -42,19 +59,14 @@ exports.createCircular = async (req, res) => {
           approver_id: approverId,
           status: "PENDING",
         });
+
         if (io) {
           const roomName = `approver-${approverId}`;
-          console.log(`Emitting to room: ${roomName}`);
-          console.log(
-            `Clients in room:`,
-            io.sockets.adapter.rooms.get(roomName)?.size || 0
-          );
-          io.to(`approver-${approverId}`).emit("new-circular-assigned", {
+          io.to(roomName).emit("new-circular-assigned", {
             circular: circularDetails,
             message: "New circular has been assigned to you",
             circular_id: circularId,
           });
-          console.log(`Socket event emitted to approver ${approverId}`);
         }
       }
     }
@@ -64,37 +76,29 @@ exports.createCircular = async (req, res) => {
       ? JSON.parse(req.body.visiblityEmployee)
       : [];
     if (Array.isArray(visiblityEmployee) && visiblityEmployee.length > 0) {
-      await circularVisibilityModal.assignToEmployees(
-        circularId,
-        visiblityEmployee
-      );
+      await circularVisibilityModal.assignToEmployees(circularId, visiblityEmployee);
+      await createCircularTrackingEntries(circularId, visiblityEmployee); // <-- Tracking added
     }
 
     if (req.body.send_type === "INTERNAL") {
       if (req.body.headOfficeId && req.body.departmentId) {
         const deptEmployee =
-          await circularVisibilityModal.getEmployeesByDepartment(
-            req.body.departmentId
-          );
+          await circularVisibilityModal.getEmployeesByDepartment(req.body.departmentId);
 
         if (deptEmployee.length > 0) {
-          await circularVisibilityModal.assignToEmployees(
-            circularId,
-            deptEmployee
-          );
+          const empIds = deptEmployee.map(e => e.id);
+          await circularVisibilityModal.assignToEmployees(circularId, empIds);
+          await createCircularTrackingEntries(circularId, empIds); // <-- Tracking added
         }
       }
 
       if (req.body.branchId && req.body.departmentId) {
         const branchEmployees =
-          await circularVisibilityModal.getEmployeesByDepartment(
-            req.body.departmentId
-          );
+          await circularVisibilityModal.getEmployeesByDepartment(req.body.departmentId);
         if (branchEmployees.length > 0) {
-          await circularVisibilityModal.assignToEmployees(
-            circularId,
-            branchEmployees
-          );
+          const empIds = branchEmployees.map(e => e.id);
+          await circularVisibilityModal.assignToEmployees(circularId, empIds);
+          await createCircularTrackingEntries(circularId, empIds); // <-- Tracking added
         }
       }
 
@@ -103,10 +107,9 @@ exports.createCircular = async (req, res) => {
           await circularVisibilityModal.getEmployeesByBranch(req.body.branchId);
 
         if (branchDepartmentEmployees.length > 0) {
-          await circularVisibilityModal.assignToEmployees(
-            circularId,
-            branchDepartmentEmployees
-          );
+          const empIds = branchDepartmentEmployees.map(e => e.id);
+          await circularVisibilityModal.assignToEmployees(circularId, empIds);
+          await createCircularTrackingEntries(circularId, empIds); // <-- Tracking added
         }
       }
     }
@@ -116,12 +119,11 @@ exports.createCircular = async (req, res) => {
       const [allEmployees] = await employeeModal.getAllEmployees();
       if (allEmployees.length > 0) {
         const allEmployeeIds = allEmployees.map((e) => e.id);
-        await circularVisibilityModal.assignToEmployees(
-          circularId,
-          allEmployeeIds
-        );
+        await circularVisibilityModal.assignToEmployees(circularId, allEmployeeIds);
+        await createCircularTrackingEntries(circularId, allEmployeeIds); // <-- Tracking added
       }
     }
+
     res.status(201).json({ message: "Circular created successfully" });
   } catch (err) {
     console.error(err);
@@ -431,5 +433,44 @@ exports.deleteCircular = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to delete circular" });
+  }
+};
+
+exports.getAllCircularsByEmployeeIdWithTrackingDetails= async (req, res) => {
+  try {
+    const { employee_id } = req.params;
+    if (!employee_id) {
+      return res.status(400).json({ error: "Employee ID is required" });
+    }
+
+    const circulars = await circularModal.getAllCircularsByEmployeeIdWithTrackingDetails(employee_id);
+
+    res.status(200).json({
+      message: "Circulars with tracking details fetched successfully",
+      data: circulars,
+    });
+  } catch (err) {
+    console.error("Error fetching circulars with tracking details:", err);
+    res.status(500).json({ error: "Failed to fetch circulars" });
+  }
+};
+exports.getCircularDetailsById = async (req, res) => {
+  try {
+    const { circular_id } = req.params;
+
+    if (!circular_id) {
+      return res.status(400).json({ error: "Circular ID is required" });
+    }
+
+    const circularDetails = await circularModal.getCircularDetailsById(circular_id);
+
+    if (!circularDetails) {
+      return res.status(404).json({ error: "Circular not found" });
+    }
+
+    res.status(200).json(circularDetails);
+  } catch (error) {
+    console.error("Error fetching circular details:", error);
+    res.status(500).json({ error: "Failed to fetch circular details" });
   }
 };

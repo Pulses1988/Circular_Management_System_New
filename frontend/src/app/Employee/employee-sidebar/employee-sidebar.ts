@@ -228,7 +228,7 @@ export class EmployeeSidebar implements OnInit, OnDestroy {
     localStorage.removeItem('user');
 
     // Navigate to login page
-    this.router.navigate(['/login']);
+    this.router.navigate(['/employee-login']);
   }
 
   private loadEmployeeData(): void {

@@ -38,6 +38,17 @@ body {
 @tailwind components;
 @tailwind utilities;
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+  }
+}
 /* Your existing SCSS code below */
 
 /* Your existing SCSS code can go below */

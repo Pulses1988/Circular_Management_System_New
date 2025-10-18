@@ -280,4 +280,38 @@ export class CircularService {
       headers: this.getHeadersForAdmin(),
     });
   }
+
+
+  // ---------------------------------------------------Circular API for employee---------------------------------------------
+
+  fetchCircularAssignToEmpById(id:number){
+    return this.http.get(`${this.apiUrl}/api/circular-visibility/employee/${id}`,{headers:this.getHeaders()});
+  }
+
+  fetchUnseenCircularsByEmpId(id:number){
+    return this.http.get(`${this.apiUrl}/api/circular-tracking/unseen/${id}`,{headers: this.getHeaders()});
+  }
+  fetchSeenCircularsByEmpId(id:number){
+    return this.http.get(`${this.apiUrl}/api/circular-tracking/seen/${id}`,{headers: this.getHeaders()});
+  }
+
+ markCircularAsSeenForEmp(data: { circularId: number; employeeId: number }) {
+  return this.http.post(`${this.apiUrl}/api/circular-tracking/mark-seen`, data, {
+    headers: this.getHeaders(),
+  });
+}
+
+  fetchAllCircularsWithTrackingDetailsByEmpId(id:number){
+    return this.http.get(`${this.apiUrl}/api/circular/all/${id}`,{headers:this.getHeaders()})
+  }
+
+  fetchCircularDetailsById(circular_id:number){
+    return this.http.get(`${this.apiUrl}/api/circular/circular/${circular_id}`,{headers:this.getHeaders()});
+  }
+
+  // --------------------------------------Chat API---------------------------------------
+
+  sendChatForCircular(data:{circular_id:number;employee_id:number;message:string}){
+    return this.http.post(`${this.apiUrl}/api/circular-chats/`,data, {headers:this.getHeaders()});
+  }
 }
