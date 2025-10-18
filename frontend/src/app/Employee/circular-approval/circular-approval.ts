@@ -33,6 +33,10 @@ interface Circular {
   reference_circular_title: string;
   reference_circular_code: string;
   reference_circular_id: number;
+  approved_by:string;
+  rejected_by:string;
+  approval_updated_at:string
+
 }
 
 interface ApprovalTable {
@@ -249,6 +253,7 @@ export class CircularApproval implements OnInit, OnDestroy {
     }
 
     this.filteredCirculars = filtered;
+    console.log(this.filterCirculars)
     this.currentPage = 1; // Reset to first page
     this.calculatePagination();
   }

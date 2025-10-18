@@ -14,4 +14,6 @@ router.post("/assign-department", controller.assignByDepartment);
 // Assign circular to employees by head office
 router.post("/assign-head-office", controller.assignByHeadOffice);
 
+router.get("/employee/:employeeId", controller.getCircularsByEmployee);
+
 module.exports = router;

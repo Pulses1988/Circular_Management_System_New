@@ -172,6 +172,38 @@ CREATE TABLE IF NOT EXISTS circulars (
 );
 `;
 
+const createCircularTracking = `
+CREATE TABLE IF NOT EXISTS circular_tracking (
+    track_id INT AUTO_INCREMENT PRIMARY KEY,
+    circular_id INT NOT NULL,
+    employee_id INT NOT NULL,
+    is_seen BOOLEAN DEFAULT FALSE,
+    seen_at TIMESTAMP NULL,
+    is_completed BOOLEAN DEFAULT FALSE,
+    completed_at TIMESTAMP NULL,
+    
+    CONSTRAINT fk_ct_circular FOREIGN KEY (circular_id) REFERENCES circulars(id) ON DELETE CASCADE,
+    CONSTRAINT fk_ct_employee FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+
+    UNIQUE (circular_id, employee_id),
+    INDEX idx_employee (employee_id),
+    INDEX idx_circular (circular_id)
+);
+`;
+
+const createCircularChats=`
+CREATE TABLE IF NOT EXISTS circular_chats (
+chat_id INT AUTO_INCREMENT PRIMARY KEY,
+  circular_id INT NOT NULL,
+  employee_id INT NOT NULL,
+  message TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (circular_id) REFERENCES circulars(id) ON DELETE CASCADE,
+  FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
+);
+`;
+
 async function initializeDatabase() {
   try {
     await db.query(createHeadOfficeTableQuery);
@@ -208,6 +240,13 @@ async function initializeDatabase() {
     console.log("Circular Approvals table is ready");
     await db.query(createCircularVisibilityQuery);
     console.log("Circular Visibility table is ready");
+
+    await db.query(createCircularTracking);
+    console.log("Circular Tracking table is ready");
+
+    await db.query(createCircularChats);
+    console.log("Circular Chats table is ready");
+    
   } catch (err) {
     console.error("Error initializing database:", err);
   }

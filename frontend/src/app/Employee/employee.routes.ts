@@ -5,6 +5,8 @@ import { CreateCircular } from './create-circular/create-circular';
 import { CircularApproval } from './circular-approval/circular-approval';
 import { CircularCreater } from './circular-creater/circular-creater';
 import { EditCircular } from './edit-circular/edit-circular';
+import { AllCirculars } from './all-circulars/all-circulars';
+import { CircularDetails } from './circular-details/circular-details';
 
 export const Employee_ROUTS: Routes = [
   { path: '', redirectTo: 'employee-login', pathMatch: 'full' },
@@ -25,5 +27,7 @@ export const Employee_ROUTS: Routes = [
   },
 
   { path: 'circular-creater', component: CircularCreater },
+  { path: 'all-circulars', component: AllCirculars },
+  {path:'circular-details', component:CircularDetails},
   { path: '**', component: EmployeeLogin },
 ];

@@ -177,7 +177,33 @@ exports.getAssignedCirculars = async (approver_id, filters = {}) => {
         -- aggregate receivers
         GROUP_CONCAT(DISTINCT CONCAT(recv.first_name, ' ', recv.last_name) SEPARATOR ', ') AS receiver_names,
         GROUP_CONCAT(DISTINCT b.name SEPARATOR ', ') AS receiver_branches,
-        GROUP_CONCAT(DISTINCT d.name SEPARATOR ', ') AS receiver_departments
+        GROUP_CONCAT(DISTINCT d.name SEPARATOR ', ') AS receiver_departments,
+
+        -- 👇 NEW: Approvers who changed status
+        GROUP_CONCAT(
+          DISTINCT CASE 
+            WHEN ca_all.status != 'PENDING' 
+            THEN CONCAT(approver.first_name, ' ', approver.last_name, ' (', ca_all.status, ')') 
+          END 
+          SEPARATOR ', '
+        ) AS approvers_with_status,
+        
+        -- 👇 NEW: Separate columns for approved and rejected
+        GROUP_CONCAT(
+          DISTINCT CASE 
+            WHEN ca_all.status = 'APPROVED' 
+            THEN CONCAT(approver.first_name, ' ', approver.last_name) 
+          END 
+          SEPARATOR ', '
+        ) AS approved_by,
+        
+        GROUP_CONCAT(
+          DISTINCT CASE 
+            WHEN ca_all.status = 'REJECTED' 
+            THEN CONCAT(approver.first_name, ' ', approver.last_name) 
+          END 
+          SEPARATOR ', '
+        ) AS rejected_by
 
       FROM circular_approvals ca
       INNER JOIN circulars c ON ca.circular_id = c.id
@@ -189,6 +215,12 @@ exports.getAssignedCirculars = async (approver_id, filters = {}) => {
       LEFT JOIN employees recv ON cv.employee_id = recv.id
       LEFT JOIN branches b ON recv.branch_id = b.id
       LEFT JOIN departments d ON recv.department_id = d.id
+
+      -- 👇 NEW: Join to get all approvers who changed status
+      LEFT JOIN circular_approvals ca_all 
+        ON ca_all.circular_id = c.id AND ca_all.status != 'PENDING'
+      LEFT JOIN employees approver 
+        ON ca_all.approver_id = approver.id
 
       WHERE ca.approver_id = ?
     `;
@@ -216,8 +248,9 @@ exports.getAssignedCirculars = async (approver_id, filters = {}) => {
       GROUP BY 
         c.id, c.title, c.content, c.circular_code, c.send_type, 
         c.status, c.effective_from, c.circular_pdf, c.created_at, c.published_at,
+        c.reference_circular_id, ref_c.title, ref_c.circular_code,
         ca.id, ca.has_seen, ca.seen_at, ca.status, ca.comments, ca.updated_at,
-        creator.id,
+        creator.id, creator.first_name, creator.last_name,
         st.id, st.name
       ORDER BY c.created_at DESC
     `;
