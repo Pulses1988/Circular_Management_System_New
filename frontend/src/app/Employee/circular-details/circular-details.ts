@@ -135,6 +135,7 @@ export class CircularDetails implements OnInit {
     }
   });
 }
+
 calculatePriority(): void {
   if (!this.circular?.published_at) return;
   

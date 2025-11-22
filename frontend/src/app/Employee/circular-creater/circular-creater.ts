@@ -73,6 +73,12 @@ export class CircularCreater implements OnInit {
       return '';
     }
   }
+  isDarkMode = false;
+
+toggleDarkMode() {
+  this.isDarkMode = !this.isDarkMode;
+}
+
 
   ngOnInit(): void {
     this.loadEmployeeData();

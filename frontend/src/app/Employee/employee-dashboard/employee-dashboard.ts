@@ -83,6 +83,8 @@ interface QuickAction {
   templateUrl: './employee-dashboard.html',
   styleUrl: './employee-dashboard.scss',
 })
+
+
 export class EmployeeDashboard {
   currentEmployee = {
     name: 'Rohit Chougale',

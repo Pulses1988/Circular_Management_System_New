@@ -1,7 +1,9 @@
 // Employee Sidebar Styles
+
 .employee-sidebar {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
+
 
 // Custom scrollbar for navigation
 nav {
@@ -412,4 +414,60 @@ nav {
   .employee-sidebar {
     display: none;
   }
+}
+/* Dark mode support */
+.sidebar-dark {
+  background: rgba(17, 24, 39, 0.95) !important; /* dark bg */
+  color: #f9fafb !important; /* text color */
+  border-right: 1px solid rgba(55, 65, 81, 0.5) !important;
+}
+
+/* Hover + active effects inside dark mode */
+.sidebar-dark .nav-item:hover {
+  background: rgba(55, 65, 81, 0.5);
+}
+
+.sidebar-dark .router-link-active {
+  background: linear-gradient(
+    to right,
+    rgba(59, 130, 246, 0.2),
+    rgba(99, 102, 241, 0.2)
+  );
+}
+
+.sidebar-dark .router-link-active::before {
+  background: linear-gradient(to bottom, #60a5fa, #818cf8);
+}
+
+/* Stats card inside dark mode */
+.sidebar-dark .stats-card {
+  background: rgba(31, 41, 55, 0.8);
+  border-color: rgba(55, 65, 81, 0.5);
+}
+
+.sidebar-dark .stats-card:hover {
+  background: rgba(31, 41, 55, 1);
+}
+
+/* Glass effects */
+.sidebar-dark .glass-effect {
+  background: rgba(17, 24, 39, 0.95);
+  border-color: rgba(55, 65, 81, 0.3);
+}
+
+/* Dark mode scrollbar */
+.sidebar-dark nav {
+  scrollbar-color: #4b5563 #1f2937;
+}
+
+.sidebar-dark nav::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+.sidebar-dark nav::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+.sidebar-dark nav::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
 }

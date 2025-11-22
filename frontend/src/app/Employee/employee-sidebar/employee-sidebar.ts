@@ -1,10 +1,25 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterModule } from '@angular/router';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { EmployeeService } from '../../services/employee-service';
+
+
+interface EmployeeData {
+  id: number;
+  first_name: string;
+  last_name: string;
+  role_name: string;
+  department_name: string | null;
+  branch_name: string | null;
+  head_office_name: string | null;
+  employee_id: string;
+  can_approve_circular: number;
+  can_create_circular: number;
+}
 
 interface NavItem {
   label: string;
@@ -44,13 +59,19 @@ interface CurrentEmployee {
   imports: [CommonModule, MatIconModule, RouterModule],
   templateUrl: './employee-sidebar.html',
   styleUrl: './employee-sidebar.scss',
+  // chnage 
+  encapsulation: ViewEncapsulation.None ,
 })
 export class EmployeeSidebar implements OnInit, OnDestroy {
   isSidebarOpen = false;
   isMobileOpen = false;
   private subscriptions: Subscription[] = [];
+  employeeData!: EmployeeData;
+  isDarkMode: boolean | undefined;
 
-  constructor(private router: Router, private dialog: MatDialog) {}
+  constructor(private router: Router, private dialog: MatDialog, private employeeService: EmployeeService  ) {
+
+  }
 
   currentEmployee: CurrentEmployee = {
     name: 'John Doe',
@@ -85,7 +106,7 @@ export class EmployeeSidebar implements OnInit, OnDestroy {
         {
           label: 'All Circulars',
           icon: 'list_alt',
-          route: '/employee/circulars/all',
+          route: '/employee/all-circulars',
         },
         {
           label: 'Unread',
@@ -103,6 +124,16 @@ export class EmployeeSidebar implements OnInit, OnDestroy {
           label: 'Archived',
           icon: 'archive',
           route: '/employee/circulars/archived',
+        },
+         {
+          label: 'Circular-create',
+          icon: 'add',
+          route: '/employee/create-circular',
+        },
+        {
+         label: 'Circular-approve',
+         icon: 'thumb_up',
+         route: '/employee/circular-approval',
         },
       ],
     },
@@ -184,9 +215,21 @@ export class EmployeeSidebar implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.subscriptions.forEach((sub) => sub.unsubscribe());
   }
+
+ 
+
   ngOnInit(): void {
+    this.detectSystemDarkMode();
     this.loadEmployeeData();
     this.loadCircularStats();
+  }
+  detectSystemDarkMode(): void {
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  this.isDarkMode = prefersDark;
+
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    this.isDarkMode = e.matches;
+  });
   }
 
   expandSidebar(): void {
@@ -231,15 +274,33 @@ export class EmployeeSidebar implements OnInit, OnDestroy {
     this.router.navigate(['/employee-login']);
   }
 
-  private loadEmployeeData(): void {
-    // Replace with actual service call
-    // const sub = this.employeeService.getCurrentEmployee().subscribe(
-    //   (employee) => {
-    //     this.currentEmployee = employee;
-    //   }
-    // );
-    // this.subscriptions.push(sub);
+   
+
+ async loadEmployeeData() {
+    this.employeeData = await this.employeeService.getCurrentEmployee();
+    console.log(this.employeeData,'from side bar')
+
+    this.updateCircularPermission();
   }
+
+  updateCircularPermission() {
+  const circularMenu = this.employeeNavItems.find(item => item.label === 'Circulars');
+
+  if (circularMenu && circularMenu.subItems) {
+    circularMenu.subItems = circularMenu.subItems.filter(sub => {
+
+      if (sub.label === 'Circular-create' && this.employeeData.can_create_circular !== 1) {
+        return false;
+      }
+
+      if (sub.label === 'Circular-approve' && this.employeeData.can_approve_circular !== 1) {
+        return false;
+      }
+
+      return true;
+    });
+  }
+}
 
   private loadCircularStats(): void {
     // Replace with actual service call
