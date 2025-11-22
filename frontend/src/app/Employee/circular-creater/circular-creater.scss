@@ -1,0 +1,282 @@
+:host {
+  display: block;
+}
+
+// Dark mode transitions
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+// Custom scrollbar for dark mode
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 0.5rem;
+  background-color: rgb(229 231 235);
+
+  @media (prefers-color-scheme: dark) {
+    background-color: rgb(55 65 81);
+  }
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 0.5rem;
+  background-color: rgb(156 163 175);
+
+  @media (prefers-color-scheme: dark) {
+    background-color: rgb(107 114 128);
+  }
+
+  &:hover {
+    background-color: rgb(107 114 128);
+
+    @media (prefers-color-scheme: dark) {
+      background-color: rgb(156 163 175);
+    }
+  }
+}
+
+// Line clamp utility
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Hover animations
+.bg-white,
+.bg-gray-50,
+[class*='bg-'] {
+  transition: all 0.3s ease-in-out;
+}
+
+// Button hover effects
+button {
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  &:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+}
+
+// Card animations
+.bg-white,
+.bg-gray-800 {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Stagger animation for statistics cards
+.grid > div:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.grid > div:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.grid > div:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.grid > div:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+// Loading state for buttons
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    width: 1rem;
+    height: 1rem;
+    margin-top: -0.5rem;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Mobile responsiveness
+@media (max-width: 768px) {
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .flex.justify-between {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  nav.flex {
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Print styles - remove all dark mode styles for printing
+@media print {
+  .min-h-screen,
+  .bg-white,
+  .bg-gray-50,
+  [class*='bg-'] {
+    background: white !important;
+  }
+
+  .text-white,
+  .text-gray-900,
+  .text-gray-600,
+  [class*='text-'] {
+    color: black !important;
+  }
+
+  .border-gray-200,
+  .border-gray-700,
+  [class*='border-'] {
+    border-color: black !important;
+  }
+
+  .shadow-sm,
+  .shadow,
+  .shadow-lg,
+  .shadow-xl,
+  [class*='shadow-'] {
+    box-shadow: none !important;
+  }
+
+  button {
+    display: none !important;
+  }
+
+  // Ensure good contrast for printed text
+  .bg-blue-100,
+  .bg-yellow-100,
+  .bg-green-100,
+  .bg-red-100,
+  .bg-gray-100 {
+    background: #f0f0f0 !important;
+  }
+
+  .text-blue-600,
+  .text-yellow-600,
+  .text-green-600,
+  .text-red-600 {
+    color: black !important;
+    font-weight: bold;
+  }
+}
+
+/* Add to your global styles.css or component styles */
+
+/* Fade in animation for backdrop */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Slide up animation for modal */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+/* Optional: Grid pattern for header background */
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Smooth scrollbar styling */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.7);
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.5);
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(75, 85, 99, 0.7);
+}

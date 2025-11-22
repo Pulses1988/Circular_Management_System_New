@@ -53,6 +53,19 @@ exports.getAllCirculars = () => {
   `);
 };
 
+exports.getAllApprovedCirculars = () => {
+  return db.query(`
+    SELECT c.*, 
+           e.first_name AS creator_name,
+           st.name AS source_type
+    FROM circulars c
+    JOIN employees e ON c.creator_employee_id = e.id
+    JOIN source_types st ON c.source_type_id = st.id
+    WHERE c.status = 'APPROVED'
+    ORDER BY c.created_at DESC
+  `);
+};
+
 exports.getCircularById = (id) => {
   return db.query(
     `
@@ -162,16 +175,36 @@ exports.updateCircular = (id, data) => {
 };
 
 // ✅ Delete Circular
-exports.deleteCircular = async (req, res) => {
+exports.deleteCircular = async (circularId) => {
   try {
-    const [result] = await circularModal.deleteCircular(req.params.id);
-    if (result.affectedRows === 0)
-      return res.status(404).json({ error: "Circular not found" });
+    // First, check if the circular exists and get its status
+    const [circularRows] = await db.query(
+      "SELECT * FROM circulars WHERE id = ?",
+      [circularId]
+    );
 
-    res.json({ message: "Circular deleted successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to delete circular" });
+    if (circularRows.length === 0) {
+      throw new Error("Circular not found");
+    }
+
+    const circular = circularRows[0];
+
+    // Check if circular can be deleted (only DRAFT or REJECTED status)
+    if (circular.status !== "DRAFT" && circular.status !== "REJECTED") {
+      throw new Error(
+        "Circular can only be deleted if it is in DRAFT or REJECTED status"
+      );
+    }
+
+    // Delete the circular
+    const [result] = await db.query("DELETE FROM circulars WHERE id = ?", [
+      circularId,
+    ]);
+
+    return result;
+  } catch (error) {
+    console.error("Error in deleteCircular model:", error);
+    throw error;
   }
 };
 
@@ -213,9 +246,10 @@ exports.getAllCircularsByEmployeeIdWithTrackingDetails = async (employeeId) => {
   return rows;
 };
 
-exports.getCircularDetailsById = async (circularId)=>{
-// 1️⃣ Fetch main circular details + creator info + department + branch
-  const [circularRows] = await db.query(`
+exports.getCircularDetailsById = async (circularId) => {
+  // 1️⃣ Fetch main circular details + creator info + department + branch
+  const [circularRows] = await db.query(
+    `
     SELECT 
       c.id,
       c.title,
@@ -236,13 +270,16 @@ exports.getCircularDetailsById = async (circularId)=>{
     LEFT JOIN departments d ON e.department_id = d.id
     LEFT JOIN branches b ON e.branch_id = b.id
     WHERE c.id = ?
-  `, [circularId]);
+  `,
+    [circularId]
+  );
 
   if (circularRows.length === 0) return null;
   const circular = circularRows[0];
 
   // 2️⃣ Fetch approved approvers (names)
-  const [approverRows] = await db.query(`
+  const [approverRows] = await db.query(
+    `
     SELECT 
       ca.approver_id,
       e.first_name,
@@ -250,36 +287,45 @@ exports.getCircularDetailsById = async (circularId)=>{
     FROM circular_approvals ca
     JOIN employees e ON ca.approver_id = e.id
     WHERE ca.circular_id = ? AND ca.status = 'APPROVED'
-  `, [circularId]);
+  `,
+    [circularId]
+  );
 
   circular.approvers = approverRows;
 
   // 3️⃣ Fetch reference circular info (if exists)
   if (circular.reference_circular_id) {
-    const [refRows] = await db.query(`
+    const [refRows] = await db.query(
+      `
       SELECT id, title, circular_code
       FROM circulars
       WHERE id = ?
-    `, [circular.reference_circular_id]);
+    `,
+      [circular.reference_circular_id]
+    );
     circular.reference_circular = refRows[0] || null;
   } else {
     circular.reference_circular = null;
   }
 
   // 4️⃣ Fetch tracking stats (seen & completed counts)
-  const [trackingStats] = await db.query(`
+  const [trackingStats] = await db.query(
+    `
     SELECT 
       SUM(CASE WHEN is_seen = TRUE THEN 1 ELSE 0 END) AS seen_count,
       SUM(CASE WHEN is_completed = TRUE THEN 1 ELSE 0 END) AS completed_count,
       COUNT(*) AS total_count
     FROM circular_tracking
     WHERE circular_id = ?
-  `, [circularId]);
+  `,
+    [circularId]
+  );
 
   circular.tracking = trackingStats[0];
 
   // 5️⃣ Fetch chats + sender names
-  const [chatRows] = await db.query(`
+  const [chatRows] = await db.query(
+    `
     SELECT 
       cc.chat_id,
       cc.employee_id,
@@ -291,9 +337,11 @@ exports.getCircularDetailsById = async (circularId)=>{
     JOIN employees e ON cc.employee_id = e.id
     WHERE cc.circular_id = ?
     ORDER BY cc.created_at ASC
-  `, [circularId]);
+  `,
+    [circularId]
+  );
 
   circular.chats = chatRows;
 
   return circular;
-}
+};

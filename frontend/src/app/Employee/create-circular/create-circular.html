@@ -256,7 +256,7 @@
               <input
                 #fileInput
                 type="file"
-                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                accept=".pdf"
                 style="display: none"
                 (change)="onFileSelect($event)"
               />
@@ -284,12 +284,19 @@
           <div class="form-field full-width">
             <label>Content <span class="required">*</span></label>
             <div class="editor-toolbar">
-              <button type="button" class="toolbar-btn" (click)="formatText('bold')" title="Bold">
+              <button
+                type="button"
+                class="toolbar-btn"
+                [class.active]="activeFormats.bold"
+                (click)="formatText('bold')"
+                title="Bold"
+              >
                 <mat-icon>format_bold</mat-icon>
               </button>
               <button
                 type="button"
                 class="toolbar-btn"
+                [class.active]="activeFormats.italic"
                 (click)="formatText('italic')"
                 title="Italic"
               >
@@ -298,6 +305,7 @@
               <button
                 type="button"
                 class="toolbar-btn"
+                [class.active]="activeFormats.underline"
                 (click)="formatText('underline')"
                 title="Underline"
               >
@@ -307,6 +315,7 @@
               <button
                 type="button"
                 class="toolbar-btn"
+                [class.active]="activeFormats.unorderedList"
                 (click)="formatText('insertUnorderedList')"
                 title="Bullet List"
               >
@@ -315,23 +324,23 @@
               <button
                 type="button"
                 class="toolbar-btn"
+                [class.active]="activeFormats.orderedList"
                 (click)="formatText('insertOrderedList')"
                 title="Numbered List"
               >
                 <mat-icon>format_list_numbered</mat-icon>
               </button>
             </div>
+
+            <!-- Update your content editor div -->
             <div
               class="rich-editor"
               contenteditable="true"
               (input)="onContentChange($event)"
+              (click)="onEditorClick()"
               (paste)="onPaste($event)"
               #contentEditor
             ></div>
-
-            <div class="editor-footer">
-              <span class="char-count">{{ getContentLength() }} / 5000 characters</span>
-            </div>
           </div>
         </div>
       </div>

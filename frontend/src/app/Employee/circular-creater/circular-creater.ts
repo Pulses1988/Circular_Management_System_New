@@ -3,6 +3,8 @@ import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CircularService } from '../../services/circular-service';
 import { Router } from '@angular/router';
+import { Toast } from '../../toast/toast';
+import { response } from 'express';
 
 // interface Circular {
 //   id: number;
@@ -26,6 +28,8 @@ export interface Circular {
   effective_from: string; // ISO date string
   published_at: string | null; // ISO date string or null
   created_at: string; // ISO date string
+  priority: string;
+  pdf: string;
 
   source_type_name: string | null;
   repeat_cycle_name: string | null;
@@ -63,8 +67,18 @@ export interface Approval {
 export class CircularCreater implements OnInit {
   circulars = signal<Circular[]>([]);
   employee: any;
+  // Add these signals to your component
+  pdfViewUrl = signal<string | null>(null);
+  showPdfModal = signal(false);
+  // PAGE SIZE
+  pageSize = 10;
+  currentPage = signal(1);
 
-  constructor(private circularService: CircularService, private router: Router) {}
+  constructor(
+    private circularService: CircularService,
+    private router: Router,
+    private toast: Toast
+  ) {}
 
   private decryptData(encryptedData: string): string {
     try {
@@ -82,7 +96,9 @@ toggleDarkMode() {
 
   ngOnInit(): void {
     this.loadEmployeeData();
-
+    this.loadCircular();
+  }
+  private loadCircular() {
     if (this.employee?.id) {
       this.circularService
         .getCircularByCreaterId(this.employee.id)
@@ -103,40 +119,6 @@ toggleDarkMode() {
       }
     }
   }
-
-  // circulars = signal<Circular[]>([
-  //   {
-  //     id: 1,
-  //     title: 'Holiday Notice - Diwali 2025',
-  //     content: 'Office will remain closed from Oct 20-24 for Diwali celebrations.',
-  //     category: 'Holiday',
-  //     priority: 'High',
-  //     status: 'REJECTED',
-  //     createdDate: new Date('2025-10-01'),
-  //     approver: 'Mr. Sharma',
-  //     remarks: 'Approved with schedule adjustments',
-  //   },
-  //   {
-  //     id: 2,
-  //     title: 'New Parking Policy',
-  //     content: 'Updated parking guidelines for all employees effective immediately.',
-  //     category: 'Policy',
-  //     priority: 'Medium',
-  //     status: 'PENDING_APPROVAL',
-  //     createdDate: new Date('2025-10-03'),
-  //     approver: 'Ms. Patel',
-  //   },
-  //   {
-  //     id: 3,
-  //     title: 'Team Meeting Schedule',
-  //     content: 'Weekly team meetings scheduled every Monday at 10 AM.',
-  //     category: 'Meeting',
-  //     priority: 'Low',
-  //     status: 'DRAFT',
-  //     createdDate: new Date('2025-10-02'),
-  //     approver: 'Mr. Kumar',
-  //   },
-  // ]);
 
   showCreateModal = signal(false);
   selectedCircular = signal<Circular | null>(null);
@@ -168,16 +150,15 @@ toggleDarkMode() {
   filteredCirculars = computed(() => {
     const status = this.filterStatus();
     if (status === 'all') return this.circulars();
+    this.currentPage = signal(1);
     return this.circulars().filter((c) => c.status === status);
   });
 
-  openCreateModal() {
-    this.showCreateModal.set(true);
-    this.resetForm();
+  createNewCircular() {
+    this.router.navigate(['/employee/create-circular']);
   }
 
-  closeCreateModal() {
-    this.showCreateModal.set(false);
+  closeModal() {
     this.selectedCircular.set(null);
   }
 
@@ -191,27 +172,6 @@ toggleDarkMode() {
     };
   }
 
-  createCircular() {
-    if (!this.newCircular.title || !this.newCircular.content || !this.newCircular.approver) {
-      alert('Please fill all required fields');
-      return;
-    }
-
-    // const circular: Circular = {
-    //   id: Date.now(),
-    //   title: this.newCircular.title,
-    //   content: this.newCircular.content,
-    //   category: this.newCircular.category,
-    //   priority: this.newCircular.priority,
-    //   status: 'DRAFT',
-    //   createdDate: new Date(),
-    //   approver: this.newCircular.approver,
-    // };
-
-    // this.circulars.update((circs) => [...circs, circular]);
-    this.closeCreateModal();
-  }
-
   sendForApproval(circular: Circular) {
     this.circulars.update((circs) =>
       circs.map((c) => (c.id === circular.id ? { ...c, status: 'PENDING_APPROVAL' as const } : c))
@@ -223,15 +183,147 @@ toggleDarkMode() {
   }
 
   deleteCircular(id: number) {
-    if (confirm('Are you sure you want to delete this circular?')) {
-      this.circulars.update((circs) => circs.filter((c) => c.id !== id));
-    }
+    this.toast
+      .confirm({
+        message: 'Are you sure you want to delete this circular?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        type: 'danger',
+      })
+      .subscribe((confirm) => {
+        if (confirm) {
+          this.circularService.deleteCircular(id).subscribe({
+            next: (response) => {
+              this.toast.show('Circular deleted successfully', 'success');
+              this.loadCircular();
+            },
+            error: (error) => {
+              this.toast.show(error.error?.message || 'Failed to delete circular', 'error');
+            },
+          });
+        }
+      });
   }
 
   editCircular(circular: Circular) {
     this.router.navigate(['/employee/edit-circular'], {
       queryParams: { id: circular.id, status: 'edit' },
     });
+  }
+
+  getRejectionApproval(circular: Circular): Approval | null {
+    return circular.approvals?.find((approval) => approval.status === 'REJECTED') || null;
+  }
+
+  showPdf(circular: Circular) {
+    if (!circular.pdf) {
+      this.toast.show('No PDF available for this circular', 'error');
+      return;
+    }
+
+    try {
+      // Decode the base64 PDF data
+      const pdfData = atob(circular.pdf);
+
+      // Convert to Uint8Array
+      const bytes = new Uint8Array(pdfData.length);
+      for (let i = 0; i < pdfData.length; i++) {
+        bytes[i] = pdfData.charCodeAt(i);
+      }
+
+      // Create blob from the PDF data
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+
+      // Create object URL
+      const pdfUrl = URL.createObjectURL(blob);
+
+      // Open in new tab
+      const pdfWindow = window.open(pdfUrl, '_blank');
+
+      if (!pdfWindow) {
+        this.toast.show('Please allow popups to view PDF', 'error');
+        return;
+      }
+
+      // Focus the new window
+      pdfWindow.focus();
+
+      // Clean up the URL after some time
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 1000);
+    } catch (error) {
+      console.error('Error displaying PDF:', error);
+      this.toast.show('Error displaying PDF', 'error');
+    }
+  }
+
+  getFilteredApprovals(circular: Circular): Approval[] {
+    if (!circular.approvals || circular.approvals.length === 0) {
+      return [];
+    }
+
+    // If circular is approved, show only the most recent APPROVED approver
+    if (circular.status === 'APPROVED') {
+      const approvedApprovals = circular.approvals
+        .filter((approval) => approval.status === 'APPROVED')
+        .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+
+      return approvedApprovals.length > 0 ? [approvedApprovals[0]] : [];
+    }
+
+    // If circular is rejected, show only the most recent REJECTED approver
+    if (circular.status === 'REJECTED') {
+      const rejectedApprovals = circular.approvals
+        .filter((approval) => approval.status === 'REJECTED')
+        .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+
+      return rejectedApprovals.length > 0 ? [rejectedApprovals[0]] : [];
+    }
+
+    // For other statuses (DRAFT, PENDING_APPROVAL), show all approvers
+    return circular.approvals;
+  }
+
+  //------------------------------------pagination code-----------------------------------------------
+
+  // compute total pages dynamically
+  totalPages = computed(() => Math.ceil(this.filteredCirculars().length / this.pageSize));
+
+  // paginated circulars
+  paginatedCirculars = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize;
+    return this.filteredCirculars().slice(start, start + this.pageSize);
+  });
+
+  // Go to page
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+    }
+  }
+
+  // Generate limited page numbers (prev 2, current, next 2)
+  paginationPages = computed(() => {
+    const pages = [];
+    const total = this.totalPages();
+    const current = this.currentPage();
+
+    let start = Math.max(1, current - 2);
+    let end = Math.min(total, current + 2);
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  });
+
+  getApprovalStatusColor(status: string): string {
+    const colors = {
+      PENDING: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+      APPROVED: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+      REJECTED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    };
+    return colors[status as keyof typeof colors] || colors.PENDING;
   }
 
   getStatusColor(status: string): string {
@@ -246,10 +338,11 @@ toggleDarkMode() {
 
   getPriorityColor(priority: string): string {
     const colors = {
-      High: 'text-red-600',
-      Medium: 'text-yellow-600',
-      Low: 'text-green-600',
+      URGENT: 'text-red-600',
+      HIGH: 'text-orange-500',
+      MEDIUM: 'text-yellow-500',
+      LOW: 'text-green-600',
     };
-    return colors[priority as keyof typeof colors] || colors.Medium;
+    return colors[priority as keyof typeof colors] || 'text-gray-600';
   }
 }

@@ -2,19 +2,19 @@ const circularModal = require("../models/circularModel");
 const circularApprovalModal = require("../models/circularApprovalsModel");
 const circularVisibilityModal = require("../models/circularVisibilityModel");
 const employeeModal = require("../models/employeesModal");
-const circularTrackingModel = require('../models/circularTrackingModel');
+const circularTrackingModel = require("../models/circularTrackingModel");
 
 // helper function---------------
 async function createCircularTrackingEntries(circularId, employeeIds) {
   if (!Array.isArray(employeeIds) || employeeIds.length === 0) return;
 
-  const trackingData = employeeIds.map(empId => ({
+  const trackingData = employeeIds.map((empId) => ({
     circular_id: circularId,
     employee_id: empId,
     is_seen: false,
     seen_at: null,
     is_completed: false,
-    completed_at: null
+    completed_at: null,
   }));
 
   await circularTrackingModel.bulkInsert(trackingData);
@@ -76,17 +76,22 @@ exports.createCircular = async (req, res) => {
       ? JSON.parse(req.body.visiblityEmployee)
       : [];
     if (Array.isArray(visiblityEmployee) && visiblityEmployee.length > 0) {
-      await circularVisibilityModal.assignToEmployees(circularId, visiblityEmployee);
+      await circularVisibilityModal.assignToEmployees(
+        circularId,
+        visiblityEmployee
+      );
       await createCircularTrackingEntries(circularId, visiblityEmployee); // <-- Tracking added
     }
 
     if (req.body.send_type === "INTERNAL") {
       if (req.body.headOfficeId && req.body.departmentId) {
         const deptEmployee =
-          await circularVisibilityModal.getEmployeesByDepartment(req.body.departmentId);
+          await circularVisibilityModal.getEmployeesByDepartment(
+            req.body.departmentId
+          );
 
         if (deptEmployee.length > 0) {
-          const empIds = deptEmployee.map(e => e.id);
+          const empIds = deptEmployee.map((e) => e.id);
           await circularVisibilityModal.assignToEmployees(circularId, empIds);
           await createCircularTrackingEntries(circularId, empIds); // <-- Tracking added
         }
@@ -94,9 +99,11 @@ exports.createCircular = async (req, res) => {
 
       if (req.body.branchId && req.body.departmentId) {
         const branchEmployees =
-          await circularVisibilityModal.getEmployeesByDepartment(req.body.departmentId);
+          await circularVisibilityModal.getEmployeesByDepartment(
+            req.body.departmentId
+          );
         if (branchEmployees.length > 0) {
-          const empIds = branchEmployees.map(e => e.id);
+          const empIds = branchEmployees.map((e) => e.id);
           await circularVisibilityModal.assignToEmployees(circularId, empIds);
           await createCircularTrackingEntries(circularId, empIds); // <-- Tracking added
         }
@@ -107,7 +114,7 @@ exports.createCircular = async (req, res) => {
           await circularVisibilityModal.getEmployeesByBranch(req.body.branchId);
 
         if (branchDepartmentEmployees.length > 0) {
-          const empIds = branchDepartmentEmployees.map(e => e.id);
+          const empIds = branchDepartmentEmployees.map((e) => e.id);
           await circularVisibilityModal.assignToEmployees(circularId, empIds);
           await createCircularTrackingEntries(circularId, empIds); // <-- Tracking added
         }
@@ -119,7 +126,10 @@ exports.createCircular = async (req, res) => {
       const [allEmployees] = await employeeModal.getAllEmployees();
       if (allEmployees.length > 0) {
         const allEmployeeIds = allEmployees.map((e) => e.id);
-        await circularVisibilityModal.assignToEmployees(circularId, allEmployeeIds);
+        await circularVisibilityModal.assignToEmployees(
+          circularId,
+          allEmployeeIds
+        );
         await createCircularTrackingEntries(circularId, allEmployeeIds); // <-- Tracking added
       }
     }
@@ -184,6 +194,18 @@ exports.getCircularById = async (req, res) => {
   }
 };
 
+// get circular all approved
+
+exports.getAllApprovedCirculars = async (req, res) => {
+  try {
+    const [rows] = await circularModal.getAllApprovedCirculars();
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch circular" });
+  }
+};
+
 // get circular by creater id
 
 exports.getCircularByCreaterId = async (req, res) => {
@@ -218,6 +240,9 @@ exports.getCircularByCreaterId = async (req, res) => {
           source_type_name: row.source_type_name,
           repeat_cycle_id: row.repeat_cycle_id,
           repeat_cycle_name: row.repeat_cycle_name,
+          priority: row.priority,
+          pdf: row.circular_pdf ? row.circular_pdf.toString("base64") : null,
+
           // repeat_cycle_duration: row.repeat_cycle_duration,
           creator: {
             first_name: row.creator_first_name,
@@ -425,25 +450,66 @@ exports.updateCircular = async (req, res) => {
 // ✅ Delete Circular
 exports.deleteCircular = async (req, res) => {
   try {
-    const [result] = await circularModal.deleteCircular(req.params.id);
-    if (result.affectedRows === 0)
-      return res.status(404).json({ error: "Circular not found" });
+    const { id } = req.params;
 
-    res.json({ message: "Circular deleted successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to delete circular" });
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Circular ID is required",
+      });
+    }
+
+    const result = await circularModal.deleteCircular(id);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Circular not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Circular deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error in deleteCircular controller:", error);
+
+    if (error.message === "Circular not found") {
+      return res.status(404).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    if (
+      error.message ===
+      "Circular can only be deleted if it is in DRAFT or REJECTED status"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };
 
-exports.getAllCircularsByEmployeeIdWithTrackingDetails= async (req, res) => {
+exports.getAllCircularsByEmployeeIdWithTrackingDetails = async (req, res) => {
   try {
     const { employee_id } = req.params;
     if (!employee_id) {
       return res.status(400).json({ error: "Employee ID is required" });
     }
 
-    const circulars = await circularModal.getAllCircularsByEmployeeIdWithTrackingDetails(employee_id);
+    const circulars =
+      await circularModal.getAllCircularsByEmployeeIdWithTrackingDetails(
+        employee_id
+      );
 
     res.status(200).json({
       message: "Circulars with tracking details fetched successfully",
@@ -462,7 +528,9 @@ exports.getCircularDetailsById = async (req, res) => {
       return res.status(400).json({ error: "Circular ID is required" });
     }
 
-    const circularDetails = await circularModal.getCircularDetailsById(circular_id);
+    const circularDetails = await circularModal.getCircularDetailsById(
+      circular_id
+    );
 
     if (!circularDetails) {
       return res.status(404).json({ error: "Circular not found" });
