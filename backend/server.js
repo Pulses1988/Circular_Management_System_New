@@ -10,7 +10,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: 'http://localhost:4200',
     methods: ["GET", "POST"]
   }
 });
@@ -35,7 +35,7 @@ const circularChatRoutes = require("./routes/circularChatRoutes");
 // Allow cross-origin requests from your Angular app
 app.use(
   cors({
-    origin: "*",
+    origin: 'http://localhost:4200',
   })
 );
 
@@ -90,7 +90,7 @@ app.use('/api/circular-tracking', express.json(),circularTrackingRouter);
 app.use("/api/circular-chats", express.json(),circularChatRoutes);
 
 const PORT = 3000;
-server.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Server is running on port ${PORT}`);
   console.log(`Local: http://localhost:${PORT}`);
