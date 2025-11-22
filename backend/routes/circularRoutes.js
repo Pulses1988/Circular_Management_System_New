@@ -10,6 +10,12 @@ router.post(
   circularController.createCircular
 );
 
+// get All Approved Circulars
+router.get(
+  "/getAllApprovedCirculars",
+  circularController.getAllApprovedCirculars
+);
+
 router.get(
   "/getAllDataById/:id",
   circularController.getCircularapproverandemployeeById
@@ -23,10 +29,14 @@ router.get("/:id", circularController.getCircularById);
 
 // Get All
 router.get("/", circularController.getAllCirculars);
+
 // Get by ID
 router.get("/:id", circularController.getCircularById);
 
-router.get("/all/:employee_id",circularController.getAllCircularsByEmployeeIdWithTrackingDetails);
+router.get(
+  "/all/:employee_id",
+  circularController.getAllCircularsByEmployeeIdWithTrackingDetails
+);
 
 router.get("/circular/:circular_id", circularController.getCircularDetailsById);
 // Update

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CircularService } from '../../services/circular-service';
@@ -71,6 +71,8 @@ export class EditCircular implements OnInit {
   employees: any = [];
   existingApprovers: number[] = [];
 
+  @ViewChild('contentEditor') contentEditor!: ElementRef;
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
@@ -127,6 +129,15 @@ export class EditCircular implements OnInit {
     });
   }
 
+  ngAfterViewInit(): void {
+    // Set content after view is initialized
+    setTimeout(() => {
+      if (this.circularData && this.contentEditor) {
+        this.contentEditor.nativeElement.innerHTML = this.circularData.content || '';
+      }
+    });
+  }
+
   private loadEmployee(): void {
     if (typeof window !== 'undefined') {
       const encryptedUser = localStorage.getItem('emp_user');
@@ -168,8 +179,60 @@ export class EditCircular implements OnInit {
           });
           this.attachedFile = new File([blob], `${data.title}.pdf`, { type: 'application/pdf' });
         }
+        setTimeout(() => {
+          if (this.contentEditor) {
+            this.contentEditor.nativeElement.innerHTML = data.content || '';
+          }
+        });
+        console.log(data);
       },
     });
+  }
+
+  supportedCommands = ['bold', 'italic', 'underline', 'insertUnorderedList', 'insertOrderedList'];
+  activeButtons: string[] = [];
+
+  formatText(command: string): void {
+    // 1. Execute command
+    document.execCommand(command, false, '');
+
+    // 2. Ensure focus remains on editor (just in case)
+    this.contentEditor.nativeElement.focus();
+
+    // 3. Update Form Value
+    this.onContentChange(new Event('input'));
+
+    // 4. Check status immediately
+    this.checkToolbarStatus();
+  }
+
+  checkToolbarStatus(): void {
+    this.activeButtons = this.supportedCommands.filter((command) => {
+      return document.queryCommandState(command);
+    });
+  }
+
+  onContentChange(event: Event): void {
+    const content = this.contentEditor.nativeElement.innerHTML;
+    this.circularForm.patchValue({
+      content: content,
+    });
+    // Check status in case formatting changed while typing
+    this.checkToolbarStatus();
+  }
+
+  isButtonActive(buttonName: string): boolean {
+    return this.activeButtons.includes(buttonName);
+  }
+
+  onEditorInteract(): void {
+    this.checkToolbarStatus();
+  }
+
+  onPaste(event: ClipboardEvent): void {
+    event.preventDefault();
+    const text = event.clipboardData?.getData('text/plain') || '';
+    document.execCommand('insertText', false, text);
   }
 
   private toLocalDateTime(dateString: string): string {
@@ -264,7 +327,7 @@ export class EditCircular implements OnInit {
     this.employeeService.updateCircular(this.circularId, formData).subscribe({
       next: () => {
         this.snackBar.open('Circular updated successfully!', 'Close', { duration: 3000 });
-        this.router.navigate(['/employee/employee-dashboard']);
+        this.router.navigate(['/employee/circular-creater']);
       },
       error: (err) => {
         console.error(err);
@@ -274,6 +337,6 @@ export class EditCircular implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/employee/employee-dashboard']);
+    this.router.navigate(['/employee/circular-creater']);
   }
 }

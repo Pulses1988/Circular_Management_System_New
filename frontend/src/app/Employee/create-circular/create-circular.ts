@@ -125,6 +125,14 @@ export class CreateCircular {
     },
   ];
 
+  activeFormats = {
+    bold: false,
+    italic: false,
+    underline: false,
+    unorderedList: false,
+    orderedList: false,
+  };
+
   filteredConfidentialityLevels: { value: string; label: string; description: string }[] = [];
 
   constructor(
@@ -152,6 +160,7 @@ export class CreateCircular {
     this.loadEmployeeData();
     this.loadData();
     this.setupAutoSave();
+    this.setupEditorEventListeners();
 
     // Confidentiality change handler
     this.circularForm.get('confidentiality')?.valueChanges.subscribe((value) => {
@@ -404,7 +413,8 @@ export class CreateCircular {
 
   // Navigation
   goBack(): void {
-    this.router.navigate(['/employee/employee-dashboard']);
+    // this.router.navigate(['/employee/employee-dashboard']);
+    window.history.back();
   }
 
   // Data loading
@@ -421,7 +431,7 @@ export class CreateCircular {
     });
 
     // get circular
-    this.circularService.getAllCircular().subscribe((data) => {
+    this.circularService.getAllApprovedCirculars().subscribe((data) => {
       console.log(data);
       this.previousCirculars = data as Circular[];
     });
@@ -445,6 +455,13 @@ export class CreateCircular {
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
         this.snackBar.open(`File ${file.name} is too large (max 10MB)`, 'Close', {
+          duration: 3000,
+          panelClass: ['error-snackbar'],
+        });
+        input.value = '';
+        return;
+      } else if (file.type !== 'application/pdf') {
+        this.snackBar.open(`Only PDF files are allowed.`, 'Close', {
           duration: 3000,
           panelClass: ['error-snackbar'],
         });
@@ -477,14 +494,63 @@ export class CreateCircular {
     return file.id;
   }
 
+  // Method to check current formatting state
+  checkActiveFormats(): void {
+    if (typeof document === 'undefined') return;
+
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+    const parentElement = range.commonAncestorContainer.parentElement;
+
+    if (parentElement) {
+      // Check if we're in a list
+      const listParent = parentElement.closest('ul, ol, li');
+
+      this.activeFormats = {
+        bold: document.queryCommandState('bold'),
+        italic: document.queryCommandState('italic'),
+        underline: document.queryCommandState('underline'),
+        unorderedList: listParent?.tagName === 'UL',
+        orderedList: listParent?.tagName === 'OL',
+      };
+    }
+  }
+
   // Rich text editor
+  // Update your formatText method to check formats after applying
   formatText(command: string): void {
     document.execCommand(command, false);
+
+    // Check active formats after a short delay to ensure the command has been applied
+    this.checkActiveFormats();
   }
 
   onContentChange(event: Event) {
     const content = (event.target as HTMLElement).innerHTML;
     this.circularForm.get('content')?.setValue(content, { emitEvent: false });
+
+    // Check active formats when content changes
+    this.checkActiveFormats();
+  }
+
+  // Add click handler for the editor to update formats when user clicks
+  onEditorClick(): void {
+    // Check formats after a short delay to ensure selection is updated
+    setTimeout(() => {
+      this.checkActiveFormats();
+    }, 50);
+  }
+
+  // Add selection change handler to track formats in real-time
+  setupEditorEventListeners(): void {
+    if (typeof document === 'undefined') return;
+
+    // Listen for selection changes
+    document.addEventListener('selectionchange', () => {
+      this.checkActiveFormats();
+    });
   }
 
   onPaste(event: ClipboardEvent): void {
@@ -680,7 +746,7 @@ export class CreateCircular {
 
         if (status === 'PENDING_APPROVAL') {
           setTimeout(() => {
-            this.router.navigate(['/employee/employee-dashboard']);
+            this.router.navigate(['/employee/circular-creater']);
           }, 1500);
         }
       },
