@@ -1,37 +1,88 @@
-<header class="bg-gradient-to-r from-blue-800 via-blue-700 to-blue-900 text-white shadow-xl h-20"> <!-- Added h-20 -->
-    @if (employeeData) {
-    <div class="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8 h-full"> <!-- Added h-full to inner div -->
-      <div class="flex justify-between items-center py-4 h-full"> <!-- Added h-full to inner div -->
-        <!-- Logo & Brand -->
-        <div class="flex items-center space-x-4">
-          <div class="flex justify-center items-center">
-            <mat-icon class="text-2xl mb-1.5 text-blue-200">account_balance</mat-icon>
-
-            <h1 class="ml-1 text-2xl font-bold">{{employeeData!.bank_name}}</h1>
-
+<header class="bg-gradient-to-r from-blue-800 via-blue-700 to-blue-900 text-white shadow-xl h-20">
+  @if (employeeData) {
+  <div class="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+    <div class="flex justify-between items-center py-4 h-full">
+      <!-- Logo & Brand -->
+      <div class="flex items-center space-x-4">
+        <div class="flex justify-center items-center">
+          <mat-icon class="text-2xl mb-1.5 text-blue-200">account_balance</mat-icon>
+          <h1 class="ml-1 text-2xl font-bold">{{employeeData!.bank_name}}</h1>
+        </div>
+      </div>
+      
+      <!-- User Info & Notifications -->
+      <div class="flex items-center space-x-6">
+        <!-- Notification Bell -->
+        <div class="relative">
+          <mat-icon 
+            class="text-2xl cursor-pointer hover:text-blue-200 transition-colors notification-bell"
+            [class.shake]="hasNewNotification"
+            [matBadge]="unreadCount"
+            [matBadgeHidden]="unreadCount === 0"
+            matBadgeColor="warn"
+            matBadgeSize="small"
+            (click)="toggleNotifications($event)">
+            notifications
+          </mat-icon>
+          
+          <!-- Notification Dropdown -->
+          <div *ngIf="showNotifications" class="absolute right-0 mt-2 w-96 bg-white dark:bg-slate-800 rounded-lg shadow-2xl z-50 max-h-[500px] overflow-hidden">
+            <!-- Header -->
+            <div class="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700">
+              <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Notifications</h3>
+              <button *ngIf="unreadCount > 0" (click)="markAllAsRead()" class="text-xs text-blue-600 hover:text-blue-800">
+                Mark all as read
+              </button>
+            </div>
+            
+            <!-- Notification List -->
+            <div class="overflow-y-auto max-h-[400px]">
+              <div *ngIf="notifications.length === 0" class="p-8 text-center text-slate-500 dark:text-slate-400">
+                <mat-icon class="text-xl mb-2">notifications_none</mat-icon>
+                <p>No new notifications</p>
+              </div>
+              
+              <div *ngFor="let notification of notifications" 
+                   (click)="openCircular(notification)"
+                   class="p-4 border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition-colors">
+                <div class="flex items-start gap-3">
+                  <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center flex-shrink-0">
+                    <mat-icon class="text-blue-600 dark:text-blue-400">
+                      {{ getNotificationIcon(notification.notification_type) }}
+                    </mat-icon>
+                  </div>
+                  
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-slate-900 dark:text-white">
+                      {{ notification.sender_first_name }} {{ notification.sender_last_name }}
+                    </p>
+                    <p class="text-xs text-slate-600 dark:text-slate-400 truncate">
+                      {{ notification.circular_title }}
+                    </p>
+                    <p class="text-xs text-slate-500 dark:text-slate-500 mt-1 line-clamp-2">
+                      {{ notification.notification_type === 'message' ? notification.message_preview : '📎 Sent an attachment' }}
+                    </p>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                      {{ formatTime(notification.created_at) }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         
-        <!-- User Info & Notifications -->
-        <div class="flex items-center space-x-6">
-          <div class="relative">
-            <mat-icon class="text-2xl cursor-pointer hover:text-blue-200 transition-colors" 
-                      [matBadge]="circularStats.urgent" 
-                      matBadgeColor="warn" 
-                      matBadgeSize="small">notifications</mat-icon>
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center ring-2 ring-blue-300">
+            <mat-icon class="text-white">person</mat-icon>
           </div>
-          
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center ring-2 ring-blue-300">
-              <mat-icon class="text-white">person</mat-icon>
-            </div>
-            <div class="text-sm">
-              <p class="font-semibold">{{ employeeData!.first_name}} {{employeeData!.last_name}}</p>
-              <p class="text-blue-200 text-xs">{{ employeeData!.role_name }}</p>
-            </div>
+          <div class="text-sm">
+            <p class="font-semibold">{{ employeeData!.first_name}} {{employeeData!.last_name}}</p>
+            <p class="text-blue-200 text-xs">{{ employeeData!.role_name }}</p>
           </div>
         </div>
       </div>
     </div>
-}
-  </header>
+  </div>
+  }
+</header>

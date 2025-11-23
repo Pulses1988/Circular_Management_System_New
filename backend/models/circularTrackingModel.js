@@ -24,7 +24,9 @@ exports.markAsSeen = async (circularId, employeeId) => {
   const sql = `
     UPDATE circular_tracking
     SET is_seen = TRUE, seen_at = NOW()
-    WHERE circular_id = ? AND employee_id = ?
+    WHERE circular_id = ? 
+      AND employee_id = ? 
+      AND (is_seen = FALSE OR seen_at IS NULL)
   `;
   return db.query(sql, [circularId, employeeId]);
 };
@@ -60,3 +62,12 @@ exports.getSeenByEmployee=async(employeeId)=>{
   return db.query(sql, [employeeId]);
 
 }
+
+exports.getCompletionStatus = async (circularId, employeeId) => {
+  const sql = `
+    SELECT is_completed, completed_at
+    FROM circular_tracking
+    WHERE circular_id = ? AND employee_id = ?
+  `;
+  return db.query(sql, [circularId, employeeId]);
+};

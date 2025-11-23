@@ -1,4 +1,5 @@
-<div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-6 transition-colors duration-300">
+<div
+  class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-6 transition-colors duration-300">
   <div class="max-w-7xl mx-auto">
     <div *ngIf="isLoading" class="flex items-center justify-center min-h-[400px]">
       <div class="text-center">
@@ -7,422 +8,569 @@
       </div>
     </div>
 
-     <div *ngIf="!isLoading && circular">
-    
-    <!-- Header with Back Button -->
-    <div class="mb-6 flex items-center gap-4">
-      <button class="glass-effect hover-lift px-4 py-2 rounded-lg flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-        </svg>
-        Back to Circulars
-      </button>
-      
-      <div class="flex-1"></div>
-      
-      <!-- Action Buttons -->
-      <button class="glass-effect hover-lift px-4 py-2 rounded-lg flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-        </svg>
-        Share
-      </button>
-      
-      <button class="glass-effect hover-lift px-4 py-2 rounded-lg flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
-        </svg>
-        Bookmark
-      </button>
-    </div>
+    <div *ngIf="!isLoading && circular">
 
-    <!-- Main Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      
-      <!-- Left Column - Circular Details -->
-      <div class="lg:col-span-2 space-y-6">
-        
-        <!-- Circular Header Card -->
-        <div class="glass-effect rounded-2xl p-6 gradient-border">
-          <!-- Status Badge -->
-          <div class="flex items-center justify-between mb-4">
-            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30">
-              {{ circular.status }}
-            </span>
-            <span class="text-sm text-slate-600 dark:text-slate-400">{{ circular.circular_code }}</span>
-          </div>
-          
-          <!-- Title -->
-          <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-4 leading-tight">
-            {{ circular.title }}
-          </h1>
-          
-          <!-- Meta Information -->
-          <div class="grid grid-cols-2 md:grid-cols-5 gap-8">
-            <div class="space-y-1">
-              <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Published</p>
-              <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ formatDate(circular.published_at) }}</p>
-            </div>
-            
-            <div class="space-y-1">
-              <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Effective From</p>
-              <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ formatDate(circular.effective_from || '') }}</p>
-            </div>
-            
-            <div class="space-y-1">
-              <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Priority</p>
-              <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold priority-badge" [ngClass]="getPriorityColor(circular.priority || 'low')">
-                {{ circular.priority | uppercase }}
+      <!-- Header with Back Button -->
+      <div class="mb-6 flex items-center gap-4">
+        <button (click)="goBackToPreviousCircular()"
+          class="glass-effect hover-lift px-4 py-2 rounded-lg flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to Circulars
+        </button>
+        <span *ngIf="circularHistory.length > 0" class="text-sm underline text-slate-600 dark:text-slate-400">
+          Viewing referenced circular ({{ circularHistory.length }} level deep)
+        </span>
+
+        <div class="flex-1"></div>
+
+        <!-- Action Buttons -->
+        <button
+          class="glass-effect hover-lift px-4 py-2 rounded-lg flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+          </svg>
+          Share
+        </button>
+
+        <button
+          class="glass-effect hover-lift px-4 py-2 rounded-lg flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+          </svg>
+          Bookmark
+        </button>
+      </div>
+
+      <!-- Main Content Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Left Column - Circular Details -->
+        <div class="lg:col-span-2 space-y-6">
+
+          <!-- Circular Header Card -->
+          <div class="glass-effect rounded-2xl p-6 gradient-border">
+            <!-- Status Badge -->
+            <div class="flex items-center justify-between mb-4">
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30">
+                {{ circular.status }}
               </span>
+              <span class="text-sm text-slate-600 dark:text-slate-400">Code: {{ circular.circular_code }}</span>
             </div>
-            @if(circular.department_name){
-            <div class="space-y-1">
-              <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Department</p>
-              <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ circular.department_name }}</p>
-            </div>
-          }
-          @if(circular.branch_name){
-            <div class="space-y-1">
-              <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Branch</p>
-              <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ circular.branch_name }}</p>
-            </div>
-          }
-          </div>
-          
-          <!-- Creator and aprover Info -->
-          <div class="mt-6 pt-6 border-t border-slate-300 dark:border-slate-700/50 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-semibold">
-              {{ getInitials(circular.creator_first_name || '' , circular.creator_last_name || '') }}
-            </div>
-            <div>
-              <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{(circular.creator_first_name || '') + ' ' + (circular.creator_last_name || '') }} <small>(Creator)</small></p>
-              @if(circular.department_name){
-              <p class="text-xs text-slate-600 dark:text-slate-400">{{ circular.department_name}}</p>
-              } @else {
-              <p class="text-xs text-slate-600 dark:text-slate-400">{{ circular.branch_name}}</p>
 
+            <!-- Title -->
+            <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-4 leading-tight">
+              {{ circular.title }}
+            </h1>
+
+            <!-- Meta Information -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-8">
+              <div class="space-y-1">
+                <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Published</p>
+                <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ formatDate(circular.published_at)
+                  }}</p>
+              </div>
+
+              <div class="space-y-1">
+                <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Effective From</p>
+                <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ formatDate(circular.effective_from
+                  || '') }}</p>
+              </div>
+
+              <div class="space-y-1">
+                <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Priority</p>
+                <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold priority-badge"
+                  [ngClass]="getPriorityColor(circular.priority || 'low')">
+                  {{ circular.priority | uppercase }}
+                </span>
+              </div>
+              @if(circular.department_name){
+              <div class="space-y-1">
+                <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Department</p>
+                <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ circular.department_name }}</p>
+              </div>
+              }
+              @if(circular.branch_name){
+              <div class="space-y-1">
+                <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Branch</p>
+                <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ circular.branch_name }}</p>
+              </div>
               }
             </div>
-            
-            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-lime-300 to-green-400 flex items-center justify-center text-white font-semibold">
-              {{ getInitials(circular.approvers[0].first_name || '', circular.approvers[0].last_name || '') }}
-            </div>
-            <div>
-              <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{(circular.approvers[0].first_name || '') + ' ' + (circular.approvers[0].last_name || '') }} <small>(Approver)</small></p>
-            </div>
-          </div>
-        </div>
 
-        <!-- Tab Navigation -->
-        <div class="glass-effect rounded-2xl overflow-hidden">
-          <div class="flex border-b border-slate-300 dark:border-slate-700/50">
-            <button 
-              (click)="switchTab('details')"
-              [class.bg-indigo-500/20]="activeTab === 'details'"
-              [class.text-indigo-600]="activeTab === 'details'"
-              [class.dark:text-indigo-400]="activeTab === 'details'"
-              [class.border-indigo-500]="activeTab === 'details'"
-              class="flex-1 px-6 py-4 text-sm font-medium text-slate-700 dark:text-slate-300 transition-all border-b-2 border-transparent hover:bg-slate-200 dark:hover:bg-slate-700/30">
-              <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-              </svg>
-              Details
-            </button>
-            <button 
-              (click)="switchTab('discussion')"
-              [class.bg-indigo-500/20]="activeTab === 'discussion'"
-              [class.text-indigo-600]="activeTab === 'discussion'"
-              [class.dark:text-indigo-400]="activeTab === 'discussion'"
-              [class.border-indigo-500]="activeTab === 'discussion'"
-              class="flex-1 px-6 py-4 text-sm font-medium text-slate-700 dark:text-slate-300 transition-all border-b-2 border-transparent hover:bg-slate-200 dark:hover:bg-slate-700/30">
-              <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-              </svg>
-              Discussion
-              <span class="ml-2 px-2 py-0.5 rounded-full text-xs bg-indigo-500/30 text-indigo-600 dark:text-indigo-300">{{ messages.length }}</span>
-            </button>
-          </div>
-
-          <!-- Details Tab Content -->
-          <div *ngIf="activeTab === 'details'" class="p-6">
-            <!-- Circular Content -->
-            <div class="prose prose-slate dark:prose-invert max-w-none mb-8">
-              <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-4">Circular Content</h3>
-              <div class="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap" [innerHTML]="circular!.content"></div>
-            </div>
-
-            <!-- PDF Download Section -->
-            <div *ngIf="circular?.circular_pdf" (click)="openPDFPreview()" class="mt-6 p-4 rounded-xl bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50  cursor-pointer hover:border-indigo-500 transition-colors">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-12 h-12 rounded-lg bg-red-500/20 flex items-center justify-center">
-                    <svg class="w-6 h-6 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ circular.title }}_circular.pdf</p>
-                    <p class="text-xs text-slate-600 dark:text-slate-400">Official Circular Document</p>
-                  </div>
-                </div>
-                <button (click)="downloadPDF()" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition-colors flex items-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                  </svg>
-                  Download
-                </button>
+            <!-- Creator and aprover Info -->
+            <div class="mt-6 pt-6 border-t border-slate-300 dark:border-slate-700/50 flex items-center gap-3">
+              <div
+                class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-semibold">
+                {{ getInitials(circular.creator_first_name || '' , circular.creator_last_name || '') }}
               </div>
-            </div>
+              <div>
+                <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{(circular.creator_first_name || '')
+                  + ' ' + (circular.creator_last_name || '') }} <small>(Creator)</small></p>
+                @if(circular.department_name){
+                <p class="text-xs text-slate-600 dark:text-slate-400">{{ circular.department_name}}</p>
+                } @else {
+                <p class="text-xs text-slate-600 dark:text-slate-400">{{ circular.branch_name}}</p>
 
-            <!-- Reference Circulars -->
-           <!-- Reference Circulars -->
-<div *ngIf="circular?.reference_circular" class="mt-8">
-  <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-4">Reference Circular</h3>
-  <div class="space-y-3">
-    <div class="p-4 rounded-xl bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 hover:border-indigo-500/50 transition-colors cursor-pointer hover-lift">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ circular.reference_circular?.title }}</p>
-          <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">{{ circular.reference_circular?.circular_code }}</p>
-        </div>
-        <svg class="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-        </svg>
-      </div>
-    </div>
-  </div>
-</div>
+                }
+              </div>
+
+              <!-- After - with null check -->
+              <ng-container *ngIf="circular.approvers && circular.approvers.length > 0">
+                <div
+                  class="w-10 h-10 rounded-full bg-gradient-to-br from-lime-300 to-green-400 flex items-center justify-center text-white font-semibold">
+                  {{ getInitials(circular.approvers[0].first_name, circular.approvers[0].last_name) }}
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{circular.approvers[0].first_name +
+                    ' ' + circular.approvers[0].last_name}} <small>(Approver)</small></p>
+                </div>
+              </ng-container>
+            </div>
           </div>
 
-          <!-- Discussion Tab Content -->
-          <div *ngIf="activeTab === 'discussion'" class="flex flex-col h-[600px]">
-            <!-- Messages Container -->
-            <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
-              <div *ngIf="messages.length === 0" class="flex flex-col items-center justify-center h-full text-slate-400">
-    <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-    </svg>
-    <p class="text-sm">No discussions yet. Start the conversation!</p>
-  </div>
-              <div *ngFor="let message of messages" class="message-bubble">
-                <div [class.flex-row-reverse]="isCurrentUserMessage(message)" class="flex items-start gap-3">
-                  <!-- Avatar -->
-                  <div *ngIf="!isCurrentUserMessage(message)" class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
-                    {{ getInitials(message.first_name, message.last_name) }}
-                  </div>
+          <!-- Tab Navigation -->
+          <div class="glass-effect rounded-2xl overflow-hidden">
+            <div class="flex border-b border-slate-300 dark:border-slate-700/50">
+              <button (click)="switchTab('details')" [class.bg-indigo-500/20]="activeTab === 'details'"
+                [class.text-indigo-600]="activeTab === 'details'" [class.dark:text-indigo-400]="activeTab === 'details'"
+                [class.border-indigo-500]="activeTab === 'details'"
+                class="flex-1 px-6 py-4 text-sm font-medium text-slate-700 dark:text-slate-300 transition-all border-b-2 border-transparent hover:bg-slate-200 dark:hover:bg-slate-700/30">
+                <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Details
+              </button>
+              <button (click)="switchTab('discussion')" [class.bg-indigo-500/20]="activeTab === 'discussion'"
+                [class.text-indigo-600]="activeTab === 'discussion'"
+                [class.dark:text-indigo-400]="activeTab === 'discussion'"
+                [class.border-indigo-500]="activeTab === 'discussion'"
+                class="flex-1 px-6 py-4 text-sm font-medium text-slate-700 dark:text-slate-300 transition-all border-b-2 border-transparent hover:bg-slate-200 dark:hover:bg-slate-700/30">
+                <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                Discussion
+                <span
+                  class="ml-2 px-2 py-0.5 rounded-full text-xs bg-indigo-500/30 text-indigo-600 dark:text-indigo-300">{{
+                  messages.length }}</span>
+              </button>
+            </div>
 
-                  <!-- Message Content -->
-                  <div [class.items-end]="isCurrentUserMessage(message)" class="flex flex-col max-w-[70%]">
-                    <div class="flex items-center gap-2 mb-1" [class.flex-row-reverse]="isCurrentUserMessage(message)">
-                      <span class="text-xs font-medium text-slate-700 dark:text-slate-300">
-                        {{ isCurrentUserMessage(message) ? 'You' : (message.first_name + ' ' + message.last_name) }}
-                      </span>
-                      <span class="text-xs text-slate-500">{{ formatTime(message.created_at) }}</span>
+            <!-- Details Tab Content -->
+            <div *ngIf="activeTab === 'details'" class="p-6">
+              <!-- Circular Content -->
+              <div class="prose prose-slate dark:prose-invert max-w-none mb-8">
+                <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-4">Circular Content</h3>
+                <div class="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap"
+                  [innerHTML]="circular!.content"></div>
+              </div>
+
+              <!-- PDF Download Section -->
+              <div *ngIf="circular?.circular_pdf" (click)="openPDFPreview()"
+                class="mt-6 p-4 rounded-xl bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50  cursor-pointer hover:border-indigo-500 transition-colors">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-lg bg-red-500/20 flex items-center justify-center">
+                      <svg class="w-6 h-6 text-red-500 dark:text-red-400" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
                     </div>
-                    
-                    <div [class.bg-indigo-600]="isCurrentUserMessage(message)" 
-                         [class.bg-slate-300]="!isCurrentUserMessage(message)"
-                         [class.dark:bg-slate-700/50]="!isCurrentUserMessage(message)"
-                         class="px-4 py-3 rounded-2xl">
-                      <p class="text-sm" [class.text-white]="isCurrentUserMessage(message)" [class.text-slate-800]="!isCurrentUserMessage(message)" [class.dark:text-slate-100]="!isCurrentUserMessage(message)">{{ message.message }}</p>
-                      
-                      <!-- Attachments -->
-                      <!-- <div *ngIf="message.attachments && message.attachments.length > 0" class="mt-3 space-y-2">
-                        <div *ngFor="let attachment of message.attachments" 
-                             class="p-3 rounded-lg bg-slate-200 dark:bg-slate-800/50 flex items-center justify-between">
-                          <div class="flex items-center gap-2">
-                            <svg class="w-5 h-5 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-                            </svg>
-                            <div>
-                              <p class="text-xs font-medium text-slate-800 dark:text-slate-200">{{ attachment.name }}</p>
-                              <p class="text-xs text-slate-600 dark:text-slate-400">{{ attachment.size }}</p>
-                            </div>
-                          </div>
-                          <button (click)="downloadAttachment(attachment)" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                            </svg>
-                          </button>
-                        </div>
-                      </div> -->
+                    <div>
+                      <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ circular.title
+                        }}_circular.pdf</p>
+                      <p class="text-xs text-slate-600 dark:text-slate-400">Official Circular Document</p>
                     </div>
                   </div>
-
-                  <!-- Current User Avatar -->
-                  <div *ngIf="isCurrentUserMessage(message)" class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
-                    {{ getInitials(message.first_name, message.last_name) }}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Message Input -->
-            <div class="border-t border-slate-300 dark:border-slate-700/50 p-4 bg-slate-100 dark:bg-slate-800/30">
-              <!-- Selected Files Preview -->
-              <div *ngIf="selectedFiles.length > 0" class="mb-3 flex flex-wrap gap-2">
-                <div *ngFor="let file of selectedFiles; let i = index" 
-                     class="px-3 py-2 rounded-lg bg-slate-300 dark:bg-slate-700/50 flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-                  </svg>
-                  <span>{{ file.name }}</span>
-                  <button (click)="removeFile(i)" class="ml-1 text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  <button (click)="downloadPDF()"
+                    class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
+                    Download
                   </button>
                 </div>
               </div>
 
-              <div class="flex items-end gap-3">
-                <!-- File Upload Button -->
-                <label class="cursor-pointer p-3 rounded-xl bg-slate-300 dark:bg-slate-700/50 hover:bg-slate-400 dark:hover:bg-slate-700 transition-colors">
-                  <input type="file" multiple (change)="onFileSelect($event)" class="hidden">
-                  <svg class="w-5 h-5 text-slate-700 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-                  </svg>
-                </label>
+              <!-- Reference Circulars -->
+              <div *ngIf="circular?.reference_circular" class="mt-8">
+                <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-4">Reference Circular</h3>
+                <div class="space-y-3">
+                  <div (click)="loadCircularWithHistory(circular.reference_circular!.id)"
+                    class="p-4 rounded-xl bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 hover:border-indigo-500/50 transition-colors cursor-pointer hover-lift">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{
+                          circular.reference_circular?.title }}</p>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">code: {{
+                          circular.reference_circular?.circular_code }}</p>
+                      </div>
+                      <svg class="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-                <!-- Message Input -->
-                <div class="flex-1">
-                  <textarea 
-                    [(ngModel)]="newMessage"
-                    (keydown)="handleEnterKey($event)"
-                    placeholder="Type your message... (Shift+Enter for new line)"
-                    rows="1"
-                    class="w-full px-4 py-3 rounded-xl bg-slate-300 dark:bg-slate-700/50 border border-slate-400 dark:border-slate-600/50 text-slate-900 dark:text-slate-200 placeholder-slate-600 dark:placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 resize-none chat-input"></textarea>
+            <!-- Discussion Tab Content -->
+            <div *ngIf="activeTab === 'discussion'" class="flex flex-col h-[600px]">
+              <!-- Messages Container -->
+              <div #messagesContainer class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
+                <div *ngIf="messages.length === 0"
+                  class="flex flex-col items-center justify-center h-full text-slate-400">
+                  <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  <p class="text-sm">No discussions yet. Start the conversation!</p>
+                </div>
+                <div *ngFor="let message of messages" class="message-bubble">
+                   <div *ngIf="message.is_system_message" class="flex justify-center my-4">
+    <div class="bg-grey-100 dark:bg-grey-900/30 px-4 py-2 rounded-full border border-green-300 dark:border-green-700 max-w-[80%]">
+      <p class="text-xs text-green-800 dark:text-green-300 text-center font-medium">
+        {{ message.message }} at {{ formatTime(message.created_at) }}
+      </p>
+      <p class="text-xs text-green-600 dark:text-green-400 text-center mt-1">
+        <!-- {{ formatTime(message.created_at) }} --> System generated message
+      </p>
+    </div>
+  </div>
+                  <div *ngIf="!message.is_system_message"  [class.flex-row-reverse]="isCurrentUserMessage(message)" class="flex items-start gap-3">
+                    <!-- Avatar -->
+                    <div *ngIf="!isCurrentUserMessage(message)"
+                      class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+                      {{ getInitials(message.first_name, message.last_name) }}
+                    </div>
+
+                    <!-- Message Content -->
+                    <div [class.items-end]="isCurrentUserMessage(message)" class="flex flex-col max-w-[70%]">
+                      <div class="flex items-center gap-2 mb-1"
+                        [class.flex-row-reverse]="isCurrentUserMessage(message)">
+                        <span class="text-xs font-medium text-slate-700 dark:text-slate-300">
+                          {{ isCurrentUserMessage(message) ? 'You' : (message.first_name + ' ' + message.last_name) }}
+                        </span>
+                        <span class="text-xs text-slate-500">{{ formatTime(message.created_at) }}</span>
+                      </div>
+
+                      <div [class.bg-indigo-600]="isCurrentUserMessage(message)"
+                        [class.bg-slate-300]="!isCurrentUserMessage(message)"
+                        [class.dark:bg-slate-700/50]="!isCurrentUserMessage(message)" class="px-4 py-3 rounded-2xl">
+                        <p class="text-sm" [class.text-white]="isCurrentUserMessage(message)"
+                          [class.text-slate-800]="!isCurrentUserMessage(message)"
+                          [class.dark:text-slate-100]="!isCurrentUserMessage(message)">{{ message.message }}</p>
+
+                        <!-- Attachments -->
+                        <div *ngIf="message.attachments && message.attachments.length > 0" class="mt-3 space-y-2">
+                          <div *ngFor="let attachment of message.attachments"
+                            class="p-3 rounded-lg bg-white/10 flex items-center justify-between cursor-pointer hover:bg-white/20 transition-colors"
+                            (click)="previewFile(attachment); $event.stopPropagation()">
+                            <div class="flex items-center gap-2">
+                              <!-- File Icon -->
+                              <svg *ngIf="attachment.file_type.startsWith('image/')"
+                                class="w-5 h-5 text-green-500 dark:text-green-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              <svg *ngIf="attachment.file_type === 'application/pdf'"
+                                class="w-5 h-5 text-red-500 dark:text-red-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                              </svg>
+                              <svg
+                                *ngIf="!attachment.file_type.startsWith('image/') && attachment.file_type !== 'application/pdf'"
+                                class="w-5 h-5 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                              </svg>
+                              <div>
+                                <p class="text-xs font-medium" [class.text-white]="isCurrentUserMessage(message)"
+                                  [class.text-slate-800]="!isCurrentUserMessage(message)"
+                                  [class.dark:text-slate-200]="!isCurrentUserMessage(message)">
+                                  {{ attachment.file_name }}
+                                </p>
+                                <p class="text-xs opacity-70" [class.text-white]="isCurrentUserMessage(message)"
+                                  [class.text-slate-600]="!isCurrentUserMessage(message)">
+                                  {{ formatFileSize(attachment.file_size) }}
+                                </p>
+                              </div>
+                            </div>
+                            <svg class="w-4 h-4" [class.text-white]="isCurrentUserMessage(message)"
+                              [class.text-indigo-600]="!isCurrentUserMessage(message)" fill="none" stroke="currentColor"
+                              viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Current User Avatar -->
+                    <div *ngIf="isCurrentUserMessage(message)"
+                      class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+                      {{ getInitials(message.first_name, message.last_name) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Message Input -->
+              <div class="border-t border-slate-300 dark:border-slate-700/50 p-4 bg-slate-100 dark:bg-slate-800/30">
+                <!-- Selected Files Preview -->
+                <div *ngIf="selectedFile.length > 0" class="mb-3 flex flex-wrap gap-2">
+                  <div *ngFor="let file of selectedFile; let i = index"
+                    class="px-3 py-2 rounded-lg bg-slate-300 dark:bg-slate-700/50 flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                    </svg>
+                    <span>{{ file.name }}</span>
+                    <button (click)="removeFile(i)"
+                      class="ml-1 text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
 
-                <!-- Send Button -->
-                <button 
-                  (click)="sendMessage()"
-                  [disabled]="!newMessage.trim() && selectedFiles.length === 0"
-                  class="p-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-400 dark:disabled:bg-slate-700 disabled:cursor-not-allowed transition-colors">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                  </svg>
-                </button>
+                <div class="flex items-end gap-3">
+                  <!-- File Upload Button -->
+                  <label
+                    class="cursor-pointer p-3 rounded-xl bg-slate-300 dark:bg-slate-700/50 hover:bg-slate-400 dark:hover:bg-slate-700 transition-colors">
+                    <input type="file" multiple (change)="onFileSelect($event)" class="hidden">
+                    <svg class="w-5 h-5 text-slate-700 dark:text-slate-300" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                    </svg>
+                  </label>
+
+                  <!-- Message Input -->
+                  <div class="flex-1">
+                    <textarea [(ngModel)]="newMessage" (keydown)="handleEnterKey($event)"
+                      placeholder="Type your message... (Shift+Enter for new line)" rows="1"
+                      class="w-full px-4 py-3 rounded-xl bg-slate-300 dark:bg-slate-700/50 border border-slate-400 dark:border-slate-600/50 text-slate-900 dark:text-slate-200 placeholder-slate-600 dark:placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 resize-none chat-input"></textarea>
+                  </div>
+
+                  <!-- Send Button -->
+                  <button (click)="sendMessage()" [disabled]="!newMessage.trim() && selectedFile.length === 0"
+                    class="p-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-400 dark:disabled:bg-slate-700 disabled:cursor-not-allowed transition-colors">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+        <!-- Right Column - Quick Info -->
+        <div class="lg:col-span-1 space-y-6">
+
+          <!-- Quick Actions Card -->
+          <div class="glass-effect rounded-2xl p-6">
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Quick Actions</h3>
+            <div class="space-y-3">
+              <button
+              (click)="markAsComplete()"
+     [disabled]="isMarkingComplete || isCompleted"
+  [class.opacity-50]="isCompleted"
+  [class.cursor-not-allowed]="isCompleted"
+                class="w-full px-4 py-3 rounded-xl bg-slate-300 dark:bg-slate-700/50 hover:bg-slate-400 dark:hover:bg-slate-700 text-left flex items-center gap-3 transition-colors hover-lift disabled:opacity-50 disabled:cursor-not-allowed">
+  <svg class="w-5 h-5" [ngClass]="isCompleted ? 'text-green-600 dark:text-green-400' : 'text-green-600 dark:text-green-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+  </svg>
+  <span class="text-sm font-medium text-slate-800 dark:text-slate-200">
+    {{ isCompleted ? 'Completed' : (isMarkingComplete ? 'Marking...' : 'Mark as Complete') }}
+  </span>
+              </button>
+
+              <button
+                class="w-full px-4 py-3 rounded-xl bg-slate-300 dark:bg-slate-700/50 hover:bg-slate-400 dark:hover:bg-slate-700 text-left flex items-center gap-3 transition-colors hover-lift">
+                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span class="text-sm font-medium text-slate-800 dark:text-slate-200">Email Summary</span>
+              </button>
+
+              <button
+                class="w-full px-4 py-3 rounded-xl bg-slate-300 dark:bg-slate-700/50 hover:bg-slate-400 dark:hover:bg-slate-700 text-left flex items-center gap-3 transition-colors hover-lift">
+                <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                <span class="text-sm font-medium text-slate-800 dark:text-slate-200">Print Circular</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Timeline Card -->
+          <div class="glass-effect rounded-2xl p-6">
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Timeline</h3>
+            <div class="space-y-4">
+              <div class="flex gap-3">
+                <div class="flex flex-col items-center">
+                  <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                  <div class="w-0.5 h-full bg-slate-300 dark:bg-slate-700 mt-2"></div>
+                </div>
+                <div class="pb-4">
+                  <p class="text-sm font-medium text-slate-800 dark:text-slate-200">Published</p>
+                  <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">{{ formatDate(circular.published_at || '')
+                    }}</p>
+                </div>
+              </div>
+
+              <div class="flex gap-3">
+                <div class="flex flex-col items-center">
+                  <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                  <div class="w-0.5 h-full bg-slate-300 dark:bg-slate-700 mt-2"></div>
+                </div>
+                <div class="pb-4">
+                  <p class="text-sm font-medium text-slate-800 dark:text-slate-200">Effective From</p>
+                  <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">{{ formatDate(circular.effective_from ||
+                    '') }}</p>
+                </div>
+              </div>
+
+              <div class="flex gap-3">
+      <div class="flex flex-col items-center">
+        <div class="w-3 h-3 rounded-full" [ngClass]="isCompleted ? 'bg-green-500' : 'bg-slate-400 dark:bg-slate-600'"></div>
       </div>
-
-      <!-- Right Column - Quick Info -->
-      <div class="lg:col-span-1 space-y-6">
-        
-        <!-- Quick Actions Card -->
-        <div class="glass-effect rounded-2xl p-6">
-          <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Quick Actions</h3>
-          <div class="space-y-3">
-            <button class="w-full px-4 py-3 rounded-xl bg-slate-300 dark:bg-slate-700/50 hover:bg-slate-400 dark:hover:bg-slate-700 text-left flex items-center gap-3 transition-colors hover-lift">
-              <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-              <span class="text-sm font-medium text-slate-800 dark:text-slate-200">Mark as Complete</span>
-            </button>
-            
-            <button class="w-full px-4 py-3 rounded-xl bg-slate-300 dark:bg-slate-700/50 hover:bg-slate-400 dark:hover:bg-slate-700 text-left flex items-center gap-3 transition-colors hover-lift">
-              <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-              </svg>
-              <span class="text-sm font-medium text-slate-800 dark:text-slate-200">Email Summary</span>
-            </button>
-            
-            <button class="w-full px-4 py-3 rounded-xl bg-slate-300 dark:bg-slate-700/50 hover:bg-slate-400 dark:hover:bg-slate-700 text-left flex items-center gap-3 transition-colors hover-lift">
-              <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-              </svg>
-              <span class="text-sm font-medium text-slate-800 dark:text-slate-200">Print Circular</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Timeline Card -->
-        <div class="glass-effect rounded-2xl p-6">
-          <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Timeline</h3>
-          <div class="space-y-4">
-            <div class="flex gap-3">
-              <div class="flex flex-col items-center">
-                <div class="w-3 h-3 rounded-full bg-green-500"></div>
-                <div class="w-0.5 h-full bg-slate-300 dark:bg-slate-700 mt-2"></div>
-              </div>
-              <div class="pb-4">
-                <p class="text-sm font-medium text-slate-800 dark:text-slate-200">Published</p>
-                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">{{ formatDate(circular.published_at || '') }}</p>
-              </div>
-            </div>
-            
-            <div class="flex gap-3">
-              <div class="flex flex-col items-center">
-                <div class="w-3 h-3 rounded-full bg-blue-500"></div>
-                <div class="w-0.5 h-full bg-slate-300 dark:bg-slate-700 mt-2"></div>
-              </div>
-              <div class="pb-4">
-                <p class="text-sm font-medium text-slate-800 dark:text-slate-200">Effective From</p>
-                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">{{ formatDate(circular.effective_from || '') }}</p>
-              </div>
-            </div>
-            
-            <div class="flex gap-3">
-              <div class="flex flex-col items-center">
-                <div class="w-3 h-3 rounded-full bg-slate-400 dark:bg-slate-600"></div>
-              </div>
-              <div>
-                <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Completion Pending</p>
-                <p class="text-xs text-slate-500">Action required</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Activity Stats -->
-        <div class="glass-effect rounded-2xl p-6">
-          <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Activity</h3>
-          <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Total Views</span>
-              <span class="text-sm font-medium text-slate-800 dark:text-slate-200">{{circular.tracking!.seen_count}}</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Discussions</span>
-              <span class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ messages.length }}</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Completions</span>
-              <span class="text-sm font-medium text-slate-800 dark:text-slate-200">{{circular.tracking.completed_count}}</span>
-            </div>
-          </div>
-        </div>
-
+      <div>
+        <p class="text-sm font-medium" [ngClass]="isCompleted ? 'text-green-600 dark:text-green-400' : 'text-slate-600 dark:text-slate-400'">
+          {{ isCompleted ? 'Completed' : 'Completion Pending' }}
+        </p>
+        <p class="text-xs" [ngClass]="isCompleted ? 'text-slate-600 dark:text-slate-400' : 'text-slate-500'">
+          {{ isCompleted ? formatDate(completedAt || '') : 'Action required' }}
+        </p>
       </div>
     </div>
+            </div>
+          </div>
+
+          <!-- Activity Stats -->
+          <div class="glass-effect rounded-2xl p-6">
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Activity</h3>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Total Views</span>
+                <span
+                  class="text-sm font-medium text-slate-800 dark:text-slate-200">{{circular.tracking!.seen_count}}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Discussions</span>
+                <span class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ messages.length }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Completions</span>
+                <span
+                  class="text-sm font-medium text-slate-800 dark:text-slate-200">{{circular.tracking.completed_count}}</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
     </div>
     <div *ngIf="!isLoading && !circular" class="flex items-center justify-center min-h-[400px]">
       <p class="text-slate-600 dark:text-slate-400">Circular not found</p>
     </div>
-    
-<!-- pdf Viewer -->
-    <div *ngIf="showPDFPreview" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" (click)="closePDFPreview()">
-  <div class="relative w-[90%] h-[90%] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl" (click)="$event.stopPropagation()">
-    <!-- Header -->
-    <div class="flex items-center justify-between p-4 border-b border-slate-300 dark:border-slate-700">
-      <h3 class="text-lg font-semibold text-slate-900 dark:text-white">PDF Preview</h3>
-      <div class="flex gap-2">
-        <button (click)="downloadPDF()" class="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm">
-          Download
-        </button>
-        <button (click)="closePDFPreview()" class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
+
+    <!-- pdf Viewer -->
+    <div *ngIf="showPDFPreview" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      (click)="closePDFPreview()">
+      <div class="relative w-[90%] h-[90%] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl"
+        (click)="$event.stopPropagation()">
+        <!-- Header -->
+        <div class="flex items-center justify-between p-4 border-b border-slate-300 dark:border-slate-700">
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-white">PDF Preview</h3>
+          <div class="flex gap-2">
+            <button (click)="downloadPDF()"
+              class="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm">
+              Download
+            </button>
+            <button (click)="closePDFPreview()" class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- PDF Viewer -->
+        <iframe [src]="pdfUrl | safe: 'resourceUrl'" class="w-full h-[calc(100%-64px)] rounded-b-2xl"></iframe>
+
       </div>
     </div>
-    
-    <!-- PDF Viewer -->
-    <iframe [src]="pdfUrl | safe: 'resourceUrl'" class="w-full h-[calc(100%-64px)] rounded-b-2xl"></iframe>
 
+    <!-- Attachment Preview Modal -->
+    <div *ngIf="showAttachmentPreview"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      (click)="closeAttachmentPreview()">
+      <div class="relative w-[90%] h-[90%] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl"
+        (click)="$event.stopPropagation()">
+        <!-- Header -->
+        <div class="flex items-center justify-between p-4 border-b border-slate-300 dark:border-slate-700">
+          <div>
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">{{ currentAttachment?.file_name }}</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-400">{{ formatFileSize(currentAttachment?.file_size || 0)
+              }}</p>
+          </div>
+          <div class="flex gap-2">
+            <button (click)="downloadFromPreview()"
+              class="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download
+            </button>
+            <button (click)="closeAttachmentPreview()"
+              class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700">
+              <svg class="w-5 h-5 text-slate-900 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Preview Content -->
+        <div class="w-full h-[calc(100%-64px)] overflow-auto">
+          <!-- Image Preview -->
+          <div *ngIf="previewType === 'image'"
+            class="flex items-center justify-center h-full bg-slate-100 dark:bg-slate-900 p-4">
+            <img [src]="previewUrl" [alt]="currentAttachment?.file_name"
+              class="max-w-full max-h-full object-contain rounded-lg shadow-lg">
+          </div>
+
+          <!-- PDF Preview -->
+          <iframe *ngIf="previewType === 'pdf'" [src]="previewUrl | safe: 'resourceUrl'"
+            class="w-full h-full rounded-b-2xl"></iframe>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

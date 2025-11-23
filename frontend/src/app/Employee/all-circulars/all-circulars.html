@@ -80,26 +80,26 @@
             </button>
             <button
               class="chip priority-urgent"
-              [class.active]="selectedPriority === 'urgent'"
-              (click)="onPriorityChange('urgent')">
+              [class.active]="selectedPriority === 'URGENT'"
+              (click)="onPriorityChange('URGENT')">
               Urgent
             </button>
             <button
               class="chip priority-high"
-              [class.active]="selectedPriority === 'high'"
-              (click)="onPriorityChange('high')">
+              [class.active]="selectedPriority === 'HIGH'"
+              (click)="onPriorityChange('HIGH')">
               High
             </button>
             <button
               class="chip priority-medium"
-              [class.active]="selectedPriority === 'medium'"
-              (click)="onPriorityChange('medium')">
+              [class.active]="selectedPriority === 'MEDIUM'"
+              (click)="onPriorityChange('MEDIUM')">
               Medium
             </button>
             <button
               class="chip priority-low"
-              [class.active]="selectedPriority === 'low'"
-              (click)="onPriorityChange('low')">
+              [class.active]="selectedPriority === 'LOW'"
+              (click)="onPriorityChange('LOW')">
               Low
             </button>
           </div>
@@ -180,7 +180,7 @@
             <!-- Card Body -->
             <div class="card-body">
               <h4 class="circular-title">{{ circular.title }}</h4>
-              <p class="circular-code">{{ circular.circular_code }}</p>
+              <p class="circular-code">Code: {{ circular.circular_code }}</p>
               
               <div class="circular-meta">
                 <div class="meta-item">
@@ -195,13 +195,13 @@
             </div>
 
             <!-- Card Footer -->
-            <!-- <div class="card-footer">
-              <button class="action-btn primary" (click)="viewCircular(circular); $event.stopPropagation()">
+            <div class="card-footer">
+              <button class="action-btn primary" (click)="viewCircular(circular)">
                 <mat-icon>visibility</mat-icon>
                 View Details
               </button>
               
-              <button
+              <!-- <button
                 *ngIf="circular.hasAttachment"
                 class="action-btn secondary"
                 (click)="downloadCircular(circular, $event)"
@@ -215,8 +215,8 @@
                 (click)="markAsRead(circular); $event.stopPropagation()"
                 matTooltip="Mark as Read">
                 <mat-icon>done</mat-icon>
-              </button>
-            </div> -->
+              </button> -->
+            </div>
           </div>
         </div>
       </div>

@@ -63,16 +63,28 @@ exports.getCircularsByEmployee = async (employeeId) => {
       c.status,
       c.created_at,
       c.published_at,
+      c.priority,
       c.effective_from,
       c.reference_circular_id,
       c.source_type_id,
-      c.repeat_cycle_id
+      c.repeat_cycle_id,
+      ct.is_completed,
+      ct.completed_at
     FROM circular_visibility cv
     INNER JOIN circulars c ON cv.circular_id = c.id
     LEFT JOIN employees e ON c.creator_employee_id = e.id
-     WHERE cv.employee_id = ? AND c.status = 'APPROVED'
-    ORDER BY c.created_at DESC
+    LEFT JOIN circular_tracking ct ON c.id = ct.circular_id AND ct.employee_id = ?
+    WHERE cv.employee_id = ? AND c.status = 'APPROVED'
+    ORDER BY ct.is_completed ASC, c.created_at DESC
   `;
-  const [rows] = await db.query(sql, [employeeId]);
+  const [rows] = await db.query(sql, [employeeId,employeeId]);
+  return rows;
+};
+
+exports.getEmployeesByCircular = async (circular_id) => {
+  const [rows] = await db.query(
+    `SELECT DISTINCT employee_id FROM circular_visibility WHERE circular_id = ?`,
+    [circular_id]
+  );
   return rows;
 };

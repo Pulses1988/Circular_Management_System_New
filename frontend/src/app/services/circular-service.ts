@@ -23,7 +23,19 @@ export class CircularService {
   public newCircular$ = this.newCircularSubject.asObservable();
   public statusUpdate$ = this.statusUpdateSubject.asObservable();
 
-  constructor(private http: HttpClient, private router: Router) {}
+  private newChatMessageSubject = new Subject<any>();
+public newChatMessage$ = this.newChatMessageSubject.asObservable();
+
+private newNotificationSubject = new Subject<any>();
+public newNotification$ = this.newNotificationSubject.asObservable();
+
+ private notificationSound!: HTMLAudioElement;
+
+  constructor(private http: HttpClient, private router: Router) {
+     if (this.isBrowser()) {
+      this.initializeNotificationSound();
+    }
+  }
   token!: string | null;
 
   private initializeSocket() {
@@ -34,10 +46,13 @@ export class CircularService {
 
     console.log('Initializing WebSocket connection...');
     this.socket = io(this.apiUrl, {
-      transports: ['websocket'],
+      transports: ['polling','websocket'],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
+      timeout: 10000,
+    autoConnect: true,
+    withCredentials: true
     });
 
     this.socket.on('connect', () => {
@@ -58,6 +73,17 @@ export class CircularService {
       this.statusUpdateSubject.next(data);
     });
 
+     this.socket.on('new-chat-message', (data) => {
+    console.log('New chat message received:', data);
+    this.newChatMessageSubject.next(data);
+  });
+
+  this.socket.on('new-notification', (data) => {
+  console.log('New notification received:', data);
+  this.newNotificationSubject.next(data);
+  this.playNotificationSound();
+});
+
     this.socket.on('disconnect', () => {
       console.log('WebSocket disconnected');
     });
@@ -68,6 +94,31 @@ export class CircularService {
 
     this.socketInitialized = true;
   }
+
+  joinCircularChatRoom(circular_id: number) {
+  if (!this.socketInitialized) {
+    this.initializeSocket();
+  }
+
+  const joinRoom = () => {
+    if (this.socket && this.socket.connected) {
+      this.socket.emit('join-circular-chat', circular_id);
+      console.log(`✅ Joined circular chat room: ${circular_id}`);
+    } else {
+      console.log('⏳ Socket not ready, retrying...');
+      setTimeout(joinRoom, 500);
+    }
+  };
+
+  joinRoom();
+}
+
+leaveCircularChatRoom(circular_id: number) {
+  if (this.socket && this.socket.connected) {
+    this.socket.emit('leave-circular-chat', circular_id);
+    console.log(`❌ Left circular chat room: ${circular_id}`);
+  }
+}
 
   subscribeToCircularUpdates(approver_id: number) {
     if (!this.socketInitialized) {
@@ -93,6 +144,23 @@ export class CircularService {
       this.socketInitialized = false;
     }
   }
+
+  subscribeToNotifications(employee_id: number) {
+  if (!this.socketInitialized) {
+    this.initializeSocket();
+  }
+  
+  const trySubscribe = () => {
+    if (this.socket && this.socket.connected) {
+      this.socket.emit('subscribe-notifications', employee_id);
+      console.log(`Subscribed to notifications for employee: ${employee_id}`);
+    } else {
+      setTimeout(trySubscribe, 500);
+    }
+  };
+  
+  trySubscribe();
+}
 
   private getHeaders(): HttpHeaders {
     if (typeof window !== 'undefined') {
@@ -163,6 +231,38 @@ export class CircularService {
     } catch (error) {
       return '';
     }
+  }
+
+ private initializeNotificationSound() {
+    if (this.isBrowser()) {
+      this.notificationSound = new Audio();
+      this.notificationSound.src = 'sounds/notification-sound.mp3';
+      this.notificationSound.volume = 1;
+      this.notificationSound.load();
+    }
+  }
+
+  playNotificationSound() {
+    if (this.isBrowser() && this.notificationSound) {
+      this.notificationSound.currentTime = 0;
+      this.notificationSound.play().catch(err => console.log("Audio play error:", err));
+      this.notificationSound.play().catch(error => {
+        console.warn('Audio play failed:', error);
+      });
+    }
+  }
+
+  onNewMessage(): Observable<any> {
+    return new Observable(observer => {
+      this.socket?.on('new-chat-message', (data) => {
+        this.playNotificationSound();
+        observer.next(data);
+      });
+    });
+  }
+
+  disconnectSocket() {
+    this.socket?.disconnect();
   }
   // ---------------------------------Circular Approval--------------------------------------------------
   uploadCircular(formdata: FormData): Observable<any> {
@@ -314,11 +414,24 @@ export class CircularService {
     });
   }
 
-  markCircularAsSeenForEmp(data: { circularId: number; employeeId: number }) {
-    return this.http.post(`${this.apiUrl}/api/circular-tracking/mark-seen`, data, {
-      headers: this.getHeaders(),
-    });
-  }
+ markCircularAsSeenForEmp(data: { circularId: number; employeeId: number }) {
+  return this.http.post(`${this.apiUrl}/api/circular-tracking/mark-seen`, data, {
+    headers: this.getHeaders(),
+  });
+}
+
+markCircularAsCompleted(data: { circularId: number; employeeId: number }): Observable<any> {
+  return this.http.post(`${this.apiUrl}/api/circular-tracking/mark-completed`, data, {
+    headers: this.getHeaders(),
+  });
+}
+
+getCircularCompletionStatus(circularId: number, employeeId: number): Observable<any> {
+  return this.http.get(
+    `${this.apiUrl}/api/circular-tracking/completion-status/${circularId}/${employeeId}`,
+    { headers: this.getHeaders() }
+  );
+}
 
   fetchAllCircularsWithTrackingDetailsByEmpId(id: number) {
     return this.http.get(`${this.apiUrl}/api/circular/all/${id}`, { headers: this.getHeaders() });
@@ -332,9 +445,71 @@ export class CircularService {
 
   // --------------------------------------Chat API---------------------------------------
 
-  sendChatForCircular(data: { circular_id: number; employee_id: number; message: string }) {
-    return this.http.post(`${this.apiUrl}/api/circular-chats/`, data, {
-      headers: this.getHeaders(),
-    });
+  sendChatForCircular(data:{circular_id:number;employee_id:number;message:string}){
+    return this.http.post(`${this.apiUrl}/api/circular-chats/`,data, {headers:this.getHeaders()});
   }
+
+  sendSystemMessage(data: { circular_id: number; employee_id: number; action_type: string }): Observable<any> {
+  return this.http.post(`${this.apiUrl}/api/circular-chats/system-message`, data, {
+    headers: this.getHeaders()
+  });
+}
+
+
+  //-------------------------------------------Attachments---------------------------------------------------
+
+  uploadAttachment(circular_id: number, employee_id: number | undefined, file: File, chat_id?: number): Observable<any> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('circular_id', circular_id.toString());
+  formData.append('employee_id', employee_id!.toString());
+  if (chat_id) {
+    formData.append('chat_id', chat_id.toString());
+  }
+
+  return this.http.post(`${this.apiUrl}/api/circular-attachments/upload`, formData);
+}
+
+downloadAttachment(attachment_id: number): Observable<Blob> {
+  return this.http.get(`${this.apiUrl}/api/circular-attachments/${attachment_id}`, {
+    responseType: 'blob'
+  });
+}
+getAttachmentsByCircular(circular_id: number): Observable<any> {
+  return this.http.get(`${this.apiUrl}/api/circular-attachments/circular/${circular_id}`, {headers:this.getHeaders()});
+}
+
+onNewAttachment(): Observable<any> {
+  return new Observable(observer => {
+    this.socket?.on('new-attachment-uploaded', (data) => {
+      observer.next(data);
+    });
+  });
+}
+
+// ------------------------------------------------------Notification-------------------------------------
+
+getUnreadNotifications(employee_id: number): Observable<any> {
+  return this.http.get(`${this.apiUrl}/api/notifications/${employee_id}/unread`, {
+    headers: this.getHeaders()
+  });
+}
+
+getUnreadCount(employee_id: number): Observable<any> {
+  return this.http.get(`${this.apiUrl}/api/notifications/${employee_id}/count`, {
+    headers: this.getHeaders()
+  });
+}
+
+markNotificationAsRead(notification_id: number): Observable<any> {
+  return this.http.put(`${this.apiUrl}/api/notifications/${notification_id}/read`, {}, {
+    headers: this.getHeaders()
+  });
+}
+
+markAllNotificationsAsRead(employee_id: number): Observable<any> {
+  return this.http.put(`${this.apiUrl}/api/notifications/${employee_id}/read-all`, {}, {
+    headers: this.getHeaders()
+  });
+}
 }

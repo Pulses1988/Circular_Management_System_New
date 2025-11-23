@@ -9,6 +9,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
 import { CircularService } from '../../services/circular-service';
 import { EmployeeService } from '../../services/employee-service';
+import { Router } from '@angular/router';
 
 interface Circular {
   circular_id: number;
@@ -28,7 +29,7 @@ interface Circular {
   department_name: string;
   branch_id: number;
   branch_name: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  priority: string;
   hasAttachment: boolean;
   isRead: boolean;
   circular_code: string;
@@ -102,7 +103,7 @@ availableYears: number[] = [];
   isLoading: boolean = false;
   errorMessage: string = '';
 
-  constructor(private circularService: CircularService,private employeeService:EmployeeService) {}
+  constructor(private circularService: CircularService,private employeeService:EmployeeService, private router: Router) {}
 
   ngOnInit() {
    this.loadEmployeeData();
@@ -149,7 +150,7 @@ availableYears: number[] = [];
     return apiData
      .filter(item => item.circular_status === 'APPROVED') 
      .map((item, index) => {
-      const priority = this.calculatePriority(item.effective_from);
+      // const priority = this.calculatePriority(item.effective_from);
       const hasAttachment = this.checkForAttachment(item.content);
       
       return {
@@ -170,7 +171,7 @@ availableYears: number[] = [];
         department_name: item.department_name,
         branch_id: item.branch_id,
         branch_name: item.branch_name,
-        priority: priority,
+        priority: item.priority,
         hasAttachment: hasAttachment,
         isRead: item.is_seen,
         circular_code: item.circular_code,
@@ -359,9 +360,19 @@ availableYears: number[] = [];
   }
 
   viewCircular(circular: Circular) {
-    console.log('View circular:', circular);
-    // TODO: Navigate to circular detail page
-    // this.router.navigate(['/circulars', circular.circular_id]);
+     const data={
+      circularId:circular.circular_id,
+      employeeId:this.employeeData.id
+    }
+     
+    this.circularService.markCircularAsSeenForEmp(data).subscribe(
+      (res:any)=>{
+        console.log('Mark as seen!!!!!')
+      }
+    )
+    this.router.navigate(['employee/circular-details'], { 
+          queryParams: { circularId: circular.circular_id } 
+        });
   }
 
   markAsRead(circular: Circular) {
@@ -382,20 +393,20 @@ availableYears: number[] = [];
 
   getPriorityClass(priority: string): string {
     switch (priority) {
-      case 'urgent': return 'priority-urgent';
-      case 'high': return 'priority-high';
-      case 'medium': return 'priority-medium';
-      case 'low': return 'priority-low';
+      case 'URGENT': return 'priority-urgent';
+      case 'HIGH': return 'priority-high';
+      case 'MEDIUM': return 'priority-medium';
+      case 'LOW': return 'priority-low';
       default: return 'priority-low';
     }
   }
 
   getPriorityIcon(priority: string): string {
     switch (priority) {
-      case 'urgent': return 'error';
-      case 'high': return 'warning';
-      case 'medium': return 'info';
-      case 'low': return 'check_circle';
+      case 'URGENT': return 'error';
+      case 'HIGH': return 'warning';
+      case 'MEDIUM': return 'info';
+      case 'LOW': return 'check_circle';
       default: return 'info';
     }
   }

@@ -43,3 +43,22 @@ exports.markCompleted = async (req, res) => {
     res.status(500).json({ error: 'Failed to mark circular as completed' });
   }
 };
+
+exports.getCompletionStatus = async (req, res) => {
+  try {
+    const { circularId, employeeId } = req.params;
+    const [rows] = await circularTrackingModel.getCompletionStatus(circularId, employeeId);
+    
+    if (rows.length > 0) {
+      res.json({ 
+        is_completed: rows[0].is_completed,
+        completed_at: rows[0].completed_at
+      });
+    } else {
+      res.json({ is_completed: false, completed_at: null });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch completion status' });
+  }
+};
