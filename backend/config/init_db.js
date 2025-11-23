@@ -197,12 +197,49 @@ chat_id INT AUTO_INCREMENT PRIMARY KEY,
   circular_id INT NOT NULL,
   employee_id INT NOT NULL,
   message TEXT NOT NULL,
+  is_system_message BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
   FOREIGN KEY (circular_id) REFERENCES circulars(id) ON DELETE CASCADE,
   FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
 );
 `;
+
+const createCircularAttachments=`
+CREATE TABLE IF NOT EXISTS circular_attachments (
+  attachment_id INT AUTO_INCREMENT PRIMARY KEY,
+  circular_id INT NOT NULL,
+  employee_id INT NOT NULL,
+  chat_id INT NULL,
+  file_name VARCHAR(255) NOT NULL,
+  file_type VARCHAR(100) NOT NULL,
+  file_size INT NOT NULL,
+  file_data LONGBLOB NOT NULL,
+  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (circular_id) REFERENCES circulars(id) ON DELETE CASCADE,
+  FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+  FOREIGN KEY (chat_id) REFERENCES circular_chats(chat_id) ON DELETE CASCADE,
+  INDEX idx_circular (circular_id),
+  INDEX idx_employee (employee_id),
+  INDEX idx_chat (chat_id)
+);
+`;
+const createCircularNotifications=`
+CREATE TABLE IF NOT EXISTS circular_notifications (
+  notification_id INT AUTO_INCREMENT PRIMARY KEY,
+  circular_id INT NOT NULL,
+  recipient_employee_id INT NOT NULL,
+  sender_employee_id INT NOT NULL,
+  notification_type ENUM('message', 'attachment') NOT NULL,
+  message_preview VARCHAR(255),
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (circular_id) REFERENCES circulars(id) ON DELETE CASCADE,
+  FOREIGN KEY (recipient_employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+  FOREIGN KEY (sender_employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+  INDEX idx_recipient (recipient_employee_id, is_read),
+  INDEX idx_circular (circular_id)
+);`;
 
 async function initializeDatabase() {
   try {
@@ -246,6 +283,12 @@ async function initializeDatabase() {
 
     await db.query(createCircularChats);
     console.log("Circular Chats table is ready");
+
+    await db.query(createCircularAttachments);
+    console.log('Circular Attachment table is ready')
+
+     await db.query(createCircularNotifications);
+    console.log('Circular Notification table is ready')
     
   } catch (err) {
     console.error("Error initializing database:", err);

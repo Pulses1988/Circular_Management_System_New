@@ -44,9 +44,9 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-gray-500 text-sm font-medium">Total Circulars</p>
-            @if (circularCount) {
-            <p class="text-3xl font-bold text-gray-900">{{ circularCount }}</p>
-            }
+           
+            <p class="text-3xl font-bold text-gray-900">{{ circularStats.total }}</p>
+            
           </div>
           <div class="stats-card-icon bg-blue-100">
             <mat-icon class="text-blue-600">article</mat-icon>
@@ -72,7 +72,7 @@
           <div class="flex items-center text-green-600 text-sm">
             <mat-icon class="text-xs mt-2">trending_up</mat-icon>
             <span
-              >{{ ((circularStats.seen / circularStats.total) * 100).toFixed(1) }}% completion</span
+              >{{ ((circularStats.seen / circularStats.total) * 100).toFixed(1) }}% Reading Rate</span
             >
           </div>
         </div>
@@ -162,15 +162,15 @@
         <div
           *ngFor="let circular of recentCirculars; let i = index"
           class="px-6 py-4 cursor-pointer circular-row"
-          (click)="markAsRead(circular.id)"
+          (click)="viewUrgentCircular(circular.id)"
         >
           <div class="flex items-center space-x-4">
             <div class="flex-shrink-0">
               <div
                 class="priority-badge"
-                [ngClass]="getPriorityBadgeClass(circular.effective_from)"
+                [ngClass]="getPriorityBadgeClass(circular.priority)"
               >
-                <mat-icon>{{ getPriorityIcon(circular.effective_from) }}</mat-icon>
+                <mat-icon>{{ getPriorityIcon(circular.priority) }}</mat-icon>
               </div>
             </div>
 
@@ -191,7 +191,7 @@
               <div class="flex items-center justify-end mt-1">
                 <span
                   class="priority-text"
-                  [ngClass]="getPriorityTextClass(circular.effective_from)"
+                  [ngClass]="getPriorityTextClass(circular.priority)"
                 >
                   Effective From - {{ circular.effective_from | date : 'dd MMM yyyy' }}
                 </span>

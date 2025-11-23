@@ -27,11 +27,15 @@ interface Circular {
   status: string;
   created_at: string;
   published_at: string;
+  priority:string;
   effective_from: string;
   reference_circular_id: number;
   source_type_id: number;
   repeat_cycle_id: number;
   count: number | null;
+   is_seen: boolean;
+   is_completed:boolean;
+
 }
 
 interface Circulars {
@@ -66,7 +70,7 @@ interface RecentCircular {
   department: string;
   date: Date;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  isRead: boolean;
+  is_seen: boolean;
 }
 
 interface QuickAction {
@@ -109,7 +113,7 @@ export class EmployeeDashboard {
       icon: 'article',
       title: 'All Circulars',
       description: 'View all department circulars',
-      route: '/employee/circulars',
+      route: '/employee/all-circulars',
       color: 'bg-blue-500',
     },
     {
@@ -169,23 +173,19 @@ export class EmployeeDashboard {
         console.log('Circular response:', res);
 
         // ✅ Handle backend structure correctly
-        this.recentCirculars = res.data || [];
-        console.log(this.recentCirculars,'skjadhksa')
-        this.circularCount = res.count || 0;
+        const approvedCirculars = res.data.filter((circular: any) => 
+          circular.status === 'APPROVED'
+      );
+      console.log(approvedCirculars,'approvedddddd')
+      this.recentCirculars = approvedCirculars.sort((a: any, b: any) => {
+        const dateA = new Date(a.published_at).getTime();
+        const dateB = new Date(b.published_at).getTime();
+        return dateB - dateA; // Descending order (latest first)
+      })
+      .slice(0, 5);
+      this.circularStats.total = approvedCirculars.length;
         this.urgentCirculars = this.recentCirculars.filter((circular) => {
-          if (!circular.effective_from) return false;
-
-          const effectiveDate = new Date(circular.effective_from);
-          const now = new Date();
-
-          // Time difference in milliseconds
-          const diffMs = effectiveDate.getTime() - now.getTime();
-
-          // diffDays = number of days until effective date
-          const diffDays = diffMs / (1000 * 60 * 60 * 24);
-
-          // Include if already effective (diffDays <= 0) OR will be effective within 7 days
-          return diffDays <= 7;
+         return circular.priority === 'URGENT' && circular.is_completed != true;
         });
 
         // Update stats
@@ -197,6 +197,7 @@ export class EmployeeDashboard {
             this.unSeenCirculars = res.data || [];
             console.log(this.unSeenCirculars,'unseen')
             this.circularStats.unseen = this.unSeenCirculars.length;
+            //  this.circularStats.total = this.circularStats.seen + this.circularStats.unseen;
           });
       },
       (error) => {
@@ -235,6 +236,16 @@ export class EmployeeDashboard {
   }
 
   viewUrgentCircular(id:number){
+    const data={
+      circularId:id,
+      employeeId:this.employeeData.id
+    }
+     
+    this.circularService.markCircularAsSeenForEmp(data).subscribe(
+      (res:any)=>{
+        console.log('Mark as seen!!!!!')
+      }
+    )
     this.router.navigate(['employee/circular-details'], { 
           queryParams: { circularId: id } 
         });
@@ -245,7 +256,7 @@ export class EmployeeDashboard {
       circularId:circular.circular_id,
       employeeId:this.employeeData.id
     }
-   if(circular.is_seen !=null){
+   if(circular.is_seen){
      this.router.navigate(['employee/circular-details'], { 
           queryParams: { circularId: circular.circular_id } 
         });
@@ -253,7 +264,7 @@ export class EmployeeDashboard {
     this.circularService.markCircularAsSeenForEmp(data).subscribe(
       (res:any)=>{
         console.log('marked as seen!!!!!!! ', res);
-        this.router.navigate(['/circular-details'], { 
+        this.router.navigate(['employee/circular-details'], { 
           queryParams: { circularId: circular.circular_id } 
         });
       },
@@ -280,97 +291,47 @@ export class EmployeeDashboard {
     }
   }
 
-  getPriorityIcon(effectiveFrom: string): string {
-    if (!effectiveFrom) return 'info';
-
-    const effectiveDate = new Date(effectiveFrom);
-    const now = new Date();
-
-    const diffDays = (effectiveDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-
-    let priority = 'low'; // default
-
-    if (diffDays <= 0) {
-      priority = 'urgent'; // already effective or past
-    } else if (diffDays <= 1) {
-      priority = 'high'; // within next 1 day
-    } else if (diffDays <= 3) {
-      priority = 'medium'; // within next 3 days
-    } else if (diffDays <= 7) {
-      priority = 'low'; // within next 7 days
-    }
+  getPriorityIcon(priority: string): string {
 
     switch (priority) {
-      case 'urgent':
+      case 'URGENT':
         return 'error';
-      case 'high':
+      case 'HIGH':
         return 'warning';
-      case 'medium':
+      case 'MEDIUM':
         return 'info';
-      case 'low':
+      case 'LOW':
         return 'check_circle';
       default:
         return 'info';
     }
   }
 
-  getPriorityBadgeClass(effectiveFrom: string): string {
-    if (!effectiveFrom) return 'bg-gray-100 text-gray-600';
-
-    const effectiveDate = new Date(effectiveFrom);
-    const now = new Date();
-
-    const diffDays = (effectiveDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-
-    let priority = 'low'; // default
-
-    if (diffDays <= 0) {
-      priority = 'urgent';
-    } else if (diffDays <= 1) {
-      priority = 'high';
-    } else if (diffDays <= 3) {
-      priority = 'medium';
-    } else if (diffDays <= 7) {
-      priority = 'low';
-    }
+  getPriorityBadgeClass(priority: string): string {
 
     switch (priority) {
-      case 'urgent':
+      case 'URGENT':
         return 'bg-red-100 text-red-600';
-      case 'high':
+      case 'HIGH':
         return 'bg-orange-100 text-orange-600';
-      case 'medium':
+      case 'MEDIUM':
         return 'bg-yellow-100 text-yellow-600';
-      case 'low':
+      case 'LOW':
         return 'bg-green-100 text-green-600';
       default:
         return 'bg-gray-100 text-gray-600';
     }
   }
 
-  getPriorityTextClass(effectiveFrom: string): string {
-    if (!effectiveFrom) return 'bg-gray-50 text-gray-700';
-
-    const effectiveDate = new Date(effectiveFrom);
-    const now = new Date();
-    const diffInDays = Math.floor(
-      (effectiveDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-    );
-
-    let priority = 'low';
-    if (diffInDays <= 0) priority = 'urgent'; // past or today
-    else if (diffInDays <= 3) priority = 'high'; // within 3 days
-    else if (diffInDays <= 7) priority = 'medium'; // within a week
-    else priority = 'low'; // more than 7 days away
-
+  getPriorityTextClass(priority: string): string {
     switch (priority) {
-      case 'urgent':
+      case 'URGENT':
         return 'bg-red-50 text-red-700';
-      case 'high':
+      case 'HIGH':
         return 'bg-orange-50 text-orange-700';
-      case 'medium':
+      case 'MEDIUM':
         return 'bg-yellow-50 text-yellow-700';
-      case 'low':
+      case 'LOW':
         return 'bg-green-50 text-green-700';
       default:
         return 'bg-gray-50 text-gray-700';
@@ -387,6 +348,7 @@ export class EmployeeDashboard {
   }
 
   navigateToAction(route: string) {
+    this.router.navigate([route])
     // Navigate to specific route
     console.log('Navigating to:', route);
   }

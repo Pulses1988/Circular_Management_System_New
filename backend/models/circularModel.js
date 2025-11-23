@@ -217,6 +217,7 @@ exports.getAllCircularsByEmployeeIdWithTrackingDetails = async (employeeId) => {
       c.content,
       c.effective_from,
       c.published_at,
+      c.priority,
       c.status AS circular_status,
       c.circular_code,
 
@@ -260,6 +261,7 @@ exports.getCircularDetailsById = async (circularId) => {
       c.send_type,
       c.status,
       c.published_at,
+      c.priority,
       c.reference_circular_id,
       e.first_name AS creator_first_name,
       e.last_name AS creator_last_name,
@@ -330,6 +332,7 @@ exports.getCircularDetailsById = async (circularId) => {
       cc.chat_id,
       cc.employee_id,
       cc.message,
+      cc.is_system_message,
       cc.created_at,
       e.first_name,
       e.last_name
@@ -340,6 +343,23 @@ exports.getCircularDetailsById = async (circularId) => {
   `,
     [circularId]
   );
+
+  // 6️⃣ Fetch attachments for each chat
+  for (let chat of chatRows) {
+    const [attachments] = await db.query(`
+      SELECT 
+        attachment_id,
+        file_name,
+        file_type,
+        file_size,
+        uploaded_at,
+        chat_id
+      FROM circular_attachments
+      WHERE chat_id = ?
+    `, [chat.chat_id]);
+    
+    chat.attachments = attachments;
+  }
 
   circular.chats = chatRows;
 

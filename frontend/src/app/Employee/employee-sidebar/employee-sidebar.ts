@@ -6,6 +6,7 @@ import { RouterModule } from '@angular/router';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { EmployeeService } from '../../services/employee-service';
+import { CircularService } from '../../services/circular-service';
 
 
 interface EmployeeData {
@@ -69,7 +70,7 @@ export class EmployeeSidebar implements OnInit, OnDestroy {
   employeeData!: EmployeeData;
   isDarkMode: boolean | undefined;
 
-  constructor(private router: Router, private dialog: MatDialog, private employeeService: EmployeeService  ) {
+  constructor(private router: Router, private dialog: MatDialog, private employeeService: EmployeeService, private circular:CircularService  ) {
 
   }
 
@@ -126,13 +127,13 @@ export class EmployeeSidebar implements OnInit, OnDestroy {
           route: '/employee/circulars/archived',
         },
          {
-          label: 'Circular-create',
-          icon: 'add',
-          route: '/employee/create-circular',
+          label: 'Manage Circulars',
+          icon: 'assignment',
+          route: '/employee/circular-creater',
         },
         {
-         label: 'Circular-approve',
-         icon: 'thumb_up',
+         label: 'Circular-Approve',
+         icon: 'fact_check',
          route: '/employee/circular-approval',
         },
       ],
@@ -224,6 +225,7 @@ export class EmployeeSidebar implements OnInit, OnDestroy {
     this.loadCircularStats();
   }
   detectSystemDarkMode(): void {
+    if (!this.circular.isBrowser()) return 
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   this.isDarkMode = prefersDark;
 

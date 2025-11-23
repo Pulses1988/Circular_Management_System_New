@@ -7,12 +7,18 @@ const http = require("http");
 
 const app = express();
 const server = http.createServer(app);
+const subscribedCircularRooms = new Set();
 
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:4200',
-    methods: ["GET", "POST"]
-  }
+    origin: ["http://localhost:4200", "http://192.168.1.11:4200"],
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+  transports: ['websocket', 'polling'], // Allow both transports
+  allowEIO3: true, // Allow older clients
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
 app.set('io', io);
@@ -31,13 +37,20 @@ const repeatCycleRoutes = require("./routes/repeatCycleRoutes");
 const circularVisibilityRoutes = require("./routes/circularVisibilityRoutes");
 const circularTrackingRouter = require('./routes/circularTrackingRouter');
 const circularChatRoutes = require("./routes/circularChatRoutes");
+const circularAttachmentRoutes = require("./routes/circularAttachmentRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 // Allow cross-origin requests from your Angular app
 app.use(
   cors({
-    origin: 'http://localhost:4200',
+    origin: ["http://localhost:4200", "http://192.168.1.11:4200"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
+
+
 
 // Parse JSON body requests
 // app.use(express.json());
@@ -66,6 +79,27 @@ io.on('connection', (socket) => {
     // Send confirmation back to client
     socket.emit('subscription-confirmed', { approver_id, roomName });
   });
+   socket.on('join-circular-chat', (circular_id) => {
+    const roomName = `circular-chat-${circular_id}`;
+    socket.join(roomName);
+    subscribedCircularRooms.add(circular_id);
+    console.log(`✅ Socket ${socket.id} joined circular chat room: ${roomName}`);
+    console.log(`Total clients in room ${roomName}:`, io.sockets.adapter.rooms.get(roomName)?.size || 0);
+  });
+
+  // NEW: Leave circular chat room
+  socket.on('leave-circular-chat', (circular_id) => {
+    const roomName = `circular-chat-${circular_id}`;
+    socket.leave(roomName);
+    subscribedCircularRooms.delete(circular_id);
+    console.log(`❌ Socket ${socket.id} left circular chat room: ${roomName}`);
+  });
+
+   socket.on('subscribe-notifications', (employee_id) => {
+    const roomName = `notifications-${employee_id}`;
+    socket.join(roomName);
+    console.log(`Employee ${employee_id} subscribed to notifications`);
+  });
 
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
@@ -88,13 +122,15 @@ app.use("/api/repeat-cycle", express.json(), repeatCycleRoutes);
 app.use("/api/circular-visibility",express.json(),circularVisibilityRoutes);
 app.use('/api/circular-tracking', express.json(),circularTrackingRouter);
 app.use("/api/circular-chats", express.json(),circularChatRoutes);
+app.use("/api/circular-attachments", circularAttachmentRoutes);
+app.use("/api/notifications", express.json(), notificationRoutes);
 
 const PORT = 3000;
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Server is running on port ${PORT}`);
   console.log(`Local: http://localhost:${PORT}`);
-  console.log(`Network: http://192.168.1.7:${PORT}`);
+  console.log(`Network: http://192.168.1.11:${PORT}`);
 });
 
 module.exports = { io };

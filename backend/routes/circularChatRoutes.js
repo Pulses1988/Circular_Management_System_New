@@ -11,4 +11,6 @@ router.get("/:circular_id", circularChatController.getChatsByCircular);
 // DELETE — Delete chat (optional)
 router.delete("/:chat_id", circularChatController.deleteChat);
 
+router.post("/system-message", circularChatController.createSystemMessage);
+
 module.exports = router;
