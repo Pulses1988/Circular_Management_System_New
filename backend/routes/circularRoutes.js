@@ -42,6 +42,8 @@ router.get("/circular/:circular_id", circularController.getCircularDetailsById);
 // Update
 router.put("/:id", upload.single("pdfFile"), circularController.updateCircular);
 
+router.get('/activity-summary/:circular_id', circularController.getCircularActivitySummary);
+
 // Delete
 router.delete("/:id", circularController.deleteCircular);
 

@@ -1,0 +1,192 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 dark:from-slate-900 dark:via-gray-900 dark:to-slate-800 p-6 transition-colors duration-300">
+  <div class="max-w-7xl mx-auto">
+    
+    <!-- Page Header with Dynamic Title -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <div class="flex items-center gap-4 mb-4">
+            <button 
+              (click)="router.navigate(['/employee/employee-dashboard'])"
+              class="w-10 h-10 bg-white dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-xl shadow-md flex items-center justify-center transition-all">
+              <i class="material-icons text-gray-600 dark:text-slate-300">arrow_back</i>
+            </button>
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white flex items-center gap-3">
+              <div class="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                <i class="material-icons text-white">{{ getFilterIcon() }}</i>
+              </div>
+              {{ getFilterTitle() }}
+            </h1>
+          </div>
+          <p class="text-gray-600 dark:text-slate-400">{{ getFilterDescription() }}</p>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="flex items-center justify-center py-20">
+      <div class="text-center">
+        <i class="material-icons text-6xl text-blue-600 dark:text-blue-400 animate-spin">autorenew</i>
+        <p class="text-gray-600 dark:text-slate-400 mt-4">Loading circulars...</p>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && filteredCirculars.length === 0" class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-12 text-center transition-colors duration-300">
+      <i class="material-icons text-7xl text-gray-400 dark:text-slate-500 mb-4">inbox</i>
+      <h3 class="text-2xl font-bold text-gray-700 dark:text-slate-300 mb-2">No Circulars Found</h3>
+      <p class="text-gray-500 dark:text-slate-400 mb-6">
+        <span *ngIf="filterType === 'urgent'">No urgent circulars at the moment</span>
+        <span *ngIf="filterType === 'unread'">You're all caught up! No unread circulars</span>
+        <span *ngIf="filterType === 'all'">No circulars assigned to you yet</span>
+      </p>
+      <button 
+        (click)="router.navigate(['/employee/employee-dashboard'])"
+        class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all inline-flex items-center gap-2">
+        <i class="material-icons">arrow_back</i>
+        Back to Dashboard
+      </button>
+    </div>
+
+    <!-- Circulars Grid -->
+    <div *ngIf="!loading && filteredCirculars.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div 
+        *ngFor="let circular of getPaginatedCirculars()" 
+        (click)="viewCircular(circular)"
+        class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden group transform hover:-translate-y-1">
+        
+        <!-- Card Header -->
+        <div 
+          class="p-5 border-b dark:border-slate-700"
+          [class.bg-gradient-to-r]="true"
+          [class.from-red-50]="circular.priority === 'URGENT'"
+          [class.to-orange-50]="circular.priority === 'URGENT'"
+          [class.dark:from-red-900/20]="circular.priority === 'URGENT'"
+          [class.dark:to-orange-900/20]="circular.priority === 'URGENT'"
+          [class.from-blue-50]="circular.priority !== 'URGENT'"
+          [class.to-indigo-50]="circular.priority !== 'URGENT'"
+          [class.dark:from-blue-900/20]="circular.priority !== 'URGENT'"
+          [class.dark:to-indigo-900/20]="circular.priority !== 'URGENT'">
+          
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex flex-wrap gap-2">
+              <!-- Priority Badge -->
+              <span 
+                class="px-3 py-1 text-xs font-bold rounded-full border-2 {{ getPriorityColor(circular.priority) }}">
+                {{ circular.priority || 'NORMAL' }}
+              </span>
+              
+              <!-- Unread Badge -->
+              <span 
+                *ngIf="!circular.is_seen"
+                class="px-3 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs font-bold rounded-full flex items-center gap-1 animate-pulse">
+                <i class="material-icons" style="font-size: 12px">fiber_new</i>
+                NEW
+              </span>
+            </div>
+            <i class="material-icons text-gray-400 dark:text-slate-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">arrow_forward</i>
+          </div>
+
+          <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-2 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            {{ circular.title }}
+          </h3>
+          <p class="text-xs text-gray-600 dark:text-slate-400">{{ circular.circular_code }}</p>
+        </div>
+
+        <!-- Card Body -->
+        <div class="p-5">
+          <!-- Circular Info -->
+          <div class="space-y-3 mb-4">
+            <!-- <div class="flex items-center gap-2">
+              <i class="material-icons text-sm text-blue-600 dark:text-blue-400">person</i>
+              <span class="text-sm text-gray-700 dark:text-slate-300">
+                {{ circular.creator_first_name }} {{ circular.creator_last_name }}
+              </span>
+            </div> -->
+            
+            <div class="flex items-center gap-2">
+              <i class="material-icons text-sm text-green-600 dark:text-green-400">calendar_today</i>
+              <span class="text-sm text-gray-700 dark:text-slate-300">
+                {{ formatDate(circular.effective_from) }}
+              </span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <i class="material-icons text-sm text-purple-600 dark:text-purple-400">schedule</i>
+              <span class="text-sm text-gray-700 dark:text-slate-300">
+                {{ getTimeAgo(circular.created_at) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Department/Branch -->
+          <!-- <div class="flex flex-wrap gap-2">
+            <span 
+              *ngIf="circular.department_name"
+              class="px-2 py-1 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 text-xs rounded-full">
+              {{ circular.department_name }}
+            </span>
+            <span 
+              *ngIf="circular.branch_name"
+              class="px-2 py-1 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 text-xs rounded-full">
+              {{ circular.branch_name }}
+            </span>
+          </div>
+        </div> -->
+
+        <!-- Card Footer -->
+        <div class="px-5 pb-5">
+          <button 
+            class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2 group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-indigo-600">
+            <i class="material-icons text-sm">visibility</i>
+            View Details
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div 
+      *ngIf="!loading && totalPages > 1"
+      class="bg-white dark:bg-slate-800 rounded-xl shadow-md border border-gray-200 dark:border-slate-700 p-4 flex items-center justify-between transition-colors duration-300">
+      <div class="text-sm text-gray-600 dark:text-slate-400">
+        Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to
+        {{ Math.min(currentPage * itemsPerPage, filteredCirculars.length) }}
+        of {{ filteredCirculars.length }} circulars
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          (click)="previousPage()"
+          [disabled]="currentPage === 1"
+          class="px-3 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+          <i class="material-icons text-sm">chevron_left</i>
+        </button>
+
+        <div class="flex gap-1">
+          <button 
+            *ngFor="let page of [].constructor(totalPages); let i = index"
+            (click)="goToPage(i + 1)"
+            [class.bg-blue-600]="currentPage === i + 1"
+            [class.text-white]="currentPage === i + 1"
+            [class.bg-gray-100]="currentPage !== i + 1"
+            [class.dark:bg-slate-700]="currentPage !== i + 1"
+            [class.text-gray-700]="currentPage !== i + 1"
+            [class.dark:text-slate-300]="currentPage !== i + 1"
+            class="px-4 py-2 rounded-lg hover:bg-blue-500 hover:text-white transition-all font-medium">
+            {{ i + 1 }}
+          </button>
+        </div>
+
+        <button
+          (click)="nextPage()"
+          [disabled]="currentPage === totalPages"
+          class="px-3 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+          <i class="material-icons text-sm">chevron_right</i>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

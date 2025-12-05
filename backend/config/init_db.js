@@ -1,3 +1,4 @@
+const { createRecurrenceLog } = require("../models/circularRecurrenceModel");
 const db = require("./db");
 
 const createAdminTableQuery = `
@@ -158,8 +159,12 @@ CREATE TABLE IF NOT EXISTS circulars (
   source_type_id INT,
   effective_from TIMESTAMP,
   send_type ENUM('INTERNAL','CONFIDENTIAL','RESTRICTED','PUBLIC','CUSTOM'),
-  status ENUM('DRAFT','PENDING_APPROVAL','REJECTED','APPROVED','PUBLISHED'),
+  status ENUM('DRAFT','PENDING_APPROVAL','REJECTED','APPROVED','PUBLISHED','COMPLETED'),
   repeat_cycle_id INT,
+  is_recurring BOOLEAN DEFAULT FALSE,
+  last_recurrence_date DATE NULL,
+  next_recurrence_date DATE NULL,
+  current_cycle_number INT DEFAULT 1,
   priority ENUM('LOW','MEDIUM','HIGH','URGENT') DEFAULT 'MEDIUM',
   special_keyword VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -241,6 +246,41 @@ CREATE TABLE IF NOT EXISTS circular_notifications (
   INDEX idx_circular (circular_id)
 );`;
 
+const createCircularComplition = `
+CREATE TABLE IF NOT EXISTS circular_completions (
+  completion_id INT AUTO_INCREMENT PRIMARY KEY,
+  circular_id INT NOT NULL,
+  cycle_start_date DATE NULL,
+  cycle_end_date DATE NULL,
+  cycle_number INT NOT NULL DEFAULT 1,
+  completed_by_employee_id INT NOT NULL,
+  reference_number VARCHAR(100) NOT NULL,
+  submission_mode ENUM('BY_HAND', 'BY_COURIER', 'BY_RPD') NOT NULL,
+  completion_notes TEXT,
+  completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (circular_id) REFERENCES circulars(id) ON DELETE CASCADE,
+  FOREIGN KEY (completed_by_employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+  INDEX idx_circular (circular_id),
+  INDEX idx_employee (completed_by_employee_id)
+);`;
+
+const circularRecurrenceLog = `
+CREATE TABLE IF NOT EXISTS circular_recurrence_log (
+  recurrence_id INT AUTO_INCREMENT PRIMARY KEY,
+  circular_id INT NOT NULL,
+  cycle_number INT NOT NULL,
+  cycle_start_date DATE NOT NULL,
+  cycle_end_date DATE NOT NULL,
+  status ENUM('ACTIVE', 'COMPLETED', 'EXPIRED') DEFAULT 'ACTIVE',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  completed_at TIMESTAMP NULL,
+  FOREIGN KEY (circular_id) REFERENCES circulars(id) ON DELETE CASCADE,
+  UNIQUE KEY unique_cycle (circular_id, cycle_number),
+  INDEX idx_status (status),
+  INDEX idx_dates (cycle_start_date, cycle_end_date)
+);
+`;
+
 async function initializeDatabase() {
   try {
     await db.query(createHeadOfficeTableQuery);
@@ -289,6 +329,12 @@ async function initializeDatabase() {
 
      await db.query(createCircularNotifications);
     console.log('Circular Notification table is ready')
+
+    await db.query(createCircularComplition);
+    console.log('Circular Complition table is ready')
+
+    await db.query(circularRecurrenceLog);
+    console.log('Reccurnce table is ready')
     
   } catch (err) {
     console.error("Error initializing database:", err);

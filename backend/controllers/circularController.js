@@ -3,6 +3,7 @@ const circularApprovalModal = require("../models/circularApprovalsModel");
 const circularVisibilityModal = require("../models/circularVisibilityModel");
 const employeeModal = require("../models/employeesModal");
 const circularTrackingModel = require("../models/circularTrackingModel");
+const notificationModel = require("../models/notificationModel");
 
 // helper function---------------
 async function createCircularTrackingEntries(circularId, employeeIds) {
@@ -52,7 +53,8 @@ exports.createCircular = async (req, res) => {
       const io = req.app.get("io");
       const [circularRows] = await circularModal.getCircularById(circularId);
       const circularDetails = circularRows[0];
-
+const [creatorRows] = await employeeModal.getEmployeeById(req.body.creator_employee_id);
+      const creator = creatorRows[0];
       for (const approverId of approvers) {
         await circularApprovalModal.createCircularApproval({
           circular_id: circularId,
@@ -66,6 +68,23 @@ exports.createCircular = async (req, res) => {
             circular: circularDetails,
             message: "New circular has been assigned to you",
             circular_id: circularId,
+          });
+           const notificationId = await notificationModel.createNotification({
+            circular_id: circularId,
+            recipient_employee_id: approverId,
+            sender_employee_id: req.body.creator_employee_id,
+            notification_type: 'message',
+            message_preview: `New circular "${circularDetails.title}" requires your approval`
+          });
+           io.to(`notifications-${approverId}`).emit('new-notification', {
+            notification_id: notificationId,
+            circular_id: circularId,
+            sender_first_name: creator.first_name,
+            sender_last_name: creator.last_name,
+            notification_type: 'message',
+            message_preview: `New circular "${circularDetails.title}" requires your approval`,
+            circular_title: circularDetails.title,
+            circular_code: circularDetails.circular_code
           });
         }
       }
@@ -540,5 +559,21 @@ exports.getCircularDetailsById = async (req, res) => {
   } catch (error) {
     console.error("Error fetching circular details:", error);
     res.status(500).json({ error: "Failed to fetch circular details" });
+  }
+};
+exports.getCircularActivitySummary = async (req, res) => {
+  try {
+    const { circular_id } = req.params;
+    
+    const summary = await circularModal.getCircularActivitySummary(circular_id);
+    
+    if (!summary) {
+      return res.status(404).json({ error: 'Circular not found' });
+    }
+    
+    res.status(200).json(summary);
+  } catch (error) {
+    console.error('Error fetching activity summary:', error);
+    res.status(500).json({ error: 'Failed to fetch activity summary' });
   }
 };
