@@ -1,4 +1,7 @@
 const circularApprovalModel = require("../models/circularApprovalsModel");
+const notificationModel = require("../models/notificationModel");
+const circularModel = require("../models/circularModel");
+const employeeModel = require("../models/employeesModal");
 
 const emitCircularUpdate = (req, approver_id, eventType, data) => {
   const io = req.app.get('io');
@@ -134,12 +137,43 @@ exports.markAsSeen= async(req, res)=> {
           message: 'Approval record not found' 
         });
       }
+
+       const [circularRows] = await circularModel.getCircularById(circularId);
+    const circular = circularRows[0];
+    
+    const [approverRows] = await employeeModel.getEmployeeById(approverId);
+    const approver = approverRows[0];
+
+    const io = req.app.get('io');
  // Emit socket event to approver
       emitCircularUpdate(req, approverId, 'circular-status-updated', {
       circular_id: circularId,
       status: 'APPROVED',
       message: 'Circular has been approved'
     });
+     if (io && circular.creator_employee_id) {
+      const notificationId = await notificationModel.createNotification({
+        circular_id: circularId,
+        recipient_employee_id: circular.creator_employee_id,
+        sender_employee_id: approverId,
+        notification_type: 'message',
+        message_preview: `Your circular "${circular.title}" has been approved`,
+        redirect_to: 'details'
+      });
+
+      // ✅ Emit notification to creator
+      io.to(`notifications-${circular.creator_employee_id}`).emit('new-notification', {
+        notification_id: notificationId,
+        circular_id: circularId,
+        sender_first_name: approver.first_name,
+        sender_last_name: approver.last_name,
+        notification_type: 'message',
+        message_preview: `Your circular "${circular.title}" has been approved`,
+        circular_title: circular.title,
+        circular_code: circular.circular_code,
+        redirect_to: 'details'
+      });
+    }
 
       res.json({ 
         success: true, 
@@ -175,11 +209,43 @@ exports.markAsSeen= async(req, res)=> {
           message: 'Approval record not found' 
         });
       }
+       const [circularRows] = await circularModel.getCircularById(circularId);
+    const circular = circularRows[0];
+    
+    const [approverRows] = await employeeModel.getEmployeeById(approverId);
+    const approver = approverRows[0];
+
+    const io = req.app.get('io');
+
       emitCircularUpdate(req, approverId, 'circular-status-updated', {
       circular_id: circularId,
       status: 'REJECTED',
       message: 'Circular has been rejected'
     });
+
+    if (io && circular.creator_employee_id) {
+      const notificationId = await notificationModel.createNotification({
+        circular_id: circularId,
+        recipient_employee_id: circular.creator_employee_id,
+        sender_employee_id: approverId,
+        notification_type: 'message',
+        message_preview: `Your circular "${circular.title}" has been rejected`,
+        redirect_to: 'details'
+      });
+
+      // ✅ Emit notification to creator
+      io.to(`notifications-${circular.creator_employee_id}`).emit('new-notification', {
+        notification_id: notificationId,
+        circular_id: circularId,
+        sender_first_name: approver.first_name,
+        sender_last_name: approver.last_name,
+        notification_type: 'message',
+        message_preview: `Your circular "${circular.title}" has been rejected. Reason: ${comments}`,
+        circular_title: circular.title,
+        circular_code: circular.circular_code,
+        redirect_to: 'details'
+      });
+    }
 
       res.json({ 
         success: true, 

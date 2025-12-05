@@ -174,7 +174,7 @@ export class EmployeeDashboard {
 
         // ✅ Handle backend structure correctly
         const approvedCirculars = res.data.filter((circular: any) => 
-          circular.status === 'APPROVED'
+          circular.status === 'APPROVED' || 'COMPLETED'
       );
       console.log(approvedCirculars,'approvedddddd')
       this.recentCirculars = approvedCirculars.sort((a: any, b: any) => {

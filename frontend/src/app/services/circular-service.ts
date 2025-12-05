@@ -443,6 +443,12 @@ getCircularCompletionStatus(circularId: number, employeeId: number): Observable<
     });
   }
 
+  getCircularActivitySummary(circular_id: number): Observable<any> {
+  return this.http.get(`${this.apiUrl}/api/circular/activity-summary/${circular_id}`, {
+    headers: this.getHeaders()
+  });
+}
+
   // --------------------------------------Chat API---------------------------------------
 
   sendChatForCircular(data:{circular_id:number;employee_id:number;message:string}){
@@ -509,6 +515,45 @@ markNotificationAsRead(notification_id: number): Observable<any> {
 
 markAllNotificationsAsRead(employee_id: number): Observable<any> {
   return this.http.put(`${this.apiUrl}/api/notifications/${employee_id}/read-all`, {}, {
+    headers: this.getHeaders()
+  });
+}
+
+// --------------------------------------------------Circular Complition----------------------------------------------------
+
+completeCircularWithDetails(data: {
+  circular_id: number;
+  completed_by_employee_id: number;
+  reference_number: string;
+  submission_mode: string;
+  completion_notes?: string;
+}): Observable<any> {
+  return this.http.post(`${this.apiUrl}/api/circular-completion/complete`, data, {
+    headers: this.getHeaders()
+  });
+}
+
+getCircularCompletionDetails(circular_id: number): Observable<any> {
+  return this.http.get(`${this.apiUrl}/api/circular-completion/${circular_id}`, {
+    headers: this.getHeaders()
+  });
+}
+
+// ---------------------------------------------------------Circular Recurrence---------------------------------------
+completeCycleAndRenew(data: {
+  circular_id: number;
+  completed_by_employee_id: number;
+  reference_number: string;
+  submission_mode: string;
+  completion_notes?: string;
+}): Observable<any> {
+  return this.http.post(`${this.apiUrl}/api/circular-recurrence/complete-and-renew`, data, {
+    headers: this.getHeaders()
+  });
+}
+
+getRecurrenceHistory(circular_id: number): Observable<any> {
+  return this.http.get(`${this.apiUrl}/api/circular-recurrence/history/${circular_id}`, {
     headers: this.getHeaders()
   });
 }

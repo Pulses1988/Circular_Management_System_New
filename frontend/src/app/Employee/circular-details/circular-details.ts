@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CircularService } from '../../services/circular-service';
 import { EmployeeService } from '../../services/employee-service';
 import { SafePipePipe } from '../../safe-pipe-pipe';
@@ -126,11 +126,27 @@ export class CircularDetails implements OnInit, OnDestroy {
   previewType: 'image' | 'pdf' | 'other' = 'other';
   currentAttachment: CircularAttachment | null = null;
 
+  // complition
+  showCompletionModal: boolean = false;
+isApprover: boolean = false;
+completionForm = {
+  reference_number: '',
+  submission_mode: 'BY_HAND',
+  completion_notes: ''
+};
+
+submissionModes = [
+  { value: 'BY_HAND', label: 'By Hand' },
+  { value: 'BY_COURIER', label: 'By Courier' },
+  { value: 'BY_RPD', label: 'By RPD' }
+];
+
   constructor(
     private route: ActivatedRoute,
     private circularService: CircularService,
     private employeeService: EmployeeService,
-    private toast: Toast
+    private toast: Toast,
+     private router: Router
   ) {}
 
   async ngOnInit() {
@@ -188,7 +204,9 @@ export class CircularDetails implements OnInit, OnDestroy {
   }
   checkCompletionStatus() {
     if (!this.circular || !this.employeeData) return;
-
+this.isApprover = this.circular.approvers?.some(
+    approver => approver.approver_id === this.employeeData?.id
+  ) || false;
     this.circularService
       .getCircularCompletionStatus(this.circular.id, this.employeeData.id)
       .subscribe({
@@ -352,7 +370,10 @@ export class CircularDetails implements OnInit, OnDestroy {
 
   markAsComplete() {
     if (!this.circular || !this.employeeData || this.isCompleted) return;
-
+if (this.isApprover) {
+    // Show completion modal for approver (final completion)
+    this.showCompletionModal = true;
+  } else {
     this.toast
       .confirm({
         message: 'Are you sure you want to mark as complete to  this circular?',
@@ -397,6 +418,7 @@ export class CircularDetails implements OnInit, OnDestroy {
             });
         }
       });
+    }
   }
 
   downloadFile(attachment: any) {
@@ -582,6 +604,87 @@ export class CircularDetails implements OnInit, OnDestroy {
       this.downloadFile(this.currentAttachment);
     }
   }
+
+  viewActivitySummary() {
+  this.router.navigate(['/employee/activity-summary'], {
+    queryParams: { circularId: this.circular?.id }
+  });
+}
+
+submitCompletion() {
+  if (!this.completionForm.reference_number.trim() || !this.completionForm.submission_mode) {
+    alert('Please fill all required fields');
+    return;
+  }
+
+  this.isMarkingComplete = true;
+
+  const completionData = {
+    circular_id: this.circular!.id,
+    completed_by_employee_id: this.employeeData!.id,
+    reference_number: this.completionForm.reference_number,
+    submission_mode: this.completionForm.submission_mode,
+    completion_notes: this.completionForm.completion_notes
+  };
+
+  this.circularService.completeCircularWithDetails(completionData).subscribe({
+    next: (response) => {
+      console.log('Circular completed:', response);
+
+      this.circularService
+            .markCircularAsCompleted({
+              circularId: this.circular!.id,
+              employeeId: this.employeeData!.id,
+            })
+            .subscribe({
+              next: (res)=>{
+                console.log('circular mark as complete')
+              }
+            })
+      
+      // Send system message
+      this.circularService.sendSystemMessage({
+        circular_id: this.circular!.id,
+        employee_id: this.employeeData!.id,
+        action_type: 'completed'
+      }).subscribe({
+        next: (msgResponse) => console.log('System message sent:', msgResponse),
+        error: (err) => console.error('Error sending system message:', err)
+      });
+
+      this.toast.show('Circular marked as completed successfully!','success');
+      this.isMarkingComplete = false;
+      this.isCompleted = true;
+      this.completedAt = new Date().toISOString();
+      this.showCompletionModal = false;
+      
+      // Reset form
+      this.completionForm = {
+        reference_number: '',
+        submission_mode: 'BY_HAND',
+        completion_notes: ''
+      };
+      
+      // Reload circular data to get updated status
+      this.loadCircularData(this.circularId);
+    },
+    error: (error) => {
+      console.error('Error completing circular:', error);
+      alert('Failed to complete circular');
+      this.isMarkingComplete = false;
+    }
+  });
+}
+
+// Add closeCompletionModal method
+closeCompletionModal() {
+  this.showCompletionModal = false;
+  this.completionForm = {
+    reference_number: '',
+    submission_mode: 'BY_HAND',
+    completion_notes: ''
+  };
+}
 
   ngOnDestroy() {
     // Leave circular chat room when component is destroyed

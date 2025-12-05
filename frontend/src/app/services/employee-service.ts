@@ -118,13 +118,22 @@ export class EmployeeService {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
     localStorage.removeItem(this.EXPIRY_KEY);
+    localStorage.clear()
 
     if (typeof sessionStorage !== 'undefined') {
+       sessionStorage.removeItem('emp_redirectUrl');
+    sessionStorage.removeItem('emp_previousUrl');
       sessionStorage.clear();
     }
 
     this.currentEmployeeSubject.next(null);
-    this.router.navigate(['/employee-login']);
+   this.router.navigate(['/employee-login'], { replaceUrl: true }).then(() => {
+    // Prevent back button navigation
+    window.history.pushState(null, '', window.location.href);
+    window.onpopstate = () => {
+      window.history.pushState(null, '', window.location.href);
+    };
+  });
   }
 
   private loadUserFromStorage(): void {

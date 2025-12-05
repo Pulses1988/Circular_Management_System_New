@@ -365,3 +365,105 @@ exports.getCircularDetailsById = async (circularId) => {
 
   return circular;
 };
+
+exports.getCircularActivitySummary = async (circular_id) => {
+  // Get circular details
+  const [circularRows] = await db.query(`
+    SELECT 
+      c.id AS circular_id,
+      c.title AS circular_title,
+      c.circular_code,
+      c.status AS circular_status,
+      c.priority,
+      c.created_at,
+      c.published_at,
+      c.effective_from,
+      CONCAT(e.first_name, ' ', e.last_name) AS creator_name,
+      e.email AS creator_email,
+      d.name AS department_name,
+      b.name AS branch_name
+    FROM circulars c
+    LEFT JOIN employees e ON c.creator_employee_id = e.id
+    LEFT JOIN departments d ON e.department_id = d.id
+    LEFT JOIN branches b ON e.branch_id = b.id
+    WHERE c.id = ?
+  `, [circular_id]);
+
+  if (circularRows.length === 0) return null;
+  
+  const circular = circularRows[0];
+
+  // Get tracking statistics
+  const [statsRows] = await db.query(`
+    SELECT 
+      COUNT(*) AS total_employees,
+      SUM(CASE WHEN is_seen = TRUE THEN 1 ELSE 0 END) AS seen_count,
+      SUM(CASE WHEN is_completed = TRUE THEN 1 ELSE 0 END) AS completed_count,
+      SUM(CASE WHEN is_completed = FALSE THEN 1 ELSE 0 END) AS pending_count
+    FROM circular_tracking
+    WHERE circular_id = ?
+  `, [circular_id]);
+
+  circular.total_employees = statsRows[0].total_employees;
+  circular.seen_count = statsRows[0].seen_count;
+  circular.completed_count = statsRows[0].completed_count;
+  circular.pending_count = statsRows[0].pending_count;
+
+  // Get approvers
+  const [approverRows] = await db.query(`
+    SELECT 
+      ca.approver_id,
+      e.first_name,
+      e.last_name,
+      ca.status,
+      ca.comments,
+      ca.updated_at
+    FROM circular_approvals ca
+    JOIN employees e ON ca.approver_id = e.id
+    WHERE ca.circular_id = ?
+  `, [circular_id]);
+
+  circular.approvers = approverRows;
+
+   const [completionRows] = await db.query(`
+    SELECT 
+      cc.completion_id,
+      cc.reference_number,
+      cc.submission_mode,
+      cc.completion_notes,
+      cc.completed_at,
+      CONCAT(e.first_name, ' ', e.last_name) AS completed_by_name,
+      e.email AS completed_by_email
+    FROM circular_completions cc
+    JOIN employees e ON cc.completed_by_employee_id = e.id
+    WHERE cc.circular_id = ?
+    ORDER BY cc.completed_at DESC
+    LIMIT 1
+  `, [circular_id]);
+
+  circular.completion_details = completionRows[0] || null;
+
+  // Get employee activities
+  const [activityRows] = await db.query(`
+    SELECT 
+      ct.employee_id,
+      CONCAT(e.first_name, ' ', e.last_name) AS employee_name,
+      e.email,
+      d.name AS department,
+      b.name AS branch,
+      ct.is_seen,
+      ct.seen_at,
+      ct.is_completed,
+      ct.completed_at
+    FROM circular_tracking ct
+    JOIN employees e ON ct.employee_id = e.id
+    LEFT JOIN departments d ON e.department_id = d.id
+    LEFT JOIN branches b ON e.branch_id = b.id
+    WHERE ct.circular_id = ?
+    ORDER BY e.first_name, e.last_name
+  `, [circular_id]);
+
+  circular.employee_activities = activityRows;
+
+  return circular;
+};

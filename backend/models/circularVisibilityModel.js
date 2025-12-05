@@ -74,7 +74,7 @@ exports.getCircularsByEmployee = async (employeeId) => {
     INNER JOIN circulars c ON cv.circular_id = c.id
     LEFT JOIN employees e ON c.creator_employee_id = e.id
     LEFT JOIN circular_tracking ct ON c.id = ct.circular_id AND ct.employee_id = ?
-    WHERE cv.employee_id = ? AND c.status = 'APPROVED'
+    WHERE cv.employee_id = ? AND c.status IN ('APPROVED', 'COMPLETED')
     ORDER BY ct.is_completed ASC, c.created_at DESC
   `;
   const [rows] = await db.query(sql, [employeeId,employeeId]);

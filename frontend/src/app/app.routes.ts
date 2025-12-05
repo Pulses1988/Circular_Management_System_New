@@ -16,5 +16,5 @@ export const routes: Routes = [
     loadChildren: () => import('./Employee/employee.routes').then((m) => m.Employee_ROUTS),
   },
 
-  { path: '**', component: EmployeeLogin },
+  { path: '**', redirectTo: 'employee/employee-login' },
 ];

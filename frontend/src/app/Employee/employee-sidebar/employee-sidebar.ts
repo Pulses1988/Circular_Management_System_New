@@ -31,6 +31,7 @@ interface NavItem {
   exact?: boolean;
   isActive?: boolean;
   subItems?: SubNavItem[];
+
 }
 
 interface SubNavItem {
@@ -38,6 +39,7 @@ interface SubNavItem {
   icon: string;
   route: string;
   badge?: number | string;
+  queryParams?: any;
 }
 
 interface CircularStats {
@@ -112,19 +114,16 @@ export class EmployeeSidebar implements OnInit, OnDestroy {
         {
           label: 'Unread',
           icon: 'visibility_off',
-          route: '/employee/circulars/unread',
-          badge: this.circularStats.unseen,
+          route: '/employee/filtered-circulars',
+          // badge: this.circularStats.unseen,
+          queryParams: { type: 'unread' }
         },
         {
           label: 'Urgent',
           icon: 'priority_high',
-          route: '/employee/circulars/urgent',
-          badge: this.circularStats.urgent,
-        },
-        {
-          label: 'Archived',
-          icon: 'archive',
-          route: '/employee/circulars/archived',
+          route: '/employee/filtered-circulars',
+          // badge: this.circularStats.urgent,
+          queryParams: { type: 'urgent' }
         },
          {
           label: 'Manage Circulars',
@@ -137,13 +136,6 @@ export class EmployeeSidebar implements OnInit, OnDestroy {
          route: '/employee/circular-approval',
         },
       ],
-    },
-    {
-      label: 'Notifications',
-      icon: 'notifications',
-      route: '/employee/notifications',
-      badge: 5,
-      badgeType: 'info',
     },
     {
       label: 'My Profile',

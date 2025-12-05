@@ -7,6 +7,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ToastrModule } from 'ngx-toastr';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from './Authentication/auth.interceptor';
+import { EmployeeAuthInterceptor } from './Employee/Authentication/employee-auth.interceptor';
 
 
 export const appConfig: ApplicationConfig = {
@@ -18,6 +19,11 @@ export const appConfig: ApplicationConfig = {
      {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: EmployeeAuthInterceptor,
       multi: true
     },
     provideHttpClient(),

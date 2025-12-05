@@ -117,9 +117,21 @@ toggleNotifications(event: MouseEvent) {
     this.circularService.markNotificationAsRead(notification.notification_id).subscribe({
       next: () => {
         this.unreadCount--;
+        if (notification.message_preview?.includes('requires your approval')) {
+        this.router.navigate(['/employee/circular-approval']);
+      } else  if (notification.message_preview?.includes('has been rejected')) {
+        this.router.navigate(['/employee/circular-creater']);
+      } else {
+         const data = {
+      circularId: notification.circular_id,
+      employeeId: this.employeeData.id
+    };
+        this.circularService.markCircularAsSeenForEmp(data).subscribe(() => {
         this.router.navigate(['/employee/circular-details'], {
           queryParams: { circularId: notification.circular_id }
         });
+      })
+      }
         this.showNotifications = false;
         this.loadNotifications();
       },

@@ -11,7 +11,7 @@ const subscribedCircularRooms = new Set();
 
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:4200", "http://192.168.1.11:4200"],
+    origin: ["http://localhost:4200", "http://192.168.1.11:4200", "http://192.168.1.10:4200"],
     methods: ["GET", "POST"],
     credentials: true
   },
@@ -39,6 +39,10 @@ const circularTrackingRouter = require('./routes/circularTrackingRouter');
 const circularChatRoutes = require("./routes/circularChatRoutes");
 const circularAttachmentRoutes = require("./routes/circularAttachmentRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const circularCompletionRoutes = require("./routes/circularCompletionRoutes");
+const cron = require('node-cron');
+const circularRecurrenceController = require("./controllers/circularRecurrenceController");
+const circularRecurrenceRoutes = require("./routes/circularRecurrenceRoutes");
 
 // Allow cross-origin requests from your Angular app
 app.use(
@@ -124,6 +128,18 @@ app.use('/api/circular-tracking', express.json(),circularTrackingRouter);
 app.use("/api/circular-chats", express.json(),circularChatRoutes);
 app.use("/api/circular-attachments", circularAttachmentRoutes);
 app.use("/api/notifications", express.json(), notificationRoutes);
+app.use("/api/circular-completion", express.json(), circularCompletionRoutes);
+app.use("/api/circular-recurrence", express.json(), circularRecurrenceRoutes);
+
+cron.schedule('1 0 * * *', async () => {
+  console.log('🔄 Running automated circular recurrence check...');
+  try {
+    const result = await circularRecurrenceController.checkAndRenewExpiredCycles();
+    console.log(`✅ Renewed ${result.renewed} circular cycles`);
+  } catch (error) {
+    console.error('❌ Error in automated recurrence:', error);
+  }
+});
 
 const PORT = 3000;
 server.listen(PORT, () => {
