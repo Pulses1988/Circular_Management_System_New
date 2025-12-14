@@ -36,14 +36,18 @@ exports.getBranchById = async (req, res) => {
 };
 
 exports.createBranch = async (req, res) => {
+  const { name, address, head_office_id } = req.body;
   try {
+    const [existing] = await branchModel.checkBranchNameExists(name);
+
+    if (existing.length > 0) {
+      return res.status(400).json({ error: "Branch name already exists." });
+    }
+
     const [result] = await branchModel.createBranch(req.body);
-
     const newBranchId = result.insertId;
-
     // Fetch the newly created branch record
     const [rows] = await branchModel.getBranchById(newBranchId);
-
     res.status(201).json(rows[0]);
   } catch (err) {
     console.error(err);
@@ -56,6 +60,11 @@ exports.updateBranch = async (req, res) => {
   const { name, address, head_office_id } = req.body;
 
   try {
+    const [existing] = await branchModel.checkBranchNameExists(name, id);
+
+    if (existing.length > 0) {
+      return res.status(400).json({ error: "Branch name already exists." });
+    }
     await branchModel.updateBranch(id, { name, address, head_office_id });
     res.json({ message: "Branch updated successfully" });
   } catch (err) {
@@ -111,10 +120,12 @@ exports.getBranchesWithAdminStatus = async (req, res) => {
   }
 };
 
-exports.getBranchCountByHeadOfficeId= async (req, res) => {
+exports.getBranchCountByHeadOfficeId = async (req, res) => {
   const { headOfficeId } = req.params;
   try {
-    const [result] = await branchModel.getBranchCountByHeadOfficeId(headOfficeId);
+    const [result] = await branchModel.getBranchCountByHeadOfficeId(
+      headOfficeId
+    );
     res.json(result[0]); // return { count: number }
   } catch (err) {
     console.error("Error fetching Branch count by head office:", err);

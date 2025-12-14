@@ -242,3 +242,30 @@ exports.filterEmployees = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch employees" });
   }
 };
+
+exports.AllEmployeeCount = async (req, res) => {
+  try {
+    const [result] = await employeeModel.getAllEmployeesCount();
+    res.json(result[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch employees count" });
+  }
+};
+exports.BranchEmployeeCount = async (req, res) => {
+  try {
+    const { branchId } = req.params;
+    console.log("Branch ID:", branchId);
+
+    if (!branchId) {
+      return res.status(400).json({ error: "branchId is required" });
+    }
+
+    const [result] = await employeeModel.getByBranchEmployeesCount(branchId);
+
+    res.json(result[0]); // { count: 39 }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch Branch employees count" });
+  }
+};

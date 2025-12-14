@@ -40,6 +40,8 @@ export class AdminBranchManagement implements OnInit {
   showAdminModal = false;
   selectedBranchId: number | null = null;
   selectedBranchName: string | null = null;
+  isButtonLoading: boolean = false;
+  loading: boolean = false;
 
   @ViewChild('branchFormRef') branchFormRef!: ElementRef;
   private scrollToForm = false;
@@ -86,6 +88,7 @@ export class AdminBranchManagement implements OnInit {
   }
 
   loadBranches() {
+    this.loading = true;
     this.userService.fetchAllBranches().subscribe((branchesData: any) => {
       const branchesArray = branchesData as any[]; // ✅ force array type
 
@@ -104,6 +107,7 @@ export class AdminBranchManagement implements OnInit {
 
     this.userService.fetchAllHeadOffice().subscribe((data: any) => {
       this.headOffice = data;
+      this.loading = false;
     });
   }
 
@@ -154,21 +158,41 @@ export class AdminBranchManagement implements OnInit {
         branch[key] = branch[key].trim();
       }
     });
+    this.isButtonLoading = true;
     if (this.isEditMode && this.editBranchId) {
-      this.userService.updateBranches(this.editBranchId, branch).subscribe(() => {
-        this.toast.show('Branch updated successfully!', 'success');
-        this.loadBranches();
-        this.resetForm();
+      this.userService.updateBranches(this.editBranchId, branch).subscribe({
+        next: () => {
+          this.toast.show('Branch updated successfully!', 'success');
+          this.loadBranches();
+          this.resetForm();
+          this.isButtonLoading = false;
+        },
+        error: (err) => {
+          // Extract backend error message if present
+          const message = err.error?.error || 'Failed to update branch!';
+          this.toast.show(message, 'error'); // Show toast for errors
+          this.isButtonLoading = false;
+        },
       });
     } else {
-      this.userService.createBranches(branch).subscribe((createdBranch: any) => {
-        this.toast.show('Branch created sucessfully!', 'success');
-        this.loadBranches();
-        this.resetForm();
+      this.userService.createBranches(branch).subscribe({
+        next: (createdBranch: any) => {
+          this.toast.show('Branch created successfully!', 'success');
 
-        this.selectedBranchId = createdBranch.id;
-        this.selectedBranchName = createdBranch.name;
-        this.showAdminModal = true;
+          this.loadBranches();
+          this.resetForm();
+
+          this.selectedBranchId = createdBranch.id;
+          this.selectedBranchName = createdBranch.name;
+          this.showAdminModal = true;
+          this.isButtonLoading = false;
+        },
+        error: (err) => {
+          // Extract backend error message if present
+          const message = err.error?.error || 'Failed to update branch!';
+          this.toast.show(message, 'error'); // Show toast for errors
+          this.isButtonLoading = false;
+        },
       });
     }
   }
@@ -186,8 +210,6 @@ export class AdminBranchManagement implements OnInit {
     this.scrollToForm = true; // mark that we should scroll on next view check
     this.cdr.detectChanges();
   }
-
-  deleteBranch(id: any) {}
 
   resetForm() {
     this.isEditMode = false;

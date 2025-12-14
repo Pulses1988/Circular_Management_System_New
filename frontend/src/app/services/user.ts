@@ -103,7 +103,7 @@ export class User {
   createBranches(data: {}) {
     return this.http
       .post(`${environment.apiUrl}/api/branches/`, data, { headers: this.getHeaders() })
-      .pipe(catchError(this.handleError));
+      // .pipe(catchError(this.handleError));
   }
 
   updateBranches(id: number, data: {}) {
@@ -185,6 +185,18 @@ export class User {
 
   checkEmployeePhoneNoExists(phoneNo: string): Observable<boolean> {
     return this.http.get<boolean>(`${this.apiUrl}/api/employees/check-phone?phone=${phoneNo}`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  getAllEmployeeCount() {
+    return this.http.get(`${this.apiUrl}/api/employees/getAllEmployeeCount`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  getByBranchEmployeeCount(branchId: number) {
+    return this.http.get(`${this.apiUrl}/api/employees/getByBranchEmployeeCount/${branchId}`, {
       headers: this.getHeaders(),
     });
   }

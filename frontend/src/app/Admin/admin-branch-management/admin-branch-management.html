@@ -91,9 +91,17 @@
       <button
         type="submit"
         class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        [disabled]="branchForm.invalid"
+        [disabled]="branchForm.invalid || isButtonLoading"
       >
-        {{ isEditMode ? 'Update Branch' : 'Add Branch' }}
+        {{
+          isButtonLoading
+            ? isEditMode
+              ? 'Updating...'
+              : 'Adding...'
+            : isEditMode
+            ? 'Update Branch'
+            : 'Add Branch'
+        }}
       </button>
       <button
         type="button"
@@ -105,108 +113,122 @@
     </div>
   </form>
 
-  <!-- Branch Table -->
-  <div class="bg-white rounded-lg shadow-md overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="min-w-full">
-        <thead class="bg-gray-50 border-b">
-          <tr>
-            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">#</th>
-            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Name</th>
-            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Address</th>
-            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Head Office</th>
-            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Created At</th>
-            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Admin</th>
-            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-          <tr *ngFor="let branch of paginatedBranches(); let i = index" class="hover:bg-gray-50">
-            <td class="px-6 py-4 text-sm text-gray-900">
-              {{ (currentPage - 1) * itemsPerPage + i + 1 }}
-            </td>
-            <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ branch.name }}</td>
-            <td class="px-6 py-4 text-sm text-gray-600">{{ branch.address }}</td>
-            <td class="px-6 py-4 text-sm text-gray-900">{{ branch.head_office_name }}</td>
-            <td class="px-6 py-4 text-sm text-gray-500">
-              {{ branch.created_at | date : 'dd/MM/yyyy' }}
-            </td>
-            <td class="px-6 py-4">
-              <div *ngIf="branch.has_admin === 1" class="flex gap-2">
-                <button
-                  (click)="openAdminModal(branch, true)"
-                  class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors text-sm"
-                >
-                  Add Another Admin
-                </button>
-              </div>
-              <div *ngIf="branch.has_admin === 0">
-                <button
-                  (click)="openAdminModal(branch, false)"
-                  class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition-colors text-sm"
-                >
-                  Create Admin
-                </button>
-              </div>
-            </td>
-            <td class="px-6 py-4">
-              <div class="flex gap-2">
-                <button
-                  (click)="editBranch(branch)"
-                  class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition-colors text-sm"
-                >
-                  Edit
-                </button>
-                <button
+  <!-- Loader -->
+  <div *ngIf="loading" class="text-center py-6">
+    <div class="flex flex-col items-center gap-4">
+      <div
+        class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
+      ></div>
+      <p class="text-gray-600 mt-2">Loading branch...</p>
+    </div>
+  </div>
+
+  <div *ngIf="!loading">
+    <!-- Branch Table -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full">
+          <thead class="bg-gray-50 border-b">
+            <tr>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">#</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Name</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Address</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Head Office</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Created At</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Admin</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <tr *ngFor="let branch of paginatedBranches(); let i = index" class="hover:bg-gray-50">
+              <td class="px-6 py-4 text-sm text-gray-900">
+                {{ (currentPage - 1) * itemsPerPage + i + 1 }}
+              </td>
+              <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ branch.name }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600">{{ branch.address }}</td>
+              <td class="px-6 py-4 text-sm text-gray-900">{{ branch.head_office_name }}</td>
+              <td class="px-6 py-4 text-sm text-gray-500">
+                {{ branch.created_at | date : 'dd/MM/yyyy' }}
+              </td>
+              <td class="px-6 py-4">
+                <div *ngIf="branch.has_admin === 1" class="flex gap-2">
+                  <button
+                    (click)="openAdminModal(branch, true)"
+                    class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    Add Another Admin
+                  </button>
+                </div>
+                <div *ngIf="branch.has_admin === 0">
+                  <button
+                    (click)="openAdminModal(branch, false)"
+                    class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition-colors text-sm"
+                  >
+                    Create Admin
+                  </button>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex gap-2">
+                  <button
+                    (click)="editBranch(branch)"
+                    class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition-colors text-sm"
+                  >
+                    Edit
+                  </button>
+                  <!-- <button
                   (click)="deleteBranch(branch.id!)"
                   class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors text-sm"
                 >
                   Delete
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Pagination Controls -->
-  <div class="flex justify-between items-center mt-6 bg-white p-4 rounded-lg shadow-md">
-    <div class="flex items-center gap-2">
-      <label for="itemsPerPage" class="text-sm font-medium text-gray-700"> Items per page: </label>
-      <select
-        id="itemsPerPage"
-        [(ngModel)]="itemsPerPage"
-        (change)="changePage(1)"
-        class="border border-gray-300 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-      >
-        <option *ngFor="let option of itemsPerPageOptions" [value]="option">
-          {{ option }}
-        </option>
-      </select>
+                </button> -->
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <div class="flex items-center gap-3">
-      <button
-        (click)="changePage(currentPage - 1)"
-        [disabled]="currentPage === 1"
-        class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
-      >
-        Previous
-      </button>
+    <!-- Pagination Controls -->
+    <div class="flex justify-between items-center mt-6 bg-white p-4 rounded-lg shadow-md">
+      <div class="flex items-center gap-2">
+        <label for="itemsPerPage" class="text-sm font-medium text-gray-700">
+          Items per page:
+        </label>
+        <select
+          id="itemsPerPage"
+          [(ngModel)]="itemsPerPage"
+          (change)="changePage(1)"
+          class="border border-gray-300 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option *ngFor="let option of itemsPerPageOptions" [value]="option">
+            {{ option }}
+          </option>
+        </select>
+      </div>
 
-      <span class="px-3 py-1 text-sm text-gray-600">
-        Page {{ currentPage }} of {{ totalPages }}
-      </span>
+      <div class="flex items-center gap-3">
+        <button
+          (click)="changePage(currentPage - 1)"
+          [disabled]="currentPage === 1"
+          class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+        >
+          Previous
+        </button>
 
-      <button
-        (click)="changePage(currentPage + 1)"
-        [disabled]="currentPage === totalPages"
-        class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
-      >
-        Next
-      </button>
+        <span class="px-3 py-1 text-sm text-gray-600">
+          Page {{ currentPage }} of {{ totalPages }}
+        </span>
+
+        <button
+          (click)="changePage(currentPage + 1)"
+          [disabled]="currentPage === totalPages"
+          class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+        >
+          Next
+        </button>
+      </div>
     </div>
   </div>
 

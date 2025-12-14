@@ -52,6 +52,7 @@ export class EmployeeMangement {
   searchTerm: string = '';
   selectedDepartment: string = 'all';
   filteredEmployees: any[] = [];
+  isLoading: boolean = false;
 
   @ViewChild('employeeFormRef') employeeFormRef!: ElementRef;
   private scrollToForm = false;
@@ -73,15 +74,15 @@ export class EmployeeMangement {
         '',
         [Validators.required, Validators.pattern(/^[A-Za-z\s]+$/), this.noWhitespaceValidator],
       ],
-      email: [
-        '',
-        [Validators.required, Validators.email, this.noWhitespaceValidator],
-        [this.emailDuplicateValidator()], // Add async validator here
-      ],
+      email: ['', [Validators.required, Validators.email, this.noWhitespaceValidator]],
       phone_no: [
         '',
-        [Validators.pattern(/^[0-9]*$/), Validators.maxLength(10), Validators.minLength(10)],
-        [this.phoneNoDuplicateValidator()], // Add async validator here
+        [
+          Validators.pattern(/^[0-9]*$/),
+          Validators.maxLength(10),
+          Validators.minLength(10),
+          Validators.required,
+        ],
       ],
       role_id: ['', Validators.required],
       department_id: [''],
@@ -89,9 +90,8 @@ export class EmployeeMangement {
       employee_id: [
         '',
         [Validators.required, Validators.pattern(/^\S+$/)], // no spaces
-        [this.employeeIdDuplicateValidator()], // Add async validator here
       ],
-      password: ['', Validators.required],
+      password: ['', [Validators.required, this.passwordValidator]],
       can_create_circular: [false],
       can_approve_circular: [false],
     });
@@ -105,11 +105,24 @@ export class EmployeeMangement {
     return null;
   }
 
+  passwordValidator(control: AbstractControl) {
+    const value: string = control.value || '';
+    // Regex: min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
+    const pattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
+
+    if (!pattern.test(value)) {
+      return { invalidPassword: true };
+    }
+    return null;
+  }
+
   ngOnInit(): void {
     this.role = localStorage.getItem('role');
     this.userAssignment = localStorage.getItem('userAssignment')
       ? JSON.parse(localStorage.getItem('userAssignment')!)
       : null;
+
+    this.isLoading = true;
 
     this.loadData();
 
@@ -146,7 +159,8 @@ export class EmployeeMangement {
       // Search filter
       const matchesSearch =
         !this.searchTerm ||
-        (emp.first_name && emp.first_name.toLowerCase().startsWith(this.searchTerm.toLowerCase())) ||
+        (emp.first_name &&
+          emp.first_name.toLowerCase().startsWith(this.searchTerm.toLowerCase())) ||
         (emp.last_name && emp.last_name.toLowerCase().startsWith(this.searchTerm.toLowerCase())) ||
         (emp.employee_id && emp.employee_id.toLowerCase().includes(this.searchTerm.toLowerCase()));
 
@@ -197,6 +211,7 @@ export class EmployeeMangement {
   }
 
   loadData() {
+    this.isLoading = true;
     if (this.role === 'HO_ADMIN') {
       this.userService.getDepartmentsByHeadOffice(this.userAssignment.id).subscribe((data) => {
         this.departments = data;
@@ -214,6 +229,7 @@ export class EmployeeMangement {
       this.userService.getEmployeeByHeadOfficeId(this.userAssignment.id).subscribe((data: any) => {
         this.employees = data;
         this.applyFilters(); // Apply filters after loading data
+        this.isLoading = false;
       });
     } else if (this.role === 'BRANCH_ADMIN') {
       this.userService.getBranchById(this.userAssignment.id).subscribe((branch: any) => {
@@ -236,6 +252,7 @@ export class EmployeeMangement {
       this.userService.getEmployeeByBranchId(this.userAssignment.id).subscribe((data: any) => {
         this.employees = data;
         this.applyFilters(); // Apply filters after loading data
+        this.isLoading = false;
       });
     }
   }
@@ -265,6 +282,9 @@ export class EmployeeMangement {
   // ---------------------------READ EXCEL FILE AND SAVE THE DATA---------------------------------
 
   onFileChange(event: any) {
+    this.excelErrors = [];
+    this.showErrorModal = false;
+
     const file = event.target.files[0];
     if (!file) return;
 
@@ -277,6 +297,8 @@ export class EmployeeMangement {
       const data = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
       this.validateAndSaveExcelData(data);
+
+      event.target.value = '';
     };
     reader.readAsBinaryString(file);
   }
@@ -328,7 +350,7 @@ export class EmployeeMangement {
           exampleRow[col] = 'EMP001';
           break;
         case 'Password':
-          exampleRow[col] = '12345';
+          exampleRow[col] = 'Pass@123';
           break;
         case 'Role':
           exampleRow[col] = this.roles[0]?.name || 'Manager';
@@ -408,6 +430,12 @@ export class EmployeeMangement {
       // Employee ID format validation (no spaces)
       if (/\s/.test(employeeId)) {
         this.excelErrors.push(`Employee ID cannot contain spaces for ${firstName} ${lastName}`);
+        continue;
+      }
+      if (!/(?=.*[A-Za-z])(?=.*\d).+/.test(password)) {
+        this.excelErrors.push(
+          `The password must contain at least one capital letter, one special character, and one number for employee ${firstName} ${lastName}.`
+        );
         continue;
       }
 
@@ -533,139 +561,85 @@ export class EmployeeMangement {
     this.loadData();
   }
 
-  submitForm() {
-    this.employeeForm.get('employee_id')?.clearValidators();
-    this.employeeForm.get('password')?.clearValidators();
-    this.employeeForm.get('department_id')?.clearValidators();
-    this.employeeForm.get('email')?.clearAsyncValidators(); // Clear async validators for re-application
-    this.employeeForm.get('phone_no')?.clearAsyncValidators();
-    this.employeeForm.get('employee_id')?.clearAsyncValidators();
-
-    this.employeeForm
-      .get('first_name')
-      ?.setValidators([
-        Validators.required,
-        Validators.pattern(/^[A-Za-z\s]+$/),
-        this.noWhitespaceValidator,
-      ]);
-    this.employeeForm
-      .get('last_name')
-      ?.setValidators([
-        Validators.required,
-        Validators.pattern(/^[A-Za-z\s]+$/),
-        this.noWhitespaceValidator,
-      ]);
-    this.employeeForm
-      .get('email')
-      ?.setValidators([Validators.required, Validators.email, this.noWhitespaceValidator]);
-    this.employeeForm.get('role_id')?.setValidators([Validators.required]);
-    this.employeeForm.get('email')?.setAsyncValidators([this.emailDuplicateValidator()]); // Re-apply async validators
-    this.employeeForm.get('phone_no')?.setAsyncValidators([this.phoneNoDuplicateValidator()]);
-
-    if (!this.isEditMode) {
-      this.employeeForm
-        .get('employee_id')
-        ?.setValidators([Validators.required, Validators.pattern(/^\S+$/)]);
-      this.employeeForm
-        .get('password')
-        ?.setValidators([Validators.required, this.noWhitespaceValidator]);
-      this.employeeForm
-        .get('employee_id')
-        ?.setAsyncValidators([this.employeeIdDuplicateValidator()]);
-    } else {
-      this.employeeForm.get('employee_id')?.setValidators([Validators.pattern(/^\S+$/)]);
-      if (this.employeeForm.get('password')?.value) {
-        this.employeeForm.get('password')?.setValidators([this.noWhitespaceValidator]);
-      }
-      // In edit mode, only validate employee_id if it's different from the original
-      this.employeeForm
-        .get('employee_id')
-        ?.setAsyncValidators([this.employeeIdDuplicateValidator()]);
-    }
-
-    if (this.hasDepartments) {
-      this.employeeForm.get('department_id')?.setValidators([Validators.required]);
-    }
-
-    Object.keys(this.employeeForm.controls).forEach((key) => {
-      this.employeeForm.get(key)?.updateValueAndValidity();
-    });
-
-    // Use a Promise to wait for async validation to complete
-    this.employeeForm.statusChanges
-      .pipe(
-        takeUntil(this.destroy$),
-        take(1), // Only take the first status change after marking as touched
-        map(() => {
-          if (this.employeeForm.pending) {
-            return false; // Still pending, wait for next status change
-          }
-          return this.employeeForm.valid;
-        })
-      )
-      .subscribe((isValid) => {
-        if (!isValid) {
-          this.toast.show('Please correct the form errors.', 'error');
-          this.employeeForm.markAllAsTouched();
-          return;
-        }
-
-        const employee = { ...this.employeeForm.value };
-        if (this.isEditMode && !employee.password) {
-          delete employee.password;
-        }
-
-        if (!this.hasDepartments && this.role === 'BRANCH_ADMIN') {
-          employee.department_id = null;
-        }
-
-        if (this.role === 'HO_ADMIN') {
-          employee.head_office_id = this.userAssignment.head_office_id || this.userAssignment.id;
-          employee.branch_id = null;
-        } else if (this.role === 'BRANCH_ADMIN') {
-          employee.branch_id = this.userAssignment.branch_id || this.userAssignment.id;
-          employee.head_office_id = null;
-        }
-
-        if (this.isEditMode && this.editEmployeeId !== null) {
-          this.userService.updateEmployee(this.editEmployeeId, employee).subscribe({
-            next: () => {
-              this.toast.show('Employee updated successfully!', 'success');
-              this.loadData();
-              this.resetForm();
-            },
-            error: (err) => {
-              this.toast.show(
-                'Error updating employee: ' + (err.error?.message || err.message),
-                'error'
-              );
-            },
-          });
-        } else {
-          this.userService.createEmployee(employee).subscribe({
-            next: () => {
-              this.toast.show('Employee created successfully!', 'success');
-              this.loadData();
-              this.resetForm();
-            },
-            error: (err) => {
-              this.toast.show(
-                'Error creating employee: ' + (err.error?.message || err.message),
-                'error'
-              );
-            },
-          });
-        }
-      });
-
-    // Manually trigger status change after marking all as touched to ensure async validators run
+  async submitForm() {
     this.employeeForm.markAllAsTouched();
-    Object.keys(this.employeeForm.controls).forEach((field) => {
-      const control = this.employeeForm.get(field);
-      if (control?.hasAsyncValidator) {
-        control.updateValueAndValidity();
+
+    if (!this.employeeForm.valid) {
+      this.toast.show('Please correct the form errors.', 'error');
+      return;
+    }
+
+    const { email, phone_no, employee_id } = this.employeeForm.value;
+
+    // --- Duplicate checks ---
+    if (!this.isEditMode || email !== this.originalEmail) {
+      const emailExists = await this.userService.checkEmployeeEmailExists(email).toPromise();
+      if (emailExists) {
+        this.employeeForm.get('email')?.setErrors({ emailTaken: true });
+        return;
       }
-    });
+    }
+
+    if (phone_no && (!this.isEditMode || phone_no !== this.originalPhoneNo)) {
+      const phoneExists = await this.userService.checkEmployeePhoneNoExists(phone_no).toPromise();
+      if (phoneExists) {
+        this.employeeForm.get('phone_no')?.setErrors({ phoneNoTaken: true });
+        return;
+      }
+    }
+
+    if (!this.isEditMode || employee_id !== this.originalEmployeeId) {
+      const employeeIdExists = await this.userService
+        .checkEmployeeIdExists(employee_id)
+        .toPromise();
+      if (employeeIdExists) {
+        this.employeeForm.get('employee_id')?.setErrors({ employeeIdTaken: true });
+        return;
+      }
+    }
+
+    // --- Prepare employee object ---
+    const employee = { ...this.employeeForm.value };
+    if (this.isEditMode && !employee.password) delete employee.password;
+
+    if (this.role === 'HO_ADMIN') {
+      employee.head_office_id = this.userAssignment.head_office_id || this.userAssignment.id;
+      employee.branch_id = null;
+    } else if (this.role === 'BRANCH_ADMIN') {
+      employee.branch_id = this.userAssignment.branch_id || this.userAssignment.id;
+      employee.head_office_id = null;
+    }
+
+    // --- Submit data ---
+    if (this.isEditMode && this.editEmployeeId !== null) {
+      this.userService.updateEmployee(this.editEmployeeId, employee).subscribe({
+        next: () => {
+          this.toast.show('Employee updated successfully!', 'success');
+          this.loadData();
+          this.resetForm();
+        },
+        error: (err) => {
+          this.toast.show(
+            'Error updating employee: ' + (err.error?.message || err.message),
+            'error'
+          );
+        },
+      });
+    } else {
+      this.userService.createEmployee(employee).subscribe({
+        next: () => {
+          this.toast.show('Employee created successfully!', 'success');
+          this.loadData();
+          this.resetForm();
+        },
+        error: (err) => {
+          this.toast.show(
+            'Error creating employee: ' + (err.error?.message || err.message),
+            'error'
+          );
+        },
+      });
+    }
   }
 
   editEmployee(emp: any) {

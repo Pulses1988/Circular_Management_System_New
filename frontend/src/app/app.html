@@ -1,31 +1,34 @@
 @if (showAdminSidebar()) {
-  <div class="flex h-screen">
-    <!-- Admin Sidebar -->
-    <app-admin-sidebar></app-admin-sidebar>
+<div class="flex h-screen">
+  <!-- Admin Sidebar -->
+  <app-admin-sidebar></app-admin-sidebar>
 
-    <!-- Main Content -->
-    <div class="flex-1 overflow-auto">
-      <router-outlet></router-outlet>
-    </div>
+  <!-- Main Content -->
+  <div class="flex-1 overflow-auto">
+    <router-outlet></router-outlet>
   </div>
+</div>
 } @else if (showNavbar()) {
-  <!-- Navbar always at the top -->
-  <app-navbar></app-navbar>
+<!-- Navbar always at the top -->
+<app-navbar></app-navbar>
 
-  <!-- Content area below the Navbar -->
-  <div class="flex flex-1 overflow-hidden" style="height: calc(100vh - 80px);"> <!-- Adjust 80px based on actual navbar height -->
-    <!-- Employee Sidebar -->
-    <app-employee-sidebar></app-employee-sidebar>
-    
-    <!-- Main content area, scrollable -->
-    <div class="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4">
-      <router-outlet></router-outlet>
-    </div>
+<!-- Content area below the Navbar -->
+<div class="flex flex-1 overflow-hidden" style="height: calc(100vh - 80px)">
+  <!-- Adjust 80px based on actual navbar height -->
+  <!-- Employee Sidebar -->
+  <app-employee-sidebar></app-employee-sidebar>
+
+  <!-- Main content area, scrollable -->
+  <div class="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4">
+    <router-outlet></router-outlet>
   </div>
+</div>
 } @else {
-  <!-- Main Content when no sidebar or navbar -->
-  <router-outlet></router-outlet>
+<!-- Main Content when no sidebar or navbar -->
+<router-outlet></router-outlet>
 }
 
 <!-- Toast always visible -->
-<app-toast-component></app-toast-component>
+<div class="fixed top-4 right-4 z-[9999]">
+  <app-toast-component></app-toast-component>
+</div>

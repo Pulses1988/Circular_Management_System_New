@@ -38,9 +38,12 @@ export class CreateBranchAdminForm implements OnInit {
         [this.usernameDuplicateValidator()],
       ],
       password: ['', [Validators.required, this.noWhitespaceValidator]],
-      first_name: ['', [this.noWhitespaceValidator,this.lettersOnlyValidator]],
-      middle_name: ['',this.lettersOnlyValidator],
-      last_name: ['', [this.noWhitespaceValidator,this.lettersOnlyValidator]],
+      first_name: [
+        '',
+        [Validators.required, this.noWhitespaceValidator, this.lettersOnlyValidator],
+      ],
+      middle_name: ['', this.lettersOnlyValidator],
+      last_name: ['', [Validators.required, this.noWhitespaceValidator, this.lettersOnlyValidator]],
       email: [
         '',
         [Validators.required, Validators.email, this.noWhitespaceValidator],
