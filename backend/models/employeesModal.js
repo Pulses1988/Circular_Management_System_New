@@ -248,3 +248,16 @@ exports.getApprovers = () => {
     ORDER BY e.created_at DESC
   `);
 };
+
+exports.getAllEmployeesCount = () => {
+  return db.query(`SELECT COUNT(*) as count FROM employees`);
+};
+
+exports.getByBranchEmployeesCount = (branchId) => {
+  return db.query(
+    `SELECT COUNT(*) AS count 
+     FROM employees 
+     WHERE branch_id = ?`,
+    [branchId]
+  );
+};

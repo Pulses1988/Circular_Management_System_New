@@ -6,88 +6,119 @@
       <p class="text-gray-600 mt-2">Overview of your organization's structure and employees</p>
     </div>
 
-    <!-- Dashboard Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-      <div class="bg-white rounded-xl shadow hover:shadow-lg p-6 transition-shadow">
-        <div class="flex items-center space-x-4">
-          <div class="bg-blue-100 p-3 rounded-full">
-            <mat-icon class="text-blue-600 text-3xl">domain</mat-icon>
-          </div>
-          <div>
-            <h3 class="text-lg font-semibold text-gray-700">Total Departments</h3>
-            <p class="text-2xl font-bold text-gray-900">{{ totalDepartments }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div *ngIf="isHoAdmin" class="bg-white rounded-xl shadow hover:shadow-lg p-6 transition-shadow">
-        <div class="flex items-center space-x-4">
-          <div class="bg-green-100 p-3 rounded-full">
-            <mat-icon class="text-green-600 text-3xl">account_tree</mat-icon>
-          </div>
-          <div>
-            <h3 class="text-lg font-semibold text-gray-700">Total Branches</h3>
-            <p class="text-2xl font-bold text-gray-900">{{ totalBranches }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-xl shadow hover:shadow-lg p-6 transition-shadow">
-        <div class="flex items-center space-x-4">
-          <div class="bg-purple-100 p-3 rounded-full">
-            <mat-icon class="text-purple-600 text-3xl">people</mat-icon>
-          </div>
-          <div>
-            <h3 class="text-lg font-semibold text-gray-700">Total Employees</h3>
-            <p class="text-2xl font-bold text-gray-900">{{ totalEmployees }}</p>
-          </div>
-        </div>
+    <!-- Global Loader -->
+    <div *ngIf="isLoading" class="flex items-center justify-center py-10">
+      <div class="flex flex-col items-center gap-4">
+        <div
+          class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
+        ></div>
+        <p class="text-gray-700 text-lg font-semibold animate-pulse">Loading...</p>
       </div>
     </div>
 
-    <!-- Add Head Office Section -->
-    <div *ngIf="isHoAdmin" class="mb-8">
-      <button (click)="toggleHeadOfficeForm()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors">
-        {{ showHeadOfficeForm ? 'Close Form' : 'Add Head Office' }}
-      </button>
-
-      <div *ngIf="showHeadOfficeForm" class="mt-4 bg-white rounded-xl shadow-md p-6 space-y-4 transition-all">
-        <h3 class="text-lg font-semibold text-gray-700">Add Head Office</h3>
-        <form (ngSubmit)="addHeadOffice()" #headOfficeForm="ngForm" novalidate>
-          <label>Head Office Name</label>
-          <input type="text"
-                 name="hoName"
-                 [(ngModel)]="headOffice.name"
-                 required
-                 placeholder="Enter name"
-                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 mb-2" />
-                  <label>Bank Name</label>
-          <input type="text"
-                 name="hobank_name"
-                 [(ngModel)]="headOffice.bank_name"
-                 required
-                 placeholder="Enter Bank Name"
-                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 mb-2" />
-                  <label>Address</label>
-          <input type="text"
-                 name="hoAddress"
-                 [(ngModel)]="headOffice.address"
-                 required
-                 placeholder="Enter address"
-                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 mb-2" />
-          <div class="flex justify-end space-x-2">
-            <button type="submit"
-                    [disabled]="!headOfficeForm.form.valid"
-                    class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50">
-              Add
-            </button>
-            <button type="button"
-                    (click)="toggleHeadOfficeForm()"
-                    class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">
-              Cancel
-            </button>
+    <div *ngIf="!isLoading">
+      <!-- Dashboard Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow hover:shadow-lg p-6 transition-shadow">
+          <div class="flex items-center space-x-4">
+            <div class="bg-blue-100 p-3 rounded-full">
+              <mat-icon class="text-blue-600 text-3xl">domain</mat-icon>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-700">Total Departments</h3>
+              <p class="text-2xl font-bold text-gray-900">{{ totalDepartments }}</p>
+            </div>
           </div>
-        </form>
+        </div>
+
+        <div
+          *ngIf="isHoAdmin"
+          class="bg-white rounded-xl shadow hover:shadow-lg p-6 transition-shadow"
+        >
+          <div class="flex items-center space-x-4">
+            <div class="bg-green-100 p-3 rounded-full">
+              <mat-icon class="text-green-600 text-3xl">account_tree</mat-icon>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-700">Total Branches</h3>
+              <p class="text-2xl font-bold text-gray-900">{{ totalBranches }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow hover:shadow-lg p-6 transition-shadow">
+          <div class="flex items-center space-x-4">
+            <div class="bg-purple-100 p-3 rounded-full">
+              <mat-icon class="text-purple-600 text-3xl">people</mat-icon>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-700">Total Employees</h3>
+              <p class="text-2xl font-bold text-gray-900">{{ totalEmployees }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Head Office Section -->
+      <div *ngIf="isHoAdmin && !hasHeadOffice" class="mb-8">
+        <button
+          (click)="toggleHeadOfficeForm()"
+          class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors"
+        >
+          {{ showHeadOfficeForm ? 'Close Form' : 'Add Head Office' }}
+        </button>
+
+        <div
+          *ngIf="showHeadOfficeForm"
+          class="mt-4 bg-white rounded-xl shadow-md p-6 space-y-4 transition-all"
+        >
+          <h3 class="text-lg font-semibold text-gray-700">Add Head Office</h3>
+          <form (ngSubmit)="addHeadOffice()" #headOfficeForm="ngForm" novalidate>
+            <label>Head Office Name</label>
+            <input
+              type="text"
+              name="hoName"
+              [(ngModel)]="headOffice.name"
+              required
+              placeholder="Enter name"
+              class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 mb-2"
+            />
+            <label>Bank Name</label>
+            <input
+              type="text"
+              name="hobank_name"
+              [(ngModel)]="headOffice.bank_name"
+              required
+              placeholder="Enter Bank Name"
+              class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 mb-2"
+            />
+            <label>Address</label>
+            <input
+              type="text"
+              name="hoAddress"
+              [(ngModel)]="headOffice.address"
+              required
+              placeholder="Enter address"
+              class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 mb-2"
+            />
+            <div class="flex justify-end space-x-2">
+              <button
+                type="submit"
+                [disabled]="!headOfficeForm.form.valid"
+                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+              >
+                Add
+              </button>
+              <button
+                type="button"
+                (click)="toggleHeadOfficeForm()"
+                class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </div>

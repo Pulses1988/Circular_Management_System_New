@@ -59,3 +59,13 @@ exports.getBranchCountByHeadOfficeId = (headOfficeId) => {
     [headOfficeId]
   );
 };
+
+exports.checkBranchNameExists = (name, excludeId = null) => {
+  if (excludeId) {
+    return db.query("SELECT id FROM branches WHERE name = ? AND id != ?", [
+      name,
+      excludeId,
+    ]);
+  }
+  return db.query("SELECT id FROM branches WHERE name = ?", [name]);
+};

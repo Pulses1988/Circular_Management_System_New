@@ -203,6 +203,10 @@
           <div *ngIf="employeeForm.get('password')?.errors?.['whitespace']">
             Password cannot be empty or only spaces.
           </div>
+          <div *ngIf="employeeForm.get('password')?.errors?.['invalidPassword']">
+            Password must be at least 8 characters, include uppercase, lowercase, number, and
+            special character
+          </div>
         </div>
       </div>
 
@@ -219,7 +223,7 @@
           class="text-red-500 text-sm mt-1"
         >
           <div *ngIf="employeeForm.get('email')?.errors?.['required']">Email is required.</div>
-          <div *ngIf="employeeForm.get('email')?.errors?.['pattern']">Enter Valid Email.</div>
+          <div *ngIf="employeeForm.get('email')?.errors?.['email']">Enter Valid Email.</div>
           <div *ngIf="employeeForm.get('email')?.errors?.['emailTaken']">
             Email is already exists.
           </div>
@@ -247,6 +251,9 @@
           </span>
           <span *ngIf="employeeForm.get('phone_no')?.errors?.['minlength']">
             Phone number must be at least 10 digits.
+          </span>
+          <span *ngIf="employeeForm.get('phone_no')?.errors?.['required']">
+            Phone number is required.
           </span>
         </div>
       </div>
@@ -284,7 +291,6 @@
       </div>
     </div>
 
-    <!-- Permissions Section -->
     <!-- Permissions Section -->
     <div class="mt-6 pt-6 border-t border-gray-200">
       <div class="flex items-center gap-2 mb-4">
@@ -331,7 +337,9 @@
       <button
         type="submit"
         class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        [disabled]="employeeForm.invalid"
+        [disabled]="employeeForm.invalid || employeeForm.pending"
+        [class.opacity-50]="employeeForm.invalid || employeeForm.pending"
+        [class.cursor-not-allowed]="employeeForm.invalid || employeeForm.pending"
       >
         {{ isEditMode ? 'Update Employee' : 'Add Employee' }}
       </button>
@@ -345,153 +353,167 @@
     </div>
   </form>
 
-
-  <!-- Search and Filter Section -->
-<div class="bg-white p-4 rounded-lg shadow-md mb-6">
-  <div class="flex flex-col md:flex-row gap-4">
-    <!-- Search Input -->
-    <div class="flex-1">
-      <label class="block text-sm font-medium mb-2 text-gray-700">Search by Name or Employee ID</label>
-      <input
-        type="text"
-        [(ngModel)]="searchTerm"
-        (input)="applyFilters()"
-        class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        placeholder="Enter name or employee ID..."
-      />
-    </div>
-
-    <!-- Department Filter -->
-    <div class="flex-1">
-      <label class="block text-sm font-medium mb-2 text-gray-700">Filter by Department</label>
-      <select
-        [(ngModel)]="selectedDepartment"
-        (change)="applyFilters()"
-        class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-      >
-        <option value="all">All Departments</option>
-        <option *ngFor="let dept of departments" [value]="dept.id">{{ dept.name }}</option>
-      </select>
-    </div>
-  </div>
-</div>
-
-  <!-- Employee Table -->
-  <div class="bg-white rounded-lg shadow-md overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="min-w-full">
-        <thead class="bg-gray-50 border-b">
-          <tr>
-            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">#</th>
-            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Employee ID</th>
-            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Name</th>
-            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
-            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Phone</th>
-
-            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Role</th>
-
-            <!-- Show Department column only if user is HO_ADMIN or BRANCH_ADMIN with departments -->
-            <th
-              *ngIf="role === 'HO_ADMIN' || (role === 'BRANCH_ADMIN' && hasDepartments)"
-              class="px-6 py-4 text-left text-sm font-semibold text-gray-700"
-            >
-              Department
-            </th>
-
-            <th
-              *ngIf="role === 'BRANCH_ADMIN'"
-              class="px-6 py-4 text-left text-sm font-semibold text-gray-700"
-            >
-              Branch
-            </th>
-            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Created At</th>
-            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
-          </tr>
-        </thead>
-
-        <tbody class="divide-y divide-gray-200">
-          <tr *ngFor="let emp of paginatedEmployees(); let i = index" class="hover:bg-gray-50">
-            <td class="px-6 py-4 text-sm text-gray-900">
-              {{ (currentPage - 1) * itemsPerPage + i + 1 }}
-            </td>
-            <td class="px-6 py-4 text-sm text-gray-900">{{ emp.employee_id }}</td>
-            <td class="px-6 py-4 text-sm text-gray-900">
-              {{ emp.first_name }} {{ emp.last_name }}
-            </td>
-            <td class="px-6 py-4 text-sm text-gray-600">{{ emp.email }}</td>
-            <td class="px-6 py-4 text-sm text-gray-600">{{ emp.phone_no }}</td>
-
-            <td class="px-6 py-4 text-sm text-gray-900">{{ emp.role_name }}</td>
-
-            <!-- Conditional Department -->
-            <td
-              *ngIf="role === 'HO_ADMIN' || (role === 'BRANCH_ADMIN' && hasDepartments)"
-              class="px-6 py-4 text-sm text-gray-900"
-            >
-              {{ emp?.department_name }}
-            </td>
-
-            <td *ngIf="role === 'BRANCH_ADMIN'" class="px-6 py-4 text-sm text-gray-900">
-              {{ emp.branch_name }}
-            </td>
-            <td class="px-6 py-4 text-sm text-gray-500">
-              {{ emp.created_at | date : 'dd/MM/yyyy' }}
-            </td>
-
-            <td class="px-6 py-4 flex gap-2">
-              <button
-                (click)="editEmployee(emp)"
-                class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition-colors text-sm"
-              >
-                Edit
-              </button>
-              <button
-                (click)="deleteEmployee(emp.id)"
-                class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors text-sm"
-              >
-                Delete
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+  <div *ngIf="isLoading" class="text-center py-6">
+    <div class="flex flex-col items-center gap-4">
+      <div
+        class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
+      ></div>
+      <p class="text-gray-600 mt-2">Loading departments...</p>
     </div>
   </div>
 
-  <!-- Pagination Controls -->
-  <div class="flex justify-between items-center mt-6 bg-white p-4 rounded-lg shadow-md">
-    <div class="flex items-center gap-2">
-      <label for="itemsPerPage" class="text-sm font-medium text-gray-700"> Items per page: </label>
-      <select
-        id="itemsPerPage"
-        [(ngModel)]="itemsPerPage"
-        (change)="changePage(1)"
-        class="border border-gray-300 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-      >
-        <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
-      </select>
+  <div *ngIf="!isLoading">
+    <!-- Search and Filter Section -->
+    <div class="bg-white p-4 rounded-lg shadow-md mb-6">
+      <div class="flex flex-col md:flex-row gap-4">
+        <!-- Search Input -->
+        <div class="flex-1">
+          <label class="block text-sm font-medium mb-2 text-gray-700"
+            >Search by Name or Employee ID</label
+          >
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (input)="applyFilters()"
+            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Enter name or employee ID..."
+          />
+        </div>
+
+        <!-- Department Filter -->
+        <div class="flex-1">
+          <label class="block text-sm font-medium mb-2 text-gray-700">Filter by Department</label>
+          <select
+            [(ngModel)]="selectedDepartment"
+            (change)="applyFilters()"
+            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="all">All Departments</option>
+            <option *ngFor="let dept of departments" [value]="dept.id">{{ dept.name }}</option>
+          </select>
+        </div>
+      </div>
     </div>
 
-    <div class="flex items-center gap-3">
-      <button
-        (click)="changePage(currentPage - 1)"
-        [disabled]="currentPage === 1"
-        class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
-      >
-        Previous
-      </button>
+    <!-- Employee Table -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full">
+          <thead class="bg-gray-50 border-b">
+            <tr>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">#</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Employee ID</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Name</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Phone</th>
 
-      <span class="px-3 py-1 text-sm text-gray-600">
-        Page {{ currentPage }} of {{ totalPages }}
-      </span>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Role</th>
 
-      <button
-        (click)="changePage(currentPage + 1)"
-        [disabled]="currentPage === totalPages"
-        class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
-      >
-        Next
-      </button>
+              <!-- Show Department column only if user is HO_ADMIN or BRANCH_ADMIN with departments -->
+              <th
+                *ngIf="role === 'HO_ADMIN' || (role === 'BRANCH_ADMIN' && hasDepartments)"
+                class="px-6 py-4 text-left text-sm font-semibold text-gray-700"
+              >
+                Department
+              </th>
+
+              <th
+                *ngIf="role === 'BRANCH_ADMIN'"
+                class="px-6 py-4 text-left text-sm font-semibold text-gray-700"
+              >
+                Branch
+              </th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Created At</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-gray-200">
+            <tr *ngFor="let emp of paginatedEmployees(); let i = index" class="hover:bg-gray-50">
+              <td class="px-6 py-4 text-sm text-gray-900">
+                {{ (currentPage - 1) * itemsPerPage + i + 1 }}
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-900">{{ emp.employee_id }}</td>
+              <td class="px-6 py-4 text-sm text-gray-900">
+                {{ emp.first_name }} {{ emp.last_name }}
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-600">{{ emp.email }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600">{{ emp.phone_no }}</td>
+
+              <td class="px-6 py-4 text-sm text-gray-900">{{ emp.role_name }}</td>
+
+              <!-- Conditional Department -->
+              <td
+                *ngIf="role === 'HO_ADMIN' || (role === 'BRANCH_ADMIN' && hasDepartments)"
+                class="px-6 py-4 text-sm text-gray-900"
+              >
+                {{ emp?.department_name }}
+              </td>
+
+              <td *ngIf="role === 'BRANCH_ADMIN'" class="px-6 py-4 text-sm text-gray-900">
+                {{ emp.branch_name }}
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-500">
+                {{ emp.created_at | date : 'dd/MM/yyyy' }}
+              </td>
+
+              <td class="px-6 py-4 flex gap-2">
+                <button
+                  (click)="editEmployee(emp)"
+                  class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition-colors text-sm"
+                >
+                  Edit
+                </button>
+                <button
+                  (click)="deleteEmployee(emp.id)"
+                  class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors text-sm"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div class="flex justify-between items-center mt-6 bg-white p-4 rounded-lg shadow-md">
+      <div class="flex items-center gap-2">
+        <label for="itemsPerPage" class="text-sm font-medium text-gray-700">
+          Items per page:
+        </label>
+        <select
+          id="itemsPerPage"
+          [(ngModel)]="itemsPerPage"
+          (change)="changePage(1)"
+          class="border border-gray-300 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
+        </select>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button
+          (click)="changePage(currentPage - 1)"
+          [disabled]="currentPage === 1"
+          class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+        >
+          Previous
+        </button>
+
+        <span class="px-3 py-1 text-sm text-gray-600">
+          Page {{ currentPage }} of {{ totalPages }}
+        </span>
+
+        <button
+          (click)="changePage(currentPage + 1)"
+          [disabled]="currentPage === totalPages"
+          class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+        >
+          Next
+        </button>
+      </div>
     </div>
   </div>
 </div>

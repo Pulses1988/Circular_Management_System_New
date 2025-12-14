@@ -46,6 +46,18 @@ router.get(
   employeeController.getEmployeesByDepartment
 );
 
+router.get(
+  "/getAllEmployeeCount",
+  authenticateToken,
+  employeeController.AllEmployeeCount
+);
+
+router.get(
+  "/getByBranchEmployeeCount/:branchId",
+  authenticateToken,
+  employeeController.BranchEmployeeCount
+);
+
 // CRUD endpoints
 router.get("/", authenticateToken, employeeController.getAllEmployees);
 router.post("/login", employeeController.loginEmployee);

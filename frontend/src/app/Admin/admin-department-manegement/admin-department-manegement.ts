@@ -21,7 +21,8 @@ export class AdminDepartmentManegement {
   departments: any[] = [];
   editingDeptId: number | null = null;
   editingDeptName: string = '';
-  officeInfo!:any;
+  officeInfo!: any;
+  submitLoader: boolean = false;
 
   constructor(private user: User, private toast: Toast) {}
 
@@ -53,16 +54,16 @@ export class AdminDepartmentManegement {
           },
         });
         this.user.fetchHeadOfficeById(id).subscribe({
-          next:(res:any)=>{
-            this.officeInfo=res;
-            console.log(this.officeInfo,'.....office')
+          next: (res: any) => {
+            this.officeInfo = res;
+            console.log(this.officeInfo, '.....office');
           },
-           error: (err: any) => {
+          error: (err: any) => {
             console.error('Error fetching head office Info:', err);
             this.toast.show('Failed to load head office Info', 'error');
             this.loading = false;
           },
-        })
+        });
       } else if (assignment.type === 'branch') {
         this.branch_id = id;
         this.user.getDepartmentsByBranch(id).subscribe({
@@ -81,16 +82,16 @@ export class AdminDepartmentManegement {
           },
         });
         this.user.getBranchById(id).subscribe({
-          next:(res:any)=>{
-            this.officeInfo=res;
-            console.log(res,'oficeIno')
+          next: (res: any) => {
+            this.officeInfo = res;
+            console.log(res, 'oficeIno');
           },
           error: (err: any) => {
             console.error('Error fetching Branch Info:', err);
             this.toast.show('Failed to load Branch Info', 'error');
             this.loading = false;
           },
-        })
+        });
       }
     }
   }
@@ -104,6 +105,8 @@ export class AdminDepartmentManegement {
       return;
     }
 
+    this.submitLoader = true;
+
     this.user
       .updateDepartment(this.editingDeptId!, { name: this.editingDeptName.trim() })
       .subscribe({
@@ -112,10 +115,15 @@ export class AdminDepartmentManegement {
 
           this.loadDepartments(); // refresh the list
           this.cancelEdit();
+          this.submitLoader = false;
         },
         error: (err) => {
-          console.error('Error updating department:', err);
-          this.toast.show('Failed to update department. Please try again.', 'error');
+          // console.error('Error updating department:', err);
+
+          const message = err.error?.error || 'Failed to update department. Please try again.';
+
+          this.toast.show(message, 'error');
+          this.submitLoader = false;
         },
       });
   }
@@ -143,6 +151,7 @@ export class AdminDepartmentManegement {
       this.toast.show('Please enter a department name', 'error');
       return;
     }
+    this.submitLoader = true;
     const assignment = JSON.parse(localStorage.getItem('userAssignment') || '{}');
     const id = Number(assignment.id);
     const data = {
@@ -156,10 +165,14 @@ export class AdminDepartmentManegement {
         //  reload the department list
         this.loadDepartments();
         this.cancel(); // Reset form and hide it
+        this.submitLoader = false;
       },
       error: (err) => {
         console.error('Error adding department:', err);
-        this.toast.show('Failed to add department. Please try again.', 'error');
+        const message = err.error?.error || 'Failed to update department. Please try again.';
+
+        this.toast.show(message, 'error');
+        this.submitLoader = false;
       },
     });
   }

@@ -20,7 +20,8 @@ exports.getAllDepartments = () => {
 };
 
 exports.getDepartmentsByHeadOffice = (headOfficeId) => {
-  return db.query(`
+  return db.query(
+    `
     SELECT 
       d.id, 
       d.name,  
@@ -32,11 +33,14 @@ exports.getDepartmentsByHeadOffice = (headOfficeId) => {
     LEFT JOIN head_office h ON d.head_office_id = h.id
     WHERE d.head_office_id = ?
     ORDER BY d.created_at DESC
-  `, [headOfficeId]);
+  `,
+    [headOfficeId]
+  );
 };
 
 exports.getDepartmentsByBranch = (branchId) => {
-  return db.query(`
+  return db.query(
+    `
     SELECT 
       d.id, 
       d.name,  
@@ -48,42 +52,53 @@ exports.getDepartmentsByBranch = (branchId) => {
     LEFT JOIN branches b ON d.branch_id = b.id
     WHERE d.branch_id = ?
     ORDER BY d.created_at DESC
-  `, [branchId]);
+  `,
+    [branchId]
+  );
 };
 
 exports.createDepartment = (departmentData) => {
   const { name, head_office_id, branch_id } = departmentData;
-  
+
   return db.query(
     `INSERT INTO departments (name, head_office_id, branch_id) 
      VALUES (?, ?, ?)`,
-    [
-      name,
-      head_office_id || null,
-      branch_id || null
-    ]
+    [name, head_office_id || null, branch_id || null]
   );
 };
 
 exports.updateDepartment = (id, departmentData) => {
-  return db.query(
-    `UPDATE departments SET name = ? WHERE id = ?`,
-    [departmentData.name, id]
-  );
+  return db.query(`UPDATE departments SET name = ? WHERE id = ?`, [
+    departmentData.name,
+    id,
+  ]);
 };
 
 exports.deleteDepartment = (id) => {
   return db.query("DELETE FROM departments WHERE id = ?", [id]);
 };
 
-exports.checkDepartmentNameExists = (name, excludeId = null) => {
+exports.checkDepartmentNameExists = (
+  name,
+  excludeId = null,
+  head_office_id = null,
+  branch_id = null
+) => {
+  let query = `
+    SELECT id FROM departments
+    WHERE name = ?
+      AND head_office_id <=> ?
+      AND branch_id <=> ?
+  `;
+
+  const params = [name, head_office_id, branch_id];
+
   if (excludeId) {
-    return db.query(
-      "SELECT id FROM departments WHERE name = ? AND id != ?",
-      [name, excludeId]
-    );
+    query += " AND id != ?";
+    params.push(excludeId);
   }
-  return db.query("SELECT id FROM departments WHERE name = ?", [name]);
+
+  return db.query(query, params);
 };
 
 exports.getDepartmentCountByHeadOffice = (headOfficeId) => {
