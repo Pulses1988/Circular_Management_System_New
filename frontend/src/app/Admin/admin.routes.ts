@@ -12,7 +12,7 @@ import { UnauthorizedPage } from './unauthorized-page/unauthorized-page';
 import { AdminCircularSettings } from './admin-circular-settings/admin-circular-settings';
 
 export const ADMIN_ROUTS: Routes = [
-  { path: '', redirectTo: 'admin-login', pathMatch: 'full' },
+  // { path: '', redirectTo: 'admin-login', pathMatch: 'full' },
   { path: 'admin-signup', component: AdminSignup },
   { path: 'admin-login', component: AdminLogin },
   { 

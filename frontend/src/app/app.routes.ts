@@ -1,11 +1,12 @@
 import { Routes } from '@angular/router';
 import { EmployeeLogin } from './Employee/employee-login/employee-login';
+import { SmartRedirectGuard } from './Authentication/smart-redirect.guard';
 
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'employee-login',
-    pathMatch: 'full',
+    canActivate: [SmartRedirectGuard],
+     children: [] 
   },
   {
     path: 'admin',

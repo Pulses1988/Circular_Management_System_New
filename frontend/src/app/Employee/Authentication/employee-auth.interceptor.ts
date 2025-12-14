@@ -9,7 +9,9 @@ export class EmployeeAuthInterceptor implements HttpInterceptor {
   constructor(private employeeService: EmployeeService, private router: Router) {}
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    console.log('Interceptor - Request URL:', request.url);
     const token = this.employeeService.getToken();
+    console.log('Interceptor - Token exists:', !!token);
     
     if (token) {
       request = request.clone({
@@ -21,7 +23,9 @@ export class EmployeeAuthInterceptor implements HttpInterceptor {
 
     return next.handle(request).pipe(
       catchError(error => {
+        console.log('Interceptor - Error:', error.status, error.url);
         if (error.status === 401) {
+          console.log('Interceptor - 401 detected, logging out...');
           // Store current URL before logout
           const currentUrl = this.router.url;
           if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {

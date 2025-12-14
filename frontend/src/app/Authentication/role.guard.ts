@@ -12,8 +12,9 @@ export class RoleGuard implements CanActivate {
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
     const expectedRoles = route.data['roles'] as string[];
     const expectedPermissions = route.data['permissions'] as string[];
+    const token = this.authService.getToken();
 
-    if (!this.authService.isAuthenticated()) {
+    if (!token) {
       // Store attempted URL before redirecting to login
       if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
         sessionStorage.setItem('redirectUrl', state.url);

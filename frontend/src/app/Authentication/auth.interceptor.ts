@@ -10,6 +10,7 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(private authService: AdminAuth, private router: Router) {}
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+     console.log('=== Interceptor for:', request.url);
     const token = this.authService.getToken();
     
     if (token) {
