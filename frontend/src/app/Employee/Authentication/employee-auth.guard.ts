@@ -9,7 +9,14 @@ export class EmployeeAuthGuard implements CanActivate {
   constructor(private employeeService: EmployeeService, private router: Router) {}
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
-    if (this.employeeService.isAuthenticated()) {
+    // Direct token check - bypass isAuthenticated()
+    const token = this.employeeService.getToken();
+    
+    console.log('Guard - Token exists:', !!token);
+    console.log('Guard - Current employee:', this.employeeService.getCurrentEmployee());
+    console.log('Guard - isAuthenticated:', this.employeeService.isAuthenticated());
+    
+    if (token) {
       return true;
     }
 
@@ -18,7 +25,7 @@ export class EmployeeAuthGuard implements CanActivate {
       sessionStorage.setItem('emp_redirectUrl', state.url);
     }
 
-    this.router.navigate(['/employee-login'], { 
+    this.router.navigate(['/employee/employee-login'], { 
       queryParams: { returnUrl: state.url },
       replaceUrl: true
     });

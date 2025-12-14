@@ -254,19 +254,19 @@ export class EmployeeSidebar implements OnInit, OnDestroy {
     // Replace this with your logout dialog component
     const confirmLogout = confirm('Are you sure you want to logout?');
     if (confirmLogout) {
-      this.logout();
+      this.employeeService.logout();
     }
   }
 
-  logout(): void {
-    // Implement your logout logic here
-    // Clear localStorage/sessionStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-
-    // Navigate to login page
-    this.router.navigate(['/employee-login']);
-  }
+  // logout(): void {
+  //   // Implement your logout logic here
+  //   // Clear localStorage/sessionStorage
+  //   localStorage.removeItem('token');
+  //   localStorage.removeItem('user');
+  //   localStorage.clear();
+  //   // Navigate to login page
+  //   this.router.navigate(['/employee-login']);
+  // }
 
    
 

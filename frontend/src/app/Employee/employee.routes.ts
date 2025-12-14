@@ -14,7 +14,7 @@ import { EmployeePermissionGuard } from './Authentication/employee-permission.gu
 import { Unauthorized } from './unauthorized/unauthorized';
 
 export const Employee_ROUTS: Routes = [
-  { path: '', redirectTo: 'employee-login', pathMatch: 'full' },
+  // { path: '', redirectTo: 'employee-login', pathMatch: 'full' },
   { path: 'employee-login', component: EmployeeLogin },
   {
     path: 'employee-dashboard',
@@ -68,5 +68,5 @@ export const Employee_ROUTS: Routes = [
   {
     path:'unauthorized', component:Unauthorized
   },
-  { path: '**', component: EmployeeLogin },
+  // { path: '**', component: EmployeeLogin },
 ];

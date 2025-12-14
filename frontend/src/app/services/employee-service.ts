@@ -17,10 +17,11 @@ export class EmployeeService {
   private readonly EXPIRY_KEY = 'emp_token_expiry';
 
   constructor(private http: HttpClient, private router: Router) {
+    console.log('EmployeeService constructor called');
     // Only load from storage if running in browser
     if (this.isBrowser()) {
       this.loadUserFromStorage();
-      this.startTokenExpiryCheck();
+      // this.startTokenExpiryCheck();
     }
   }
   token!: string | null;
@@ -81,38 +82,51 @@ export class EmployeeService {
   }
 
   getToken(): string | null {
-    if (!this.isBrowser()) return null;
+  if (!this.isBrowser()) return null;
 
-    try {
-      const encryptedToken = localStorage.getItem(this.TOKEN_KEY);
-      if (encryptedToken && !this.isTokenExpired()) {
-        return this.decryptData(encryptedToken);
-      }
-    } catch (error) {
-      this.logout();
-    }
+  try {
+    const encryptedToken = localStorage.getItem(this.TOKEN_KEY);
+    if (!encryptedToken) return null;
+    
+    // Return decrypted token
+    return this.decryptData(encryptedToken);
+  } catch (error) {
+    console.error('Token retrieval error:', error);
     return null;
   }
+}
 
   getCurrentEmployee(): any {
     return this.currentEmployeeSubject.value;
   }
 
   isAuthenticated(): boolean {
-    if (!this.isBrowser()) return false;
-    return this.getToken() !== null && !this.isTokenExpired();
+  if (!this.isBrowser()) return false;
+  
+  const encryptedToken = localStorage.getItem(this.TOKEN_KEY);
+  if (!encryptedToken) return false;
+  
+  try {
+    // Decrypt once here
+    const token = this.decryptData(encryptedToken);
+    
+    // Parse JWT payload directly (no second decrypt)
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const currentTime = Math.floor(Date.now() / 1000);
+    
+    return currentTime < payload.exp;
+  } catch (error) {
+    console.error('Token validation error:', error);
+    return false;
   }
-
-  isTokenExpired(): boolean {
-    if (!this.isBrowser()) return true;
-
-    const expiryTime = localStorage.getItem(this.EXPIRY_KEY);
-    if (!expiryTime) return true;
-
-    return new Date().getTime() > parseInt(expiryTime);
-  }
+}
+private isTokenExpired(): boolean {
+  return !this.isAuthenticated();
+}
 
   logout(): void {
+    console.log('LOGOUT CALLED - Stack trace:');
+  console.trace();
     if (!this.isBrowser()) return;
 
     localStorage.removeItem(this.TOKEN_KEY);
@@ -137,33 +151,44 @@ export class EmployeeService {
   }
 
   private loadUserFromStorage(): void {
-    if (!this.isBrowser()) return;
+  if (!this.isBrowser()) return;
 
-    try {
-      if (this.isAuthenticated()) {
-        const encryptedUserData = localStorage.getItem(this.USER_KEY);
-        if (encryptedUserData) {
-          const userData = JSON.parse(this.decryptData(encryptedUserData));
-          this.currentEmployeeSubject.next(userData);
-        }
-      } else {
-        this.logout();
+  console.log('Loading user from storage...');
+  
+  try {
+    const isAuth = this.isAuthenticated();
+    console.log('Is authenticated:', isAuth);
+    
+    if (isAuth) {
+      const encryptedUserData = localStorage.getItem(this.USER_KEY);
+      console.log('Encrypted user data exists:', !!encryptedUserData);
+      
+      if (encryptedUserData) {
+        const userData = JSON.parse(this.decryptData(encryptedUserData));
+        console.log('User data loaded:', userData);
+        this.currentEmployeeSubject.next(userData);
       }
-    } catch (error) {
+    } else {
+      console.log('Not authenticated, logging out...');
       this.logout();
     }
+  } catch (error) {
+    console.error('Error loading user:', error);
+    this.logout();
   }
+}
 
-  private startTokenExpiryCheck(): void {
-    if (!this.isBrowser()) return;
+  // private startTokenExpiryCheck(): void {
+  //   if (!this.isBrowser()) return;
 
-    // Check token expiry every 5 minutes
-    setInterval(() => {
-      if (this.isTokenExpired()) {
-        this.logout();
-      }
-    }, 5 * 60 * 1000);
-  }
+  //   // Check token expiry every 5 minutes
+  //   setInterval(() => {
+  //     if (this.isTokenExpired()) {
+  //       console.log('Token expired')
+  //       this.logout();
+  //     }
+  //   }, 60 * 1000);
+  // }
 
   private encryptData(data: string): string {
     // Basic encryption - consider using crypto-js for production

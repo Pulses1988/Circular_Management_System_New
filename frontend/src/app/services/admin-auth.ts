@@ -25,24 +25,61 @@ export class AdminAuth {
   private apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient, private router: Router) {
+      console.log('AdminAuth constructor called');
     this.loadUserFromStorage();
   }
 
   private loadUserFromStorage() {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('authToken');
-      const role = localStorage.getItem('role');
+  console.log('=== loadUserFromStorage START ===');
+  
+  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    const token = localStorage.getItem('authToken');
+    const role = localStorage.getItem('role');
+    
+    console.log('Token:', token ? 'exists' : 'null');
+    console.log('Role:', role);
+    
+    if (token && role) {
+      const isExpired = this.isTokenExpired(token);
+      console.log('Token expired check:', isExpired);
       
-      if (token && role && !this.isTokenExpired(token)) {
-        const user: User = {
-          admin_type: role
+      if (!isExpired) {
+        const permissionsStr = localStorage.getItem('permissions');
+        const permissions = permissionsStr ? JSON.parse(permissionsStr) : [];
+        
+        const user: User = { 
+          admin_type: role,
+          permissions: permissions 
         };
         this.currentUserSubject.next(user);
+        console.log('✓ Admin loaded successfully');
       } else {
-        this.logout(false); // Don't navigate during initialization
+        console.log('✗ Token expired');
+        // Don't clear here, let guards handle it
+        this.currentUserSubject.next(null);
       }
+    } else {
+      console.log('✗ Token or role missing');
+      // Just set to null, DON'T clear localStorage
+      this.currentUserSubject.next(null);
     }
   }
+  console.log('=== loadUserFromStorage END ===');
+}
+private clearStorage(): void {
+  if (typeof window !== 'undefined') {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('role');
+      localStorage.removeItem('permissions');
+    }
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem('redirectUrl');
+      sessionStorage.removeItem('previousUrl');
+    }
+  }
+  this.currentUserSubject.next(null);
+}
 
   loginAdmin(data: { username: string; password: string }): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/api/admins/login`, data).pipe(
@@ -87,20 +124,7 @@ export class AdminAuth {
 }
 
   logout(navigate: boolean = true): void {
-    if (typeof window !== 'undefined') {
-      if (typeof localStorage !== 'undefined') {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('role');
-        localStorage.removeItem('permissions');
-      }
-      
-      if (typeof sessionStorage !== 'undefined') {
-        sessionStorage.removeItem('redirectUrl');
-        sessionStorage.removeItem('previousUrl');
-      }
-    }
-    
-    this.currentUserSubject.next(null);
+    this.clearStorage();
     
     if (navigate) {
       this.router.navigate(['/admin/admin-login']);
@@ -133,10 +157,19 @@ export class AdminAuth {
     return this.currentUserSubject.value;
   }
 
-  isAuthenticated(): boolean {
-    const token = this.getToken();
-    return token != null && !this.isTokenExpired(token);
+ isAuthenticated(): boolean {
+  // Check localStorage directly, not just the token variable
+  const token = this.getToken();
+  const role = this.getRole();
+  
+  console.log('isAuthenticated check - Token exists:', !!token, 'Role:', role);
+  
+  if (!token || !role) {
+    return false;
   }
+  
+  return !this.isTokenExpired(token);
+}
 
   hasRole(role: string): boolean {
     const userRole = this.getRole();
@@ -176,15 +209,30 @@ export class AdminAuth {
   }
 
   private isTokenExpired(token: string): boolean {
-    if (!token) return true;
-    
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.exp * 1000 < Date.now();
-    } catch {
-      return true;
-    }
+  if (!token) {
+    console.log('isTokenExpired: no token');
+    return true;
   }
+  
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const expiryTime = payload.exp * 1000;
+    const currentTime = Date.now();
+    const bufferTime = 60 * 1000; // 1 minute
+    
+    console.log('Token expiry check:', {
+      expiryTime: new Date(expiryTime),
+      currentTime: new Date(currentTime),
+      expiresIn: Math.floor((expiryTime - currentTime) / 1000) + ' seconds',
+      isExpired: currentTime > (expiryTime - bufferTime)
+    });
+    
+    return currentTime > (expiryTime - bufferTime);
+  } catch (error) {
+    console.log('isTokenExpired: parse error', error);
+    return true;
+  }
+}
 
   // Utility method to get redirect URL from session
   getRedirectUrl(): string | null {
