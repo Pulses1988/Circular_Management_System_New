@@ -32,3 +32,35 @@ exports.updateRepeatCycle = (id, data) => {
 exports.deleteRepeatCycle = (id) => {
   return db.query("DELETE FROM repeat_cycles WHERE id = ?", [id]);
 };
+
+exports.checkRepeatCycleNameExists = (name, excludeId = null) => {
+  let query = `
+    SELECT id FROM repeat_cycles
+    WHERE name = ?
+  `;
+
+  const params = [name];
+
+  if (excludeId) {
+    query += " AND id != ?";
+    params.push(excludeId);
+  }
+
+  return db.query(query, params);
+};
+
+exports.checkRepeatCycleDurationExists = (duration_days, excludeId = null) => {
+  let query = `
+    SELECT id FROM repeat_cycles
+    WHERE duration_days <=> ?
+  `;
+
+  const params = [duration_days];
+
+  if (excludeId) {
+    query += " AND id != ?";
+    params.push(excludeId);
+  }
+
+  return db.query(query, params);
+};
