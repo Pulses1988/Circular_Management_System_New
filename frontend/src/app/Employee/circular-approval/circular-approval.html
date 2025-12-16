@@ -117,30 +117,38 @@
           <p class="text-gray-500 mt-2">There are no circulars pending for approval</p>
         </div>
         } @for (circular of getPaginatedCirculars(); track circular.circular_id) {
-        <div
-          class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all"
-          [class.border-2]="getPriorityClass(circular) === 'urgent'"
-          [class.border-orange-200]="getPriorityClass(circular) === 'urgent'"
-        >
-          <div
-            class="px-6 py-4 border-b"
-            [class.bg-gradient-to-r]="true"
-            [class.from-orange-50]="getPriorityClass(circular) === 'urgent'"
-            [class.to-red-50]="getPriorityClass(circular) === 'urgent'"
-            [class.from-blue-50]="getPriorityClass(circular) === 'normal'"
-            [class.to-indigo-50]="getPriorityClass(circular) === 'normal'"
+       <div
+  class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all"
+  [class.border-2]="circular.priority === 'URGENT' || circular.priority === 'HIGH'"
+  [class.border-red-200]="circular.priority === 'URGENT'"
+  [class.border-orange-200]="circular.priority === 'HIGH'"
+>
+  <div
+    class="px-6 py-4 border-b"
+    [ngClass]="{
+      'bg-gradient-to-r from-red-50 to-orange-50': circular.priority === 'URGENT',
+      'bg-gradient-to-r from-orange-50 to-yellow-50': circular.priority === 'HIGH',
+      'bg-gradient-to-r from-yellow-50 to-blue-50': circular.priority === 'MEDIUM',
+      'bg-gradient-to-r from-blue-50 to-indigo-50': circular.priority === 'LOW'
+    }"
+  >
+    <div class="flex items-start justify-between">
+      <div class="flex-1">
+        <div class="flex items-center gap-2 mb-2 flex-wrap">
+          <span
+            class="px-3 py-1 text-xs font-bold rounded-full flex items-center gap-1"
+            [ngClass]="{
+              'bg-red-100 text-red-700': circular.priority === 'URGENT',
+              'bg-orange-100 text-orange-700': circular.priority === 'HIGH',
+              'bg-yellow-100 text-yellow-700': circular.priority === 'MEDIUM',
+              'bg-blue-100 text-blue-700': circular.priority === 'LOW'
+            }"
           >
-            <div class="flex items-start justify-between">
-              <div class="flex-1">
-                <div class="flex items-center gap-2 mb-2 flex-wrap">
-                  @if (getPriorityClass(circular) === 'urgent') {
-                  <span
-                    class="px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full flex items-center gap-1"
-                  >
-                    <i class="material-icons" style="font-size: 14px">priority_high</i>
-                    URGENT
-                  </span>
-                  }
+            <i class="material-icons" style="font-size: 14px">
+              {{ circular.priority === 'URGENT' || circular.priority === 'HIGH' ? 'priority_high' : 'info' }}
+            </i>
+            {{ circular.priority }}
+          </span>
 
                   <span
                     class="px-3 py-1 text-xs font-semibold rounded-full"

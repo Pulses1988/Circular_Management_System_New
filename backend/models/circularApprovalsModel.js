@@ -157,6 +157,7 @@ exports.getAssignedCirculars = async (approver_id, filters = {}) => {
         c.created_at,
         c.published_at,
         c.reference_circular_id,
+        c.priority,
         ref_c.title AS reference_circular_title,
         ref_c.circular_code AS reference_circular_code,
 

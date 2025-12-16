@@ -102,6 +102,7 @@ export class CircularDetails implements OnInit, OnDestroy {
   isMarkingComplete: boolean = false;
   isCompleted: boolean = false;
   completedAt: string | null = null;
+  isNotApproved:boolean =false;
 
   // Chat related
   messages: CircularChat[] = [];
@@ -187,6 +188,7 @@ submissionModes = [
       next: (res: any) => {
         console.log(res, 'details');
         if (res) {
+          if(res.status==='APPROVED'){
           this.circular = res;
           console.log(this.circular, 'sdajfkjasdfjksdh');
           this.messages = res.chats || [];
@@ -194,6 +196,10 @@ submissionModes = [
           this.checkCompletionStatus();
           this.scrollToBottom();
           this.isLoading = false;
+          }else{
+            this.isNotApproved=true;
+            this.isLoading = false;
+          }
         }
       },
       error: (error) => {

@@ -2,6 +2,7 @@ const circularApprovalModel = require("../models/circularApprovalsModel");
 const notificationModel = require("../models/notificationModel");
 const circularModel = require("../models/circularModel");
 const employeeModel = require("../models/employeesModal");
+const circularVisibilityModel = require("../models/circularVisibilityModel")
 
 const emitCircularUpdate = (req, approver_id, eventType, data) => {
   const io = req.app.get('io');
@@ -125,8 +126,8 @@ exports.markAsSeen= async(req, res)=> {
     }
   }
 
-  exports.approve= async(req, res)=> {
-    const { circularId,approverId } = req.params;
+ exports.approve = async(req, res) => {
+    const { circularId, approverId } = req.params;
 
     try {
       const result = await circularApprovalModel.approve(circularId, approverId);
@@ -138,42 +139,82 @@ exports.markAsSeen= async(req, res)=> {
         });
       }
 
-       const [circularRows] = await circularModel.getCircularById(circularId);
-    const circular = circularRows[0];
-    
-    const [approverRows] = await employeeModel.getEmployeeById(approverId);
-    const approver = approverRows[0];
+      const [circularRows] = await circularModel.getCircularById(circularId);
+      const circular = circularRows[0];
+      
+      const [approverRows] = await employeeModel.getEmployeeById(approverId);
+      const approver = approverRows[0];
 
-    const io = req.app.get('io');
- // Emit socket event to approver
+      const io = req.app.get('io');
+      
+      // Emit socket event to approver
       emitCircularUpdate(req, approverId, 'circular-status-updated', {
-      circular_id: circularId,
-      status: 'APPROVED',
-      message: 'Circular has been approved'
-    });
-     if (io && circular.creator_employee_id) {
-      const notificationId = await notificationModel.createNotification({
         circular_id: circularId,
-        recipient_employee_id: circular.creator_employee_id,
-        sender_employee_id: approverId,
-        notification_type: 'message',
-        message_preview: `Your circular "${circular.title}" has been approved`,
-        redirect_to: 'details'
+        status: 'APPROVED',
+        message: 'Circular has been approved'
       });
+      
+      // 1️⃣ Notify creator
+      if (io && circular.creator_employee_id) {
+        const notificationId = await notificationModel.createNotification({
+          circular_id: circularId,
+          recipient_employee_id: circular.creator_employee_id,
+          sender_employee_id: approverId,
+          notification_type: 'message',
+          message_preview: `Your circular "${circular.title}" has been approved`,
+          redirect_to: 'details'
+        });
 
-      // ✅ Emit notification to creator
-      io.to(`notifications-${circular.creator_employee_id}`).emit('new-notification', {
-        notification_id: notificationId,
-        circular_id: circularId,
-        sender_first_name: approver.first_name,
-        sender_last_name: approver.last_name,
-        notification_type: 'message',
-        message_preview: `Your circular "${circular.title}" has been approved`,
-        circular_title: circular.title,
-        circular_code: circular.circular_code,
-        redirect_to: 'details'
-      });
-    }
+        // ✅ Emit notification to creator
+        io.to(`notifications-${circular.creator_employee_id}`).emit('new-notification', {
+          notification_id: notificationId,
+          circular_id: circularId,
+          sender_first_name: approver.first_name,
+          sender_last_name: approver.last_name,
+          notification_type: 'message',
+          message_preview: `Your circular "${circular.title}" has been approved`,
+          circular_title: circular.title,
+          circular_code: circular.circular_code,
+          redirect_to: 'details'
+        });
+      } // 👈 Close the creator notification block HERE
+
+      // 2️⃣ Notify all employees with access (OUTSIDE the creator block)
+      const [visibleEmployees] = await circularVisibilityModel.getEmployeesByCircularId(circularId);
+
+      if (visibleEmployees && visibleEmployees.length > 0) {
+        // Filter out creator to avoid duplicate notification
+        const employeesToNotify = visibleEmployees.filter(
+          emp => emp.employee_id !== circular.creator_employee_id
+        );
+
+        // 3️⃣ Create notifications for all employees
+        for (const emp of employeesToNotify) {
+          const notificationId = await notificationModel.createNotification({
+            circular_id: circularId,
+            recipient_employee_id: emp.employee_id,
+            sender_employee_id: approverId,
+            notification_type: 'message',
+            message_preview: `New circular "${circular.title}" has been approved and is now available`,
+            redirect_to: 'details'
+          });
+
+          // 4️⃣ Emit socket event to each employee
+          if (io) {
+            io.to(`notifications-${emp.employee_id}`).emit('new-notification', {
+              notification_id: notificationId,
+              circular_id: circularId,
+              sender_first_name: approver.first_name,
+              sender_last_name: approver.last_name,
+              notification_type: 'message',
+              message_preview: `New circular "${circular.title}" has been approved and is now available`,
+              circular_title: circular.title,
+              circular_code: circular.circular_code,
+              redirect_to: 'details'
+            });
+          }
+        }
+      }
 
       res.json({ 
         success: true, 

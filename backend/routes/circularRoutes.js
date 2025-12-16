@@ -2,7 +2,14 @@ const express = require("express");
 const router = express.Router();
 const circularController = require("../controllers/circularController");
 const multer = require("multer");
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fieldSize: 10 * 1024 * 1024, // 10MB for JSON field data
+    fileSize: 50 * 1024 * 1024,  // 50MB for PDF files
+    fields: 20,                   // max number of non-file fields
+  }
+});
 
 router.post(
   "/upload",

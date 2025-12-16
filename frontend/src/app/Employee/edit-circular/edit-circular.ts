@@ -331,7 +331,7 @@ export class EditCircular implements OnInit {
       },
       error: (err) => {
         console.error(err);
-        this.snackBar.open('Failed to update circular', 'Close', { duration: 3000 });
+        this.snackBar.open('Failed to update circular! Fill all fileds', 'Close', { duration: 3000 });
       },
     });
   }
