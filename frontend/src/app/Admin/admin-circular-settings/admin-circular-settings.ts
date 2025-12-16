@@ -3,6 +3,7 @@ import { CircularService } from '../../services/circular-service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
+import { Toast } from '../../toast/toast';
 
 interface sourceType {
   id: number;
@@ -20,10 +21,10 @@ interface RepeatCycle {
   standalone: true,
   imports: [CommonModule, FormsModule, MatIconModule],
   templateUrl: './admin-circular-settings.html',
-  styleUrl: './admin-circular-settings.scss'
+  styleUrl: './admin-circular-settings.scss',
 })
 export class AdminCircularSettings implements OnInit {
-  constructor(private circularService: CircularService) {}
+  constructor(private circularService: CircularService, private toast: Toast) {}
 
   sourceType!: sourceType[];
   newSourceTypeName: string = '';
@@ -62,10 +63,13 @@ export class AdminCircularSettings implements OnInit {
           this.getSourceTypes();
           this.newSourceTypeName = '';
           // Show success toast
+          this.toast.show('Source Type saved successfully.', 'success');
         },
         error: (err) => {
           // Show error toast
-        }
+          const message = err.error?.error || 'Failed to update department. Please try again.';
+          this.toast.show(message, 'error');
+        },
       });
     }
   }
@@ -79,13 +83,17 @@ export class AdminCircularSettings implements OnInit {
     if (this.editingSourceTypeId && this.editingSourceTypeName.trim()) {
       this.circularService
         .updateSourceType(this.editingSourceTypeId, {
-          name: this.editingSourceTypeName.trim()
+          name: this.editingSourceTypeName.trim(),
         })
         .subscribe({
           next: () => {
             this.getSourceTypes();
             this.cancelEdit();
-          }
+          },
+          error: (err) => {
+            const message = err.error?.error;
+            this.toast.show(message, 'error');
+          },
         });
     }
   }
@@ -108,17 +116,23 @@ export class AdminCircularSettings implements OnInit {
 
   getRepeatCycles() {
     this.circularService.getRepeatCycles().subscribe((res: any) => {
-      this.repeatCycles = res.sort((a:RepeatCycle, b:RepeatCycle) => a.duration_days - b.duration_days);
+      this.repeatCycles = res.sort(
+        (a: RepeatCycle, b: RepeatCycle) => a.duration_days - b.duration_days
+      );
       console.log(res, 'repeat cycles');
     });
   }
 
   addRepeatCycle() {
-    if (this.newRepeatCycleName.trim() && this.newRepeatCycleDuration && this.newRepeatCycleDuration > 0) {
+    if (
+      this.newRepeatCycleName.trim() &&
+      this.newRepeatCycleDuration &&
+      this.newRepeatCycleDuration > 0
+    ) {
       this.circularService
         .addRepeatCycle({
           name: this.newRepeatCycleName.trim(),
-          duration_days: this.newRepeatCycleDuration
+          duration_days: this.newRepeatCycleDuration,
         })
         .subscribe({
           next: (res: any) => {
@@ -126,10 +140,13 @@ export class AdminCircularSettings implements OnInit {
             this.newRepeatCycleName = '';
             this.newRepeatCycleDuration = null;
             // Show success toast
+            this.toast.show('Repeat cycle created successfully', 'success');
           },
           error: (err) => {
             // Show error toast
-          }
+            const message = err.error?.error;
+            this.toast.show(message, 'error');
+          },
         });
     }
   }
@@ -150,13 +167,19 @@ export class AdminCircularSettings implements OnInit {
       this.circularService
         .updateRepeatCycle(this.editingRepeatCycleId, {
           name: this.editingRepeatCycleName.trim(),
-          duration_days: this.editingRepeatCycleDuration
+          duration_days: this.editingRepeatCycleDuration,
         })
         .subscribe({
           next: () => {
             this.getRepeatCycles();
             this.cancelEditCycle();
-          }
+            this.toast.show('Repeat cycle updated successfully', 'success');
+          },
+          error: (err) => {
+            // Show error toast
+            const message = err.error?.error;
+            this.toast.show(message, 'error');
+          },
         });
     }
   }

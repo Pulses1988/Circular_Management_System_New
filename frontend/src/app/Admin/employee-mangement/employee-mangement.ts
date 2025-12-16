@@ -657,14 +657,6 @@ export class EmployeeMangement {
     this.employeeForm.get('employee_id')?.setValidators([Validators.pattern(/^\S+$/)]);
     this.employeeForm.get('password')?.clearValidators();
 
-    // Clear and re-apply async validators for edit mode
-    this.employeeForm.get('email')?.clearAsyncValidators();
-    this.employeeForm.get('email')?.setAsyncValidators([this.emailDuplicateValidator()]);
-    this.employeeForm.get('phone_no')?.clearAsyncValidators();
-    this.employeeForm.get('phone_no')?.setAsyncValidators([this.phoneNoDuplicateValidator()]);
-    this.employeeForm.get('employee_id')?.clearAsyncValidators();
-    this.employeeForm.get('employee_id')?.setAsyncValidators([this.employeeIdDuplicateValidator()]);
-
     if (this.hasDepartments && emp.department_id) {
       this.loadRolesForDepartment(emp.department_id);
     } else if (!this.hasDepartments) {
@@ -750,11 +742,6 @@ export class EmployeeMangement {
       .get('password')
       ?.setValidators([Validators.required, this.noWhitespaceValidator]);
 
-    // Re-apply async validators for add mode
-    this.employeeForm.get('email')?.setAsyncValidators([this.emailDuplicateValidator()]);
-    this.employeeForm.get('phone_no')?.setAsyncValidators([this.phoneNoDuplicateValidator()]);
-    this.employeeForm.get('employee_id')?.setAsyncValidators([this.employeeIdDuplicateValidator()]);
-
     if (this.hasDepartments) {
       this.employeeForm.get('department_id')?.setValidators([Validators.required]);
     }
@@ -769,91 +756,5 @@ export class EmployeeMangement {
     }
     this.showForm = false;
     this.loadData();
-  }
-
-  // --- Async Validators ---
-  employeeIdDuplicateValidator(): AsyncValidatorFn {
-    return (control: AbstractControl) => {
-      if (!control.value) {
-        return of(null); // No value, no validation error
-      }
-
-      // If in edit mode and the employee_id hasn't changed, it's not a duplicate
-      if (this.isEditMode && control.value === this.originalEmployeeId) {
-        return of(null);
-      }
-
-      return control.valueChanges.pipe(
-        debounceTime(500), // Wait for user to stop typing
-        take(1), // Take only the first emission after debounce
-        switchMap((value) => {
-          if (!value) {
-            return of(null);
-          }
-          return this.userService.checkEmployeeIdExists(value).pipe(
-            map((isTaken) => (isTaken ? { employeeIdTaken: true } : null)),
-            takeUntil(this.destroy$)
-          );
-        })
-      );
-    };
-  }
-
-  emailDuplicateValidator(): AsyncValidatorFn {
-    return (control: AbstractControl) => {
-      if (!control.value) {
-        return of(null);
-      }
-
-      // If in edit mode and the email hasn't changed, it's not a duplicate
-      if (this.isEditMode && control.value === this.originalEmail) {
-        return of(null);
-      }
-
-      return control.valueChanges.pipe(
-        debounceTime(500),
-        take(1),
-        switchMap((value) => {
-          if (!value) {
-            return of(null);
-          }
-          return this.userService.checkEmployeeEmailExists(value).pipe(
-            map((isTaken) => (isTaken ? { emailTaken: true } : null)),
-            takeUntil(this.destroy$)
-          );
-        })
-      );
-    };
-  }
-
-  phoneNoDuplicateValidator(): AsyncValidatorFn {
-    return (control: AbstractControl) => {
-      if (!control.value) {
-        return of(null);
-      }
-
-      // If in edit mode and the phone number hasn't changed, it's not a duplicate
-      if (this.isEditMode && control.value === this.originalPhoneNo) {
-        return of(null);
-      }
-
-      return control.valueChanges.pipe(
-        debounceTime(500),
-        take(1),
-        switchMap((value) => {
-          if (!value) {
-            return of(null);
-          }
-          // Only check if phone_no has 10 digits
-          if (value && value.length === 10 && /^[0-9]{10}$/.test(value)) {
-            return this.userService.checkEmployeePhoneNoExists(value).pipe(
-              map((isTaken) => (isTaken ? { phoneNoTaken: true } : null)),
-              takeUntil(this.destroy$)
-            );
-          }
-          return of(null); // Not 10 digits or invalid format, skip duplicate check
-        })
-      );
-    };
   }
 }

@@ -1,4 +1,4 @@
-const sourceTypeModel=require('../models/sourceTypesModel')
+const sourceTypeModel = require("../models/sourceTypesModel");
 
 exports.getAllSourceTypes = async (req, res) => {
   try {
@@ -14,7 +14,8 @@ exports.getSourceTypeById = async (req, res) => {
   const { id } = req.params;
   try {
     const [rows] = await sourceTypeModel.getSourceTypeById(id);
-    if (!rows.length) return res.status(404).json({ error: "Source type not found" });
+    if (!rows.length)
+      return res.status(404).json({ error: "Source type not found" });
     res.json(rows[0]);
   } catch (err) {
     console.error(err);
@@ -26,10 +27,13 @@ exports.createSourceType = async (req, res) => {
   const { name } = req.body;
   try {
     const [existing] = await sourceTypeModel.findByName(name);
-    if (existing.length) return res.status(400).json({ error: "Source type already exists" });
+    if (existing.length)
+      return res.status(400).json({ error: "Source type already exists" });
 
     const [result] = await sourceTypeModel.createSourceType({ name });
-    const [newSource] = await sourceTypeModel.getSourceTypeById(result.insertId);
+    const [newSource] = await sourceTypeModel.getSourceTypeById(
+      result.insertId
+    );
     res.status(201).json(newSource[0]);
   } catch (err) {
     console.error(err);
@@ -42,6 +46,10 @@ exports.updateSourceType = async (req, res) => {
   const { name } = req.body;
 
   try {
+    const [existing] = await sourceTypeModel.findByName(name);
+    if (existing.length) {
+      return res.status(400).json({ error: "Source type already exists" });
+    }
     await sourceTypeModel.updateSourceType(id, { name });
     res.json({ message: "Source type updated successfully" });
   } catch (err) {
