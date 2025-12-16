@@ -35,7 +35,8 @@ interface Circular {
   reference_circular_id: number;
   approved_by:string;
   rejected_by:string;
-  approval_updated_at:string
+  approval_updated_at:string;
+  priority:'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 
 }
 
@@ -274,19 +275,36 @@ export class CircularApproval implements OnInit, OnDestroy {
 
     if (diffHours < 1) return 'Just now';
     if (diffHours < 24) return `${diffHours} hours ago`;
+    
     const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays} days ago`;
+    
+    if (diffDays <= 2) {
+      return `${diffDays} days ago`;
+    }
+    
+    // After 2 days, show date with 12-hour time
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    };
+    
+    return created.toLocaleString('en-US', options);
   }
 
-  getPriorityClass(circular: Circular): string {
-    const effectiveDate = new Date(circular.effective_from);
-    const daysUntilEffective = Math.floor(
-      (effectiveDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-    );
-
-    if (daysUntilEffective <= 7) return 'urgent';
-    return 'normal';
-  }
+ getPriorityClass(circular: Circular): string {
+  const priorityMap: { [key: string]: string } = {
+    'LOW': 'low',
+    'MEDIUM': 'medium',
+    'HIGH': 'high',
+    'URGENT': 'urgent'
+  };
+  
+  return priorityMap[circular.priority];
+}
 
   approveCircular(circularId: number) {
     if (!this.reviewerData?.id) {

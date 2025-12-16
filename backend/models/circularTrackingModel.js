@@ -45,7 +45,7 @@ exports.getUnseenByEmployee = async (employeeId) => {
     SELECT ct.*, c.title, c.effective_from, c.published_at
     FROM circular_tracking ct
     JOIN circulars c ON ct.circular_id = c.id
-    WHERE ct.employee_id = ? AND ct.is_seen = FALSE
+    WHERE ct.employee_id = ? AND ct.is_seen = FALSE AND c.status = 'APPROVED'
     ORDER BY c.published_at DESC
   `;
   return db.query(sql, [employeeId]);
@@ -56,7 +56,7 @@ exports.getSeenByEmployee=async(employeeId)=>{
     SELECT ct.*, c.title, c.effective_from, c.published_at
     FROM circular_tracking ct
     JOIN circulars c ON ct.circular_id = c.id
-    WHERE ct.employee_id = ? AND ct.is_seen = TRUE
+    WHERE ct.employee_id = ? AND ct.is_seen = TRUE AND c.status = 'APPROVED'
     ORDER BY c.published_at DESC
   `;
   return db.query(sql, [employeeId]);

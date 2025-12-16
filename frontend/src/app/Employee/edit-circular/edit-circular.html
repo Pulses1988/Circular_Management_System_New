@@ -16,7 +16,7 @@
       <!-- Title + Subtitle -->
       <div>
         <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-          Edit Rejected Circular
+          Edit Circular
         </h2>
         <p class="text-gray-600 dark:text-gray-400">
           Review and update the circular details before resubmission
@@ -77,6 +77,9 @@
             <div class="form-group">
               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 Source Type <span class="text-red-500 dark:text-red-400 ml-1">*</span>
+                @if (!sourceTypes) {
+                 <span class="text-red-500 dark:text-red-400 ml-1"> Need to define Source Type from Admin Panel</span> 
+                }
               </label>
               <div class="relative">
                 <select
@@ -405,7 +408,7 @@
             <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3"
               >Upload Circular PDF</label
             >
-            <div class="relative">
+            <div *ngIf="!attachedFile" class="relative">
               <input
                 type="file"
                 accept="application/pdf"
@@ -416,6 +419,7 @@
             <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
               PDF files only. Max size: 10MB
             </p>
+          
 
             <div
               *ngIf="attachedFile"

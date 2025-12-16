@@ -102,7 +102,7 @@ export class EmployeeSidebar implements OnInit, OnDestroy {
     {
       label: 'Circulars',
       icon: 'article',
-      route: '/employee/circulars',
+      route: '/employee/all-circulars',
       badge: this.circularStats.unseen,
       badgeType: 'urgent',
       subItems: [
