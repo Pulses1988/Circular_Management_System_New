@@ -33,8 +33,19 @@ export class EmployeeLogin {
     private employeeService: EmployeeService
   ) {
     this.loginForm = this.fb.group({
-      employeeId: ['', [Validators.required]],
-      password: ['', [Validators.required]],
+      // employeeId: ['', [Validators.required]],
+      // password: ['', [Validators.required]],
+ employeeId: [
+    '',
+    [
+      Validators.required,
+      Validators.pattern(/^EMP\d+$/)
+    ]
+  ],
+  password: ['', [Validators.required]],
+
+
+
     });
   }
 
@@ -94,17 +105,36 @@ export class EmployeeLogin {
 
   redirectToAdminLogin(): void {
     this.router.navigate(['/admin/admin-login']);
-  }
+
+  }  
+
+  goToForgotPassword(): void {
+  this.router.navigate(['/employee/forgot-password']);
+}
 
   getEmployeeIdErrorMessage(): string {
-    const control = this.loginForm.get('employeeId');
-    if (control?.hasError('required')) {
-      return 'Employee ID is required';
-    }
-    if (control?.hasError('minlength')) {
-      return 'Employee ID must be at least 6 characters';
-    }
-    return '';
+    // const control = this.loginForm.get('employeeId');
+    // if (control?.hasError('required')) {
+    //   return 'Employee ID is required';
+    // }
+    // if (control?.hasError('minlength')) {
+    //   return 'Employee ID must be at least 6 characters';
+    // }
+    // return '';
+const control = this.loginForm.get('employeeId');
+
+  if (control?.hasError('required')) {
+    return 'Employee ID is required';
+  }
+
+  if (control?.hasError('pattern')) {
+    return 'Employee ID must be in uppercase format (e.g. EMP031)';
+  }
+
+  return '';
+
+
+
   }
 
   getPasswordErrorMessage(): string {

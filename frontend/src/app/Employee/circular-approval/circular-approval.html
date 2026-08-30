@@ -322,8 +322,13 @@
                 </button>
               </div>
 
-              @if (activeTab === 'pending' && circular.circular_status === 'PENDING_APPROVAL') {
-              <div class="flex gap-2">
+              @if (activeTab === 'pending' && circular.circular_status === 'PENDING_APPROVAL')
+           {
+              <!-- <div class="flex gap-2"> 
+                 <p>
+    Approval Progress:
+    {{ circular.approved_count }} / {{ circular.total_approvers }}
+  </p>
                 <button
                   (click)="approveCircular(circular.circular_id)"
                   class="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all text-sm font-semibold shadow-md flex items-center gap-2"
@@ -337,10 +342,78 @@
                 >
                   <i class="material-icons text-sm">close</i>
                   Reject
-                </button>
-              </div>
-              }
-            </div>
+                </button> 
+              </div> -->
+ <div class="flex items-center gap-2">
+
+    <!-- <p>
+      Approval Progress:
+      {{ circular.approved_count || 0 }} / {{ circular.total_approvers || 0 }}
+    </p> -->
+
+    <!-- Current approver has not approved/rejected yet -->
+    @if (circular.approval_status === 'PENDING') {
+      <button
+        (click)="approveCircular(circular.circular_id)"
+        class="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg text-sm font-semibold shadow-md flex items-center gap-2"
+      >
+        <i class="material-icons text-sm">check</i>
+        Approve
+      </button>
+
+      <button
+        (click)="rejectCircular(circular.circular_id)"
+        class="px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg text-sm font-semibold shadow-md flex items-center gap-2"
+      >
+        <i class="material-icons text-sm">close</i>
+        Reject
+      </button>
+    }
+
+    <!-- Current approver already approved -->
+    @if (circular.approval_status === 'APPROVED') {
+      <button
+        disabled
+        class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold shadow-md flex items-center gap-2 opacity-70 cursor-not-allowed"
+      >
+        <i class="material-icons text-sm">check</i>
+        Approved
+      </button>
+    }
+
+    <!-- Current approver rejected -->
+    @if (circular.approval_status === 'REJECTED') {
+      <button
+        disabled
+        class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold shadow-md flex items-center gap-2 opacity-70 cursor-not-allowed"
+      >
+        <i class="material-icons text-sm">close</i>
+        Rejected
+      </button>
+    }
+
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              } 
+
+            </div> 
+
+
             <!--  PDF viewer -->
             <div *ngIf="showPdfViewer" class="pdf-overlay" (click)="closePDF()">
               <div class="pdf-container" (click)="$event.stopPropagation()">

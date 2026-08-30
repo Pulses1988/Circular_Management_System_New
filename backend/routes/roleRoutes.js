@@ -4,6 +4,7 @@ const roleController = require("../controllers/roleController");
 const authenticateToken = require("../authMiddleware");
 
 // Route to create role
+
 router.post("/", authenticateToken, roleController.createRole);
 
 // Get roles by head office
@@ -16,6 +17,7 @@ router.get('/branch/:branchId',authenticateToken, roleController.getRolesByBranc
 router.get('/department/:departmentId',authenticateToken, roleController.getRolesByDepartment);
 
 // Get single role by ID
+router.get("/", authenticateToken, roleController.getAllRoles);
 router.get('/:roleId',authenticateToken, roleController.getRoleById);
 
 // Bulk update role positions

@@ -53,15 +53,44 @@ exports.getUnseenByEmployee = async (employeeId) => {
 
 exports.getSeenByEmployee=async(employeeId)=>{
   const sql = `
-    SELECT ct.*, c.title, c.effective_from, c.published_at
+    SELECT
+      ct.circular_id,
+      ct.employee_id,
+      ct.is_seen,
+      ct.seen_at,
+
+      c.circular_code,
+      c.title,
+      c.priority,
+      c.published_at,
+      c.effective_from,
+
+      CONCAT(
+        e.first_name, ' ',
+        IFNULL(e.middle_name, ''), ' ',
+        e.last_name
+      ) AS created_by
+
     FROM circular_tracking ct
-    JOIN circulars c ON ct.circular_id = c.id
-    WHERE ct.employee_id = ? AND ct.is_seen = TRUE AND c.status = 'APPROVED'
-    ORDER BY c.published_at DESC
+
+    JOIN circulars c
+      ON ct.circular_id = c.id
+
+    JOIN employees e
+      ON c.creator_employee_id = e.id
+
+    WHERE
+      ct.employee_id = ?
+      AND ct.is_seen = TRUE
+      AND c.status = 'APPROVED'
+
+    ORDER BY ct.seen_at DESC
+  
+  
   `;
   return db.query(sql, [employeeId]);
 
-}
+};
 
 exports.getCompletionStatus = async (circularId, employeeId) => {
   const sql = `
@@ -70,4 +99,142 @@ exports.getCompletionStatus = async (circularId, employeeId) => {
     WHERE circular_id = ? AND employee_id = ?
   `;
   return db.query(sql, [circularId, employeeId]);
+};  
+
+
+exports.getStatistics = async (employeeId) => {
+
+  const sql = `
+    SELECT
+
+      COUNT(*) AS totalCirculars,
+
+      SUM(CASE WHEN ct.is_seen = TRUE THEN 1 ELSE 0 END) AS readCirculars,
+
+      SUM(CASE WHEN ct.is_seen = FALSE THEN 1 ELSE 0 END) AS unreadCirculars,
+
+      SUM(CASE WHEN ct.is_completed = TRUE THEN 1 ELSE 0 END) AS completedCirculars
+
+    FROM circular_tracking ct
+
+    JOIN circulars c
+      ON ct.circular_id = c.id
+
+    WHERE
+      ct.employee_id = ?
+      AND c.status = 'APPROVED'
+  `;
+
+  return db.query(sql, [employeeId]);
+
+}; 
+
+exports.getPendingEmployeesForReminder = async () => {
+  const sql = `
+    SELECT
+      ct.track_id,
+      ct.circular_id,
+      ct.employee_id,
+      ct.last_reminder_at,
+
+      c.title,
+      c.circular_code,
+      c.creator_employee_id,
+      c.effective_from,
+
+      rc.duration_days,
+      rc.name AS repeat_cycle_name
+
+    FROM circular_tracking ct
+
+    JOIN circulars c
+      ON ct.circular_id = c.id
+
+    JOIN repeat_cycles rc
+      ON c.repeat_cycle_id = rc.id
+
+    WHERE
+      ct.is_completed = FALSE
+      AND c.status = 'APPROVED'
+      AND (
+        ct.last_reminder_at IS NULL
+        OR DATE_ADD(
+          ct.last_reminder_at,
+          INTERVAL rc.duration_days DAY
+        ) <= NOW()
+      )
+  `;
+
+  const [rows] = await db.query(sql);
+  return rows;
+};   
+
+
+
+exports.updateLastReminderAt = async (trackId) => {
+  const sql = `
+    UPDATE circular_tracking
+    SET last_reminder_at = NOW()
+    WHERE track_id = ?
+  `;
+
+  await db.query(sql, [trackId]);
+};
+
+
+exports.getCircularCompletionSummary = async (circularId) => {
+
+  const sql = `
+    SELECT
+      COUNT(*) AS totalEmployees,
+      SUM(CASE WHEN is_completed = TRUE THEN 1 ELSE 0 END) AS completedEmployees
+    FROM circular_tracking
+    WHERE circular_id = ?
+  `;
+
+  return db.query(sql, [circularId]);
+
+};
+
+// Assigned employees and their current completion state.  Completion-status
+// notification rules use this without changing the tracking workflow.
+exports.getCompletionStatusEmployees = async (circularId) => {
+  const sql = `
+    SELECT
+      ct.employee_id,
+      ct.is_completed,
+      CONCAT_WS(' ', e.first_name, NULLIF(e.middle_name, ''), e.last_name) AS employee_name
+    FROM circular_tracking ct
+    JOIN employees e ON e.id = ct.employee_id
+    WHERE ct.circular_id = ?
+    ORDER BY e.first_name, e.last_name
+  `;
+
+  return db.query(sql, [circularId]);
+};
+
+
+//pending summary//
+
+exports.getPendingEmployees = async (circularId) => {
+
+  const sql = `
+    SELECT
+      e.id,
+      CONCAT(
+        e.first_name,
+        ' ',
+        IFNULL(e.middle_name, ''),
+        ' ',
+        e.last_name
+      ) AS employee_name
+    FROM circular_tracking ct
+    JOIN employees e
+      ON ct.employee_id = e.id
+    WHERE
+      ct.circular_id = ?
+      AND ct.is_completed = FALSE
+  `;
+
+  return db.query(sql, [circularId]);
 };

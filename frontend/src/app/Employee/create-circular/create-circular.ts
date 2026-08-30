@@ -93,13 +93,31 @@ export class CreateCircular {
   circularForm!: FormGroup;
   isDarkMode = false;
   isProcessing = false;
+  isPreviousCircularDropdownOpen = false;
+  hoveredCircular: Circular | null = null;
+
+  hoverPopupPosition = {
+    top: 0,
+    left: 0,
+  };
+
   lastSaved: Date | null = null;
   assistantExpanded = false;
   employee: any;
+  private readonly DRAFT_KEY = 'createCircularDraft';
 
   attachedFile: AttachedFile | null = null;
   selectedApprovers: number[] = [];
-  selectedEmployees: any[] = [];
+  maxApprovers: number = 1;
+  selectedEmployees: any[] = [];   
+
+  showSelectedEmployeesPopup = false;
+  
+//Variables for head Office
+  branches: any[] = [];
+selectedBranches: any[] = [];
+
+
 
   // Track modal state
   private isModalOpening = false;
@@ -114,15 +132,68 @@ export class CreateCircular {
   repeatCycleData: repeatCycle[] = [];
 
   confidentialityLevels = [
-    { value: 'PUBLIC', label: 'Public', description: 'Available to all employees' },
-    { value: 'INTERNAL', label: 'Internal', description: 'Restricted to internal staff' },
-    { value: 'CONFIDENTIAL', label: 'Confidential', description: 'Limited access only' },
-    { value: 'RESTRICTED', label: 'Restricted', description: 'Highly sensitive information' },
-    {
-      value: 'CUSTOM',
-      label: 'Custom',
-      description: 'Visible only to selected employees or groups',
-    },
+    // { value: 'PUBLIC', label: 'Public', description: 'Available to all employees' },
+    // { value: 'INTERNAL', label: 'Internal', description: 'Restricted to internal staff' },
+    // { value: 'CONFIDENTIAL', label: 'Confidential', description: 'Limited access only' },
+    // { value: 'RESTRICTED', label: 'Restricted', description: 'Highly sensitive information' },
+    // {
+    //   value: 'CUSTOM',
+    //   label: 'Custom',
+    //   description: 'Visible only to selected employees or groups',
+    // }, 
+ { value: 'PUBLIC', label: 'Public', description: 'Visible to all employees' },
+
+  { value: 'INTERNAL', label: 'Internal', description: 'Visible only to authenticated employees' },
+
+  { value: 'HEAD_OFFICE', label: 'Head Office (HO)', description: 'Only Head Office users' },
+
+  { value: 'CORPORATE_OFFICE', label: 'Corporate Office', description: 'Corporate office staff only' },
+
+  { value: 'BOARD_OF_DIRECTORS', label: 'Board of Directors', description: 'Chairman, Vice Chairman, Directors' },
+
+  { value: 'MD_CEO', label: 'Managing Director / CEO', description: 'Top management only' },
+
+  // { value: 'EXECUTIVE_COMMITTEE', label: 'Executive Committee', description: 'Committee members only' },
+
+  { value: 'REGION_WISE', label: 'Region Wise', description: 'Selected regions' },
+
+  { value: 'ZONE_WISE', label: 'Zone Wise', description: 'Selected zones' },
+
+  { value: 'CIRCLE_WISE', label: 'Circle Wise', description: 'Selected circles' },
+
+  { value: 'BRANCH_WISE', label: 'Branch Wise', description: 'Selected branches' },
+
+  { value: 'DEPARTMENT_WISE', label: 'Department Wise', description: 'Selected departments' },
+
+  { value: 'DESIGNATION_WISE', label: 'Designation Wise', description: 'Managers, Clerks, Officers' },
+
+  { value: 'ROLE_WISE', label: 'Role Wise', description: 'Based on system roles' },
+
+  { value: 'USER_WISE', label: 'User Wise', description: 'Specific users' },
+
+  { value: 'COMMITTEE_WISE', label: 'Committee Wise', description: 'Committee members' },
+
+  // { value: 'PRODUCT_WISE', label: 'Product Wise', description: 'Product teams' },
+
+  // { value: 'CUSTOMER_FACING', label: 'Customer Facing', description: 'Customer-facing staff' },
+
+  // { value: 'CONFIDENTIAL_GROUP', label: 'Confidential Group', description: 'Restricted users only' },
+
+  // { value: 'EXTERNAL', label: 'External', description: 'Auditors, Consultants, Regulators' }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   ];
 
   activeFormats = {
@@ -141,7 +212,7 @@ export class CreateCircular {
     private router: Router,
     private circularService: CircularService,
     private employeeService: EmployeeService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
   ) {
     this.initializeForm();
     this.detectSystemTheme();
@@ -159,6 +230,24 @@ export class CreateCircular {
     this.initializeForm();
     this.loadEmployeeData();
     this.loadData();
+    this.loadMaxApprovers();
+    // Auto-generate Circular Code
+    // this.circularForm.patchValue({
+    //   circular_code: this.generateCircularCode()
+    // });
+
+    // this.restoreDraft();
+
+    const draft = localStorage.getItem(this.DRAFT_KEY);
+
+    if (draft) {
+      if (confirm('An unsaved circular draft was found. Do you want to restore it?')) {
+        this.restoreDraft();
+      } else {
+        localStorage.removeItem(this.DRAFT_KEY);
+      }
+    }
+
     this.setupAutoSave();
     this.setupEditorEventListeners();
 
@@ -168,10 +257,39 @@ export class CreateCircular {
     });
   }
 
+  // ADD THE METHOD HERE
+  loadMaxApprovers(): void {
+    this.circularService.getMaxApprovers().subscribe({
+      next: (response: any) => {
+        this.maxApprovers = Number(response.maxApprovers);
+        console.log('Maximum approvers allowed:', this.maxApprovers);
+      },
+      error: (error) => {
+        console.error('Error loading maximum approvers:', error);
+      },
+    });
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
+
+  //   private generateCircularCode(): string {
+  //   const now = new Date();
+
+  //   return (
+  //     'CIR-' +
+  //     now.getFullYear() +
+  //     String(now.getMonth() + 1).padStart(2, '0') +
+  //     String(now.getDate()).padStart(2, '0') +
+  //     String(now.getHours()).padStart(2, '0') +
+  //     String(now.getMinutes()).padStart(2, '0') +
+  //     String(now.getSeconds()).padStart(2, '0') +
+  //     '-' +
+  //     Math.floor(1000 + Math.random() * 9000)
+  //   );
+  // }
 
   // Handle dropdown click to detect manual selection
   onConfidentialityDropdownClick(): void {
@@ -191,24 +309,147 @@ export class CreateCircular {
     }
   }
 
-  private handleConfidentialityChange(value: string): void {
+  private handleConfidentialityChange(value: string): void 
+  {
     // Skip if modal is already opening
     if (this.isModalOpening) {
       this.isModalOpening = false;
       return;
     }
+     
+//        if (value === 'HEAD_OFFICE' || value === 'BRANCH_WISE')  {
+
+//     this.loadBranches();
+
+//     return;
+// }
+
+if (
+  // value === 'HEAD_OFFICE' ||
+  // value === 'REGION_WISE' ||
+  // value === 'ZONE_WISE' ||
+  // value === 'CIRCLE_WISE' ||
+  // value === 'BRANCH_WISE' ||
+  // value === 'DEPARTMENT_WISE' ||
+  // value === 'ROLE_WISE' ||
+  // value === 'USER_WISE'  
+  
+ value === 'HEAD_OFFICE' ||
+  value === 'CORPORATE_OFFICE' ||
+  value === 'BOARD_OF_DIRECTORS' ||
+  value === 'MD_CEO' ||
+  value === 'EXECUTIVE_COMMITTEE' ||
+  value === 'REGION_WISE' ||
+  value === 'ZONE_WISE' ||
+  value === 'CIRCLE_WISE' ||
+  value === 'BRANCH_WISE' ||
+  value === 'DEPARTMENT_WISE' ||
+  value === 'DESIGNATION_WISE' ||
+  value === 'ROLE_WISE' ||
+  value === 'USER_WISE' ||
+  value === 'COMMITTEE_WISE' ||
+  value === 'PRODUCT_WISE' ||
+  value === 'CUSTOMER_FACING' ||
+  value === 'CONFIDENTIAL_GROUP' ||
+  value === 'EXTERNAL'
+
+
+) {
+  this.pendingConfidentialityChange = value;
+
+  setTimeout(() => {
+    this.openEmployeeModal();
+  });
+
+  return;
+}
+
 
     // Check if this is a modal-required confidentiality level
-    if (value === 'CONFIDENTIAL' || value === 'RESTRICTED' || value === 'CUSTOM') {
-      this.pendingConfidentialityChange = value;
+// if (    
+      // value === 'CONFIDENTIAL' 
+      // || value === 'RESTRICTED' 
+      // || value === 'CUSTOM'
 
-      setTimeout(() => {
-        this.openEmployeeModal();
-      });
-    } else {
+    //    value === 'DEPARTMENT_WISE' ||
+    //   value === 'ROLE_WISE' ||
+    //   value === 'USER_WISE'
+     
+    // ) {
+    //   this.pendingConfidentialityChange = value;
+
+    //   setTimeout(() => {
+    //     this.openEmployeeModal();
+    //   });
+    // } 
+    
+    else {
       // For non-modal levels, clear selected employees
       this.selectedEmployees = [];
       this.pendingConfidentialityChange = null;
+    }
+  }
+
+
+toggleBranch(branch: any, event: Event): void {
+
+  const checked = (event.target as HTMLInputElement).checked;
+
+  if (checked) {
+
+    this.selectedBranches.push(branch);
+
+  } else {
+
+    this.selectedBranches = this.selectedBranches.filter(
+      b => b.id !== branch.id
+    );
+
+  }
+
+  console.log(this.selectedBranches);
+
+}
+
+
+  //ConfidentialityNote
+  getConfidentialityNote(): string {
+    const value = this.circularForm.get('confidentiality')?.value;
+
+    switch (value) {
+      case 'PUBLIC':
+        return 'This circular will be visible to all employees.';
+
+      case 'INTERNAL':
+        return 'This circular will be visible to internal employees of your Head Office, Branch, and/or Department.';
+
+      case 'CONFIDENTIAL':
+        return 'This circular will be visible only to the selected employees.';
+
+      case 'RESTRICTED':
+        return 'This highly sensitive circular will be visible only to the selected employees.';
+
+      case 'CUSTOM':
+        return 'This circular will be visible only to the employees or groups you select.';
+
+      default:
+        return '';
+    }
+  }
+
+  //For going submit but to rquired filled
+  scrollToFirstInvalidField(): void {
+    const firstInvalidControl = document.querySelector(
+      '.form-input.ng-invalid, .form-select.ng-invalid, .rich-editor.error',
+    ) as HTMLElement;
+
+    if (firstInvalidControl) {
+      firstInvalidControl.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+
+      firstInvalidControl.focus();
     }
   }
 
@@ -226,6 +467,7 @@ export class CreateCircular {
       panelClass: 'custom-dialog-container',
       data: {
         preSelectedEmployees: [...this.selectedEmployees],
+        confidentiality: this.pendingConfidentialityChange || this.circularForm.get('confidentiality')?.value,
       },
     });
 
@@ -245,7 +487,7 @@ export class CreateCircular {
               {
                 confidentiality: this.pendingConfidentialityChange,
               },
-              { emitEvent: false }
+              { emitEvent: false },
             );
             this.pendingConfidentialityChange = null;
           }
@@ -271,7 +513,7 @@ export class CreateCircular {
       {
         confidentiality: defaultLevel,
       },
-      { emitEvent: false }
+      { emitEvent: false },
     );
 
     this.pendingConfidentialityChange = null;
@@ -286,7 +528,7 @@ export class CreateCircular {
   private filterConfidentialityOptions(): void {
     if (this.employee!.branch_id) {
       this.filteredConfidentialityLevels = this.confidentialityLevels.filter(
-        (level) => level.value === 'INTERNAL'
+        (level) => level.value === 'INTERNAL',
       );
     } else {
       this.filteredConfidentialityLevels = [...this.confidentialityLevels];
@@ -322,7 +564,14 @@ export class CreateCircular {
   // validator for select employee when the confidentiality is CONFIDENTIAL ,RESTRICTED ,CUSTOM
   private confidentialityValidator(control: AbstractControl): ValidationErrors | null {
     const value = control.value;
-    const requiresEmployees = ['CONFIDENTIAL', 'RESTRICTED', 'CUSTOM'];
+    // const requiresEmployees = ['CONFIDENTIAL', 'RESTRICTED', 'CUSTOM'];
+    const requiresEmployees = [
+  'DEPARTMENT_WISE',
+  'ROLE_WISE',
+  'USER_WISE'
+];
+
+
 
     if (requiresEmployees.includes(value) && this.selectedEmployees.length === 0) {
       return { employeesRequired: true };
@@ -343,7 +592,7 @@ export class CreateCircular {
     const selectedDateOnly = new Date(
       selectedDate.getFullYear(),
       selectedDate.getMonth(),
-      selectedDate.getDate()
+      selectedDate.getDate(),
     );
     const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
@@ -366,7 +615,11 @@ export class CreateCircular {
         'INTERNAL',
         [Validators.required, this.confidentialityValidator.bind(this)],
       ],
-      effective_from: ['', [Validators.required, this.todayOrFutureDateValidator.bind(this)]],
+      // effective_from: ['', [Validators.required, this.todayOrFutureDateValidator.bind(this)]],
+      effective_from: [
+        this.getTodayDate(),
+        [Validators.required, this.todayOrFutureDateValidator.bind(this)],
+      ],
       repeat_cycle: ['', Validators.required],
       content: ['', [Validators.required, Validators.minLength(10)]],
       priority: ['MEDIUM', Validators.required],
@@ -374,9 +627,21 @@ export class CreateCircular {
     });
   }
 
+  // getTodayDate(): string {
+  //   const today = new Date();
+  //   return today.toISOString().slice(0, 16);
+  // }
   getTodayDate(): string {
-    const today = new Date();
-    return today.toISOString().slice(0, 16);
+    const now = new Date();
+
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
   private detectSystemTheme(): void {
@@ -394,9 +659,7 @@ export class CreateCircular {
     this.circularForm.valueChanges
       .pipe(debounceTime(3000), takeUntil(this.destroy$))
       .subscribe(() => {
-        if (this.circularForm.valid) {
-          this.autoSave();
-        }
+        this.autoSave();
       });
   }
 
@@ -415,6 +678,47 @@ export class CreateCircular {
   goBack(): void {
     // this.router.navigate(['/employee/employee-dashboard']);
     window.history.back();
+  }
+
+  togglePreviousCircularDropdown(): void {
+    this.isPreviousCircularDropdownOpen = !this.isPreviousCircularDropdownOpen;
+  }
+
+  selectPreviousCircular(circular: Circular): void {
+    this.circularForm.patchValue({
+      previous_circular_id: circular.id,
+    });
+
+    this.isPreviousCircularDropdownOpen = false;
+    this.hoveredCircular = null;
+
+    console.log('Selected previous circular:', circular);
+  }
+
+  showCircularPopup(event: MouseEvent, circular: Circular): void {
+    const element = event.currentTarget as HTMLElement;
+    const rect = element.getBoundingClientRect();
+
+    this.hoveredCircular = circular;
+
+    this.hoverPopupPosition = {
+      top: rect.top,
+      left: rect.right + 12,
+    };
+  }
+
+  hideCircularPopup(): void {
+    this.hoveredCircular = null;
+  }
+
+  getSelectedPreviousCircularText(): string {
+    const selectedId = Number(this.circularForm.get('previous_circular_id')?.value);
+
+    const selectedCircular = this.previousCirculars.find((circular) => circular.id === selectedId);
+
+    return selectedCircular
+      ? `${selectedCircular.circular_code} - ${selectedCircular.title}`
+      : 'Select previous circular';
   }
 
   // Data loading
@@ -446,6 +750,55 @@ export class CreateCircular {
       this.repeatCycleData = data as repeatCycle[];
     });
   }
+
+loadBranches(): void {
+
+  // this.circularService
+  //   .getBranchesByHeadOfficeId(this.employee.head_office_id)
+  //   .subscribe({
+
+  //     next: (res: any) => {
+
+  //       this.branches = res.data;
+
+  //       console.log("Branches", this.branches);
+
+  //     },
+
+  //     error: err => {
+
+  //       console.error(err);
+
+  //     }
+
+  //   });
+ this.employeeService
+    .getBranchesByHeadOfficeId(this.employee.head_office_id)
+    .subscribe({
+      next: (res: any) => {
+        this.branches = res.data;
+        console.log("Branches:", this.branches);
+      },
+      error: (err: any) => {
+        console.error(err);
+      }
+    });
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
 
   // File management
   onFileSelect(event: Event): void {
@@ -493,6 +846,11 @@ export class CreateCircular {
   trackByFileId(index: number, file: AttachedFile): string {
     return file.id;
   }
+
+  
+
+
+
 
   // Method to check current formatting state
   checkActiveFormats(): void {
@@ -565,16 +923,41 @@ export class CreateCircular {
   }
 
   // Reviewer management
+  // toggleApprover(approverId: number, event: Event): void {
+  //   const checked = (event.target as HTMLInputElement).checked;
+
+  //   if (checked) {
+  //     if (!this.selectedApprovers.includes(approverId)) {
+  //       this.selectedApprovers.push(approverId);
+  //     }
+  //   } else {
+  //     this.selectedApprovers = this.selectedApprovers.filter((id) => id !== approverId);
+  //   }
+  // }
   toggleApprover(approverId: number, event: Event): void {
-    const checked = (event.target as HTMLInputElement).checked;
+    const checkbox = event.target as HTMLInputElement;
+    const checked = checkbox.checked;
 
     if (checked) {
+      if (this.selectedApprovers.length >= this.maxApprovers) {
+        checkbox.checked = false;
+
+        this.snackBar.open(`You can select only ${this.maxApprovers} approver(s)`, 'Close', {
+          duration: 3000,
+          panelClass: ['error-snackbar'],
+        });
+
+        return;
+      }
+
       if (!this.selectedApprovers.includes(approverId)) {
         this.selectedApprovers.push(approverId);
       }
     } else {
       this.selectedApprovers = this.selectedApprovers.filter((id) => id !== approverId);
     }
+
+    console.log('Selected approvers:', this.selectedApprovers);
   }
 
   removeApprover(approverId: number): void {
@@ -651,7 +1034,39 @@ export class CreateCircular {
 
   // Actions
   autoSave(): void {
+    // this.lastSaved = new Date();
+    console.log('Auto Save Called');
+
+    const draft = {
+      form: this.circularForm.value,
+      selectedApprovers: this.selectedApprovers,
+      selectedEmployees: this.selectedEmployees,
+    };
+
+    localStorage.setItem(this.DRAFT_KEY, JSON.stringify(draft));
+
+    console.log('Saved Draft:', draft);
+
     this.lastSaved = new Date();
+  }
+
+  private restoreDraft(): void {
+    console.log('Restore Called');
+
+    const draft = localStorage.getItem(this.DRAFT_KEY);
+
+    console.log('Draft from localStorage:', draft);
+
+    if (!draft) return;
+
+    const data = JSON.parse(draft);
+
+    console.log('Parsed Draft:', data);
+
+    this.circularForm.patchValue(data.form);
+
+    this.selectedApprovers = data.selectedApprovers || [];
+    this.selectedEmployees = data.selectedEmployees || [];
   }
 
   previewCircular(): void {
@@ -660,6 +1075,8 @@ export class CreateCircular {
 
   discardDraft(): void {
     if (confirm('Are you sure you want to discard this draft? All changes will be lost.')) {
+      localStorage.removeItem(this.DRAFT_KEY);
+
       this.clearForm();
       this.router.navigate(['/employee/employee-dashboard']);
     }
@@ -675,14 +1092,22 @@ export class CreateCircular {
         });
         return;
       }
-    }
+    }  
+
+
+
+
 
     // For APPROVAL - check everything
     if (status === 'PENDING_APPROVAL') {
       if (this.circularForm.invalid) {
         this.circularForm.markAllAsTouched();
+        setTimeout(() => {
+          this.scrollToFirstInvalidField();
+        }, 100);
         return;
       }
+
       if (!this.attachedFile) {
         this.snackBar.open('PDF file is required', 'Close', {
           duration: 3000,
@@ -690,8 +1115,8 @@ export class CreateCircular {
         });
         return;
       }
-      if (this.selectedApprovers.length === 0) {
-        this.snackBar.open('Please select at least one approver', 'Close', {
+      if (this.selectedApprovers.length !== this.maxApprovers) {
+        this.snackBar.open(`You must select exactly ${this.maxApprovers} approver(s)`, 'Close', {
           duration: 3000,
           panelClass: ['error-snackbar'],
         });
@@ -707,7 +1132,60 @@ export class CreateCircular {
     formData.append('source_type_id', this.circularForm.value.source_type_id || '');
     formData.append('creator_employee_id', this.circularForm.value.originator_id || '');
     formData.append('circular_code', this.circularForm.value.circular_code);
-    formData.append('send_type', this.circularForm.value.confidentiality);
+    // formData.append('send_type', this.circularForm.value.confidentiality);
+
+
+//new change that support current UI
+const confidentiality = this.circularForm.value.confidentiality;
+
+let sendType = 'CUSTOM';
+
+switch (confidentiality) {
+
+  case 'PUBLIC':
+    sendType = 'PUBLIC';
+    break;
+
+  case 'INTERNAL':
+    sendType = 'INTERNAL';
+    break;
+
+  case 'HEAD_OFFICE':
+    sendType = 'CUSTOM';
+    break;
+
+  case 'CORPORATE_OFFICE':
+  case 'BOARD_OF_DIRECTORS':
+  case 'MD_CEO':
+  case 'EXECUTIVE_COMMITTEE':
+  case 'REGION_WISE':
+  case 'ZONE_WISE':
+  case 'CIRCLE_WISE':
+  case 'BRANCH_WISE':
+    sendType = 'INTERNAL';
+    break;
+
+  case 'DEPARTMENT_WISE':
+  case 'DESIGNATION_WISE':
+  case 'ROLE_WISE':
+  case 'USER_WISE':
+  case 'COMMITTEE_WISE':
+  case 'PRODUCT_WISE':
+  case 'CUSTOMER_FACING':
+  case 'CONFIDENTIAL_GROUP':
+  case 'EXTERNAL':
+    sendType = 'CUSTOM';
+    break;
+}
+
+formData.append('send_type', sendType);
+formData.append('visibility_type', confidentiality);
+
+
+
+
+
+
     formData.append('effective_from', this.circularForm.value.effective_from || '');
     formData.append('repeat_cycle', this.circularForm.value.repeat_cycle);
     formData.append('status', status);
@@ -735,11 +1213,26 @@ export class CreateCircular {
       }
     }
 
+    console.log(formData.values, 'formdata');
+    console.log(this.circularForm.value, 'circularForm');
+
+
+    for (const pair of formData.entries()) {
+  console.log(pair[0], pair[1]);
+}
+ 
+
     this.circularService.uploadCircular(formData).subscribe({
       next: (res) => {
         this.isProcessing = false;
         const message = status === 'DRAFT' ? 'Draft saved!' : 'Submitted for approval!';
         this.snackBar.open(message, 'Close', { duration: 3000 });
+
+        // Remove temporary draft from browser
+        // localStorage.removeItem(this.DRAFT_KEY);
+        if (status === 'PENDING_APPROVAL') {
+          localStorage.removeItem(this.DRAFT_KEY);
+        }
 
         this.clearForm();
         this.loadEmployeeData();
@@ -756,7 +1249,7 @@ export class CreateCircular {
       },
     });
   }
-
+  
   // Add this simple method to check if draft can be saved
   canSaveDraft(): boolean {
     return !!(this.circularForm.value.title && this.circularForm.value.circular_code);

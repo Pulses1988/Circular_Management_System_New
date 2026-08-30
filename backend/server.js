@@ -4,7 +4,7 @@ const initializeDatabase = require("./config/init_db");
 const { Server } = require("socket.io");
 const http = require("http");
 
-
+require("./rules/circularRules");
 const app = express();
 const server = http.createServer(app);
 const subscribedCircularRooms = new Set();
@@ -30,7 +30,11 @@ const branchRoutes = require("./routes/branchesRoutes");
 const departmentRoutes = require("./routes/departmentRoutes");
 const employeeRoutes = require("./routes/employeesRoutes");
 const roleRoutes = require("./routes/roleRoutes");
-const circularRoutes = require("./routes/circularRoutes");
+const circularRoutes = require("./routes/circularRoutes"); 
+
+const recurrenceRoutes =require("./routes/recurrenceRoutes");
+
+
 const sourceTypeRoutes = require("./routes/sourceTypesRoutes");
 const circularApprovalRoutes = require("./routes/CircularApprovalsRoutes");
 const repeatCycleRoutes = require("./routes/repeatCycleRoutes");
@@ -43,23 +47,78 @@ const circularCompletionRoutes = require("./routes/circularCompletionRoutes");
 const cron = require('node-cron');
 const circularRecurrenceController = require("./controllers/circularRecurrenceController");
 const circularRecurrenceRoutes = require("./routes/circularRecurrenceRoutes");
+const settingsRoutes = require("./routes/settingsRoutes");
+const circularReminderService = require("./services/circularReminderService");
+const circularReadReminderService = require('./services/circularReadReminderService');
+const recurrenceService = require("./services/recurrenceService");
+const ruleExecutionRoutes = require("./routes/ruleExecutionRoutes");
+
+//Higher authority Controller
+const higherAuthorityRoutes =require("./routes/higherAuthorityRoutes");
+//Rule Engine Route
+const ruleEngineRoutes = require("./routes/ruleEngineRoutes");
+//register route 
+const regionRoutes = require("./routes/regionRoutes");
+
+//ROute for Zone 
+const zoneRoutes = require("./routes/zoneRoutes");  
+
+//Route for circle
+const circleRoutes =require("./routes/circleRoutes");
+
+//ROute for commitee
+const committeeRoutes = require("./routes/committeeRoutes"); 
+const memberTypeRoutes = require("./routes/memberTypeRoutes");
+
 
 // Allow cross-origin requests from your Angular app
 app.use(
   cors({
     origin: ["http://localhost:4200", "http://192.168.1.11:4200"],
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
   })
+); 
+
+// Add this
+app.use(express.json());
+
+initializeDatabase(); 
+
+const eventLogRoutes =
+require("./routes/eventLogRoutes");
+
+app.use(
+    "/api/event-master",
+    eventLogRoutes
 );
 
 
 
+// app.use("/api/circular", circularRoutes);
+
+
+
+
+app.use(
+"/api/recurrence",
+recurrenceRoutes
+); 
+
+
+//routes for rules execution
+app.use("/api", ruleExecutionRoutes); 
+
+//routes for rule engine
+app.use("/api/rule-engine", ruleEngineRoutes); 
+
+app.use("/api/member-types", memberTypeRoutes);
+
 // Parse JSON body requests
 // app.use(express.json());
 
-initializeDatabase();
+// initializeDatabase();
 
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
@@ -120,6 +179,9 @@ app.use("/api/departments", express.json(), departmentRoutes);
 app.use("/api/employees", express.json(), employeeRoutes);
 app.use("/api/roles", express.json(), roleRoutes);
 app.use("/api/circular", circularRoutes);
+
+
+
 app.use("/api/source-type", express.json(), sourceTypeRoutes);
 app.use("/api/circular-approvals", express.json(), circularApprovalRoutes);
 app.use("/api/repeat-cycle", express.json(), repeatCycleRoutes);
@@ -129,7 +191,42 @@ app.use("/api/circular-chats", express.json(),circularChatRoutes);
 app.use("/api/circular-attachments", circularAttachmentRoutes);
 app.use("/api/notifications", express.json(), notificationRoutes);
 app.use("/api/circular-completion", express.json(), circularCompletionRoutes);
-app.use("/api/circular-recurrence", express.json(), circularRecurrenceRoutes);
+app.use("/api/circular-recurrence", express.json(), circularRecurrenceRoutes); 
+// Settings API
+app.use("/api/settings", express.json(), settingsRoutes); 
+
+//routes for higher authority
+app.use("/api/higher-authority",higherAuthorityRoutes);
+
+//Routes for regions //
+app.use("/api/regions", regionRoutes);
+
+//Register zone 
+app.use("/api/zones", zoneRoutes);
+
+//Register the route for circle 
+app.use("/api/circle",circleRoutes);
+
+//Route for commitee
+app.use("/api/committee", committeeRoutes);
+
+app.get("/api/test-reminders", async (req, res) => {
+  try {
+    const result = await circularReminderService.sendPendingReminders(io);
+
+    res.status(200).json({
+      message: "Reminder check completed successfully",
+      sent: result.sent
+    });
+  } catch (error) {
+    console.error("Test reminder error:", error);
+
+    res.status(500).json({
+      error: "Failed to send reminders"
+    });
+  }
+});
+
 
 cron.schedule('1 0 * * *', async () => {
   console.log('🔄 Running automated circular recurrence check...');
@@ -148,5 +245,57 @@ server.listen(PORT, () => {
   console.log(`Local: http://localhost:${PORT}`);
   console.log(`Network: http://192.168.1.11:${PORT}`);
 });
+// setInterval(async () => {
+//   await recurrenceService.processRecurringCirculars();
+// }, 10000);
+
+cron.schedule('0 0 * * *', async () => {
+    await recurrenceService.processRecurringCirculars();
+});
+
+// A single sweep keeps reminders durable across restarts; it does not create a
+// timer for each circular. Individual due times are calculated in SQL.
+cron.schedule('* * * * *', async () => {
+ 
+  // try {
+  //   await circularReadReminderService.processDueReminders(io);
+  // } catch (error) {
+  //   console.error('Circular read reminder scheduler failed:', error);
+  // }  
+ const startTime = Date.now();
+
+  console.log(
+    '🔔 Reminder scheduler START:',
+    new Date().toLocaleString()
+  );
+
+  try {
+    await circularReadReminderService.processDueReminders(io);
+
+    console.log(
+      '✅ Reminder scheduler END:',
+      new Date().toLocaleString(),
+      '| Duration:',
+      Date.now() - startTime,
+      'ms'
+    );
+
+  } catch (error) {
+    console.error(
+      '❌ Circular read reminder scheduler failed:',
+      error
+    );
+  }
+
+
+
+
+
+
+
+
+
+});
+
 
 module.exports = { io };

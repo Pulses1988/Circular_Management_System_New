@@ -1,0 +1,343 @@
+<div class="page-container">
+
+  <!-- Header -->
+  <div class="page-header">
+
+    <div>
+      <h2>Head Office Management</h2>
+      <p>Manage Head Offices of the Organization</p>
+    </div>
+
+    <!-- <button class="btn-primary" (click)="toggleForm()">
+      <mat-icon>{{ showForm ? 'close' : 'add' }}</mat-icon>
+
+      {{ showForm ? 'Close Form' : 'Add Head Office' }}
+    </button> -->
+
+
+<button
+  class="btn-primary"
+  (click)="toggleForm()"
+  [disabled]="headOffices.length > 0 && !isEditMode"
+>
+  <mat-icon>
+    {{ showForm ? 'close' : 'add' }}
+  </mat-icon>
+
+  {{ showForm ? 'Close Form' : 'Add Head Office' }}
+</button>
+
+
+
+
+
+
+
+  </div>
+
+  <!-- ================= FORM ================= -->
+
+  <div
+    class="form-card"
+    *ngIf="showForm"
+  >
+
+    <h3>
+      {{ isEditMode ? 'Edit Head Office' : 'Create Head Office' }}
+    </h3>
+
+    <form
+      [formGroup]="headOfficeForm"
+      (ngSubmit)="submitForm()"
+    >
+
+      <!-- Name -->
+
+      <div class="form-group">
+
+        <label>Head Office Name *</label>
+
+        <input
+          type="text"
+          formControlName="name"
+          placeholder="Enter Head Office Name"
+        />
+
+      </div>
+
+      <!-- Bank Name -->
+
+      <div class="form-group">
+
+        <label>Bank Name *</label>
+
+        <input
+          type="text"
+          formControlName="bank_name"
+          placeholder="Enter Bank Name"
+        />
+
+      </div>
+
+
+
+
+
+
+
+
+
+
+      <!-- Address -->
+
+      <div class="form-group">
+
+        <label>Address</label>
+
+        <textarea
+          rows="3"
+          formControlName="address"
+          placeholder="Enter Address"
+        ></textarea>
+
+      </div>
+
+<!-- Organization type -->
+<!-- ================= Bank Type ================= -->
+
+<div class="section-card">
+
+  <h4>🏦 Bank Type</h4>
+
+  <div class="bank-type-grid">
+
+    <label class="radio-item">
+      <input type="radio" formControlName="bank_type" value="STCB">
+      State Co-operative Bank (STCB)
+    </label>
+
+    <label class="radio-item">
+      <input type="radio" formControlName="bank_type" value="DCCB">
+      District Central Co-operative Bank (DCCB)
+    </label>
+
+    <label class="radio-item">
+      <input type="radio" formControlName="bank_type" value="UCB">
+      Urban Co-operative Bank (UCB)
+    </label>
+
+    <label class="radio-item">
+      <input type="radio" formControlName="bank_type" value="MULTI">
+      Multi-State Co-operative Bank
+    </label>
+
+    <label class="radio-item">
+      <input type="radio" formControlName="bank_type" value="SCHEDULED">
+      Scheduled Co-operative Bank
+    </label>
+
+    <label class="radio-item">
+      <input type="radio" formControlName="bank_type" value="CREDIT">
+      Credit Society
+    </label>
+
+    <label class="radio-item">
+      <input type="radio" formControlName="bank_type" value="NBFC">
+      NBFC
+    </label>
+
+    <label class="radio-item">
+      <input type="radio" formControlName="bank_type" value="OTHER">
+      Other
+    </label>
+
+  </div>
+
+</div>
+
+<!-- ================= Organisation Structure ================= -->
+
+<div class="section-card">
+
+  <h4>🏢 Organisation Structure</h4>
+
+  <p class="section-text">
+    Which hierarchy levels does your bank use?
+  </p>
+
+  <div class="structure-grid">
+
+    <label class="check-item">
+      <input type="checkbox" formControlName="bank">
+      Bank
+    </label>
+
+    <label class="check-item">
+      <input type="checkbox" formControlName="headOffice">
+      Head Office
+    </label>
+
+    <label class="check-item">
+      <input type="checkbox" formControlName="region">
+      Region
+    </label>
+
+    <label class="check-item">
+      <input type="checkbox" formControlName="zone">
+      Zone
+    </label>
+
+    <label class="check-item">
+      <input type="checkbox" formControlName="circle">
+      Circle
+    </label>
+
+    <label class="check-item">
+      <input type="checkbox" formControlName="branch">
+      Branch
+    </label>
+
+    <label class="check-item">
+      <input type="checkbox" formControlName="department">
+      Department
+    </label>
+
+    <label class="check-item">
+      <input type="checkbox" formControlName="designation">
+      Designation
+    </label>
+
+    <label class="check-item">
+      <input type="checkbox" formControlName="employee">
+      Employee
+    </label>
+
+  </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      <!-- Buttons -->
+
+      <div class="button-group">
+
+        <button
+          type="submit"
+          class="btn-success"
+        >
+          <mat-icon>
+            {{ isEditMode ? 'edit' : 'save' }}
+          </mat-icon> 
+        <!-- <button type="submit" class="btn-success">
+  <mat-icon>save</mat-icon>
+  Save
+</button> -->
+
+          {{ isEditMode ? 'Update' : 'Save' }}
+        </button>
+
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="resetForm()"
+        >
+          Cancel
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+  <!-- ================= TABLE ================= -->
+
+  <div class="table-card" *ngIf="!showForm">
+
+    <table>
+
+      <thead>
+
+        <tr>
+
+          <th>#</th>
+
+          <th>Head Office</th>
+
+          <th>Bank Name</th>
+
+          <th>Address</th>
+
+          <th>Actions</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        <tr *ngFor="let office of headOffices; let i = index">
+
+          <td>{{ i + 1 }}</td>
+
+          <td>{{ office.name }}</td>
+
+          <td>{{ office.bank_name }}</td>
+
+          <td>{{ office.address }}</td>
+
+          <td>
+
+           <div class="action-buttons">
+
+  <button
+    class="action-btn edit-btn"
+    (click)="editHeadOffice(office)"
+  >
+    Edit
+  </button>
+
+  <button
+    class="action-btn delete-btn"
+    (click)="deleteHeadOffice(office.id)"
+  >
+    Delete
+  </button>
+
+</div>
+
+          </td>
+
+        </tr>
+
+        <tr *ngIf="headOffices.length === 0">
+
+          <td colspan="5" class="no-data">
+
+            No Head Office Found
+
+          </td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>

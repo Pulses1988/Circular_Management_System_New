@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CircularService } from '../../services/circular-service';
 import { Router } from '@angular/router';
 import { Toast } from '../../toast/toast';
+
 import { response } from 'express';
 
 // interface Circular {
@@ -74,10 +75,16 @@ export class CircularCreater implements OnInit {
   pageSize = 10;
   currentPage = signal(1);
 
+//VAriable to store the Assigned circular
+
+// assignedCirculars: any[] = [];
+assignedCirculars = signal<any[]>([]);
+
   constructor(
     private circularService: CircularService,
     private router: Router,
     private toast: Toast
+   
   ) {}
 
   private decryptData(encryptedData: string): string {
@@ -95,8 +102,9 @@ toggleDarkMode() {
 
 
   ngOnInit(): void {
-    this.loadEmployeeData();
-    this.loadCircular();
+    
+      this.loadEmployeeData();
+
   }
   private loadCircular() {
     if (this.employee?.id) {
@@ -116,12 +124,14 @@ toggleDarkMode() {
         const decryptedUser = this.decryptData(encryptedUser);
         this.employee = JSON.parse(decryptedUser);
         console.log('Logged in employee:', this.employee);
+        // CALL HERE
+      this.loadCircular();
       }
     }
   }
 
   showCreateModal = signal(false);
-  selectedCircular = signal<Circular | null>(null);
+  // selectedCircular = signal<Circular | null>(null);
 
   // Form fields
   newCircular = {
@@ -148,19 +158,38 @@ toggleDarkMode() {
 
   // Computed signal for filtered circulars
   filteredCirculars = computed(() => {
-    const status = this.filterStatus();
-    if (status === 'all') return this.circulars();
-    this.currentPage = signal(1);
-    return this.circulars().filter((c) => c.status === status);
+  //   const status = this.filterStatus();
+  //   if (status === 'all') return this.circulars();
+    
+  //   //Assigned Circulars
+  //    if (status === 'ASSIGNED') {
+  //   return this.assignedCirculars;
+  // }
+
+  //   this.currentPage = signal(1);
+  //   return this.circulars().filter((c) => c.status === status);
+   const status = this.filterStatus();
+
+  if (status === 'all') {
+    return this.circulars();
+  }
+
+  if (status === 'ASSIGNED') {
+    return this.assignedCirculars();
+  }
+
+  return this.circulars().filter(c => c.status === status);
   });
+
+
 
   createNewCircular() {
     this.router.navigate(['/employee/create-circular']);
   }
 
-  closeModal() {
-    this.selectedCircular.set(null);
-  }
+  // closeModal() {
+  //   this.selectedCircular.set(null);
+  // }
 
   resetForm() {
     this.newCircular = {
@@ -179,7 +208,13 @@ toggleDarkMode() {
   }
 
   viewDetails(circular: Circular) {
-    this.selectedCircular.set(circular);
+    // this.selectedCircular.set(circular);
+ this.router.navigate(['/employee/circular-details'], {
+    queryParams: {
+      circularId: circular.id
+    }
+  });
+
   }
 
   deleteCircular(id: number) {
@@ -345,4 +380,39 @@ toggleDarkMode() {
     };
     return colors[priority as keyof typeof colors] || 'text-gray-600';
   }
+
+//LoadAssignCirculars
+loadAssignedCirculars() {
+ 
+     this.filterStatus.set('ASSIGNED');
+
+ const employee = this.employee;
+
+if (!employee) {
+  return;
+}
+
+  this.circularService
+    .getAssignedCirculars(employee.id)
+    .subscribe({
+
+      next: (response) => {
+
+        console.log(response);
+
+        // this.assignedCirculars = response.data;
+        // this.assignedCirculars.set(response.data);
+this.assignedCirculars.set(response.data);
+      },
+
+      error: (err) => {
+
+        console.error(err);
+
+      }
+
+    });
+
+}
+
 }

@@ -1,0 +1,261 @@
+/* ==========================================================
+   Page Background
+========================================================== */
+
+.profile-page {
+  min-height: 100vh;
+  background: #f5f7fb;
+  padding: 30px;
+}
+
+/* ==========================================================
+   Header
+========================================================== */
+
+.profile-header {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 40%, #2563eb 100%);
+  border-radius: 20px;
+  padding: 30px;
+  color: white;
+  margin-bottom: 25px;
+  box-shadow: 0 10px 30px rgba(30, 64, 175, 0.25);
+
+  h1 {
+    font-size: 30px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  p {
+    color: #dbeafe;
+    font-size: 15px;
+  }
+}
+
+/* ==========================================================
+   Card
+========================================================== */
+
+.profile-card {
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(10px);
+  border-radius: 22px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+  padding: 35px;
+}
+
+/* ==========================================================
+   Profile Image
+========================================================== */
+
+.profile-avatar {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 25px;
+
+  .avatar-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg,#2563eb,#1d4ed8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 30px rgba(37,99,235,.35);
+
+    mat-icon {
+      font-size: 60px;
+      width: 60px;
+      height: 60px;
+      color: white;
+    }
+  }
+}
+
+/* ==========================================================
+   Section Title
+========================================================== */
+
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 20px;
+}
+
+/* ==========================================================
+   Form Layout
+========================================================== */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(280px,1fr));
+  gap: 22px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.form-group label mat-icon {
+  color: #2563eb;
+  margin-right: 8px;
+  font-size: 20px;
+}
+
+/* ==========================================================
+   Input Styling
+========================================================== */
+
+.form-control {
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
+  background: white;
+  outline: none;
+  transition: .3s;
+  font-size: 15px;
+}
+
+.form-control:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+}
+
+.form-control:hover {
+  border-color: #60a5fa;
+}
+
+/* Readonly fields */
+
+.form-control[readonly] {
+  background: #f9fafb;
+  cursor: not-allowed;
+}
+
+/* ==========================================================
+   Button Section
+========================================================== */
+
+.button-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 35px;
+}
+
+/* ==========================================================
+   Save Button
+========================================================== */
+
+.save-btn {
+  background: linear-gradient(45deg,#2563eb,#1d4ed8) !important;
+  color: white !important;
+  min-width: 170px;
+  height: 48px;
+  border-radius: 12px !important;
+  font-weight: 600;
+  transition: .3s;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(37,99,235,.35);
+  }
+}
+
+/* ==========================================================
+   Cancel Button
+========================================================== */
+
+.cancel-btn {
+  border: 2px solid #2563eb !important;
+  color: #2563eb !important;
+  min-width: 170px;
+  height: 48px;
+  border-radius: 12px !important;
+  font-weight: 600;
+  transition: .3s;
+
+  &:hover {
+    background: #eff6ff;
+  }
+}
+
+/* ==========================================================
+   Divider
+========================================================== */
+
+.profile-divider {
+  margin: 30px 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* ==========================================================
+   Responsive
+========================================================== */
+
+@media(max-width:768px){
+
+.profile-page{
+padding:15px;
+}
+
+.profile-card{
+padding:22px;
+}
+
+.profile-header{
+padding:22px;
+text-align:center;
+}
+
+.profile-header h1{
+font-size:26px;
+}
+
+.button-group{
+flex-direction:column;
+}
+
+.save-btn,
+.cancel-btn{
+width:100%;
+}
+
+.form-grid{
+grid-template-columns:1fr;
+}
+
+.profile-avatar .avatar-circle{
+width:100px;
+height:100px;
+}
+
+.profile-avatar mat-icon{
+font-size:48px;
+}
+}
+
+/* ==========================================================
+   Snackbar
+========================================================== */
+
+::ng-deep .success-snackbar{
+background:#10b981 !important;
+color:white !important;
+}
+
+::ng-deep .error-snackbar{
+background:#ef4444 !important;
+color:white !important;
+}

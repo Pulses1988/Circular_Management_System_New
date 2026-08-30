@@ -90,27 +90,95 @@ exports.markAsSeen = async (circularId, approverId) => {
 };
 
 exports.approve = async (circularId, approverId) => {
-  const query = `
-      UPDATE circular_approvals 
-      SET status = 'APPROVED',
-          updated_at = NOW()
-      WHERE circular_id = ? 
-        AND approver_id = ?
-    `;
+  // const query = `
+  //     UPDATE circular_approvals 
+  //     SET status = 'APPROVED',
+  //         updated_at = NOW()
+  //     WHERE circular_id = ? 
+  //       AND approver_id = ?
+  //   `;
 
-  try {
-    const [result] = await db.query(query, [circularId, approverId]);
+  // try {
+  //   const [result] = await db.query(query, [circularId, approverId]);
 
-    // Also update circular status to APPROVED
-    await db.query(
-      'UPDATE circulars SET status = "APPROVED", published_at = NOW() WHERE id = ?',
+  //   // Also update circular status to APPROVED
+  //   await db.query(
+  //     'UPDATE circulars SET status = "APPROVED", published_at = NOW() WHERE id = ?',
+  //     [circularId]
+  //   );
+
+  //   return result;
+  // } catch (error) {
+  //   throw error;
+  // }
+try {
+    // 1. Approve only this approver's record
+    const [result] = await db.query(
+      `UPDATE circular_approvals
+       SET status = 'APPROVED',
+           updated_at = NOW()
+       WHERE circular_id = ?
+         AND approver_id = ?
+         AND status = 'PENDING'`,
+      [circularId, approverId]
+    );
+
+    if (result.affectedRows === 0) {
+      return {
+        affectedRows: 0,
+        allApproved: false
+      };
+    }
+
+    // 2. Count all approvers
+    const [totalRows] = await db.query(
+      `SELECT COUNT(*) AS total
+       FROM circular_approvals
+       WHERE circular_id = ?`,
       [circularId]
     );
 
-    return result;
+    // 3. Count approved approvers
+    const [approvedRows] = await db.query(
+      `SELECT COUNT(*) AS approved
+       FROM circular_approvals
+       WHERE circular_id = ?
+         AND status = 'APPROVED'`,
+      [circularId]
+    );
+
+    const totalApprovers = Number(totalRows[0].total);
+    const approvedApprovers = Number(approvedRows[0].approved);
+
+    const allApproved =
+      totalApprovers > 0 &&
+      totalApprovers === approvedApprovers;
+
+    // 4. Approve circular ONLY when everyone has approved
+    if (allApproved) {
+      await db.query(
+        `UPDATE circulars
+         SET status = 'APPROVED',
+             published_at = NOW()
+         WHERE id = ?`,
+        [circularId]
+      );
+    }
+
+    return {
+      affectedRows: result.affectedRows,
+      allApproved,
+      totalApprovers,
+      approvedApprovers,
+      // pendingApprovers: totalApprovers - approvedApprovers
+      pendingCount: totalApprovers - approvedApprovers
+    };
+
   } catch (error) {
     throw error;
   }
+
+
 };
 
 exports.reject = async (circularId, approverId, comments) => {

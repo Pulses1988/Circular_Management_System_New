@@ -1,6 +1,6 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection,importProvidersFrom } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient,withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptorsFromDi } from '@angular/common/http';
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -15,7 +15,9 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes), provideClientHydration(withEventReplay()),
-     provideHttpClient(withFetch()),
+     // Standalone HttpClient only executes class-based HTTP_INTERCEPTORS when
+     // explicitly configured to read them from DI.
+     provideHttpClient(withFetch(), withInterceptorsFromDi()),
      {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
@@ -26,7 +28,6 @@ export const appConfig: ApplicationConfig = {
       useClass: EmployeeAuthInterceptor,
       multi: true
     },
-    provideHttpClient(),
     importProvidersFrom(BrowserAnimationsModule, ToastrModule.forRoot({positionClass: 'toast-top-right',
         preventDuplicates: true,
         timeOut: 3000,}))

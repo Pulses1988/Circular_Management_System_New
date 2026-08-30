@@ -268,4 +268,19 @@ exports.deleteRole = async (req, res) => {
     console.error("Error deleting role:", err);
     res.status(500).json({ error: "Failed to delete role" });
   }
+}; 
+
+
+//Get all roles 
+
+exports.getAllRoles = async (req, res) => {
+    try {
+        const [rows] = await roleModel.getAllRoles();
+        res.json(rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            error: "Failed to fetch roles"
+        });
+    }
 };

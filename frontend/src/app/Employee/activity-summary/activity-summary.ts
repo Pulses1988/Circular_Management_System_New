@@ -72,7 +72,12 @@ export class ActivitySummary implements OnInit {
   isDarkMode: boolean = false;
 
   // Filters
-  filterStatus: 'all' | 'seen' | 'unseen' | 'completed' | 'pending' = 'all';
+  // filterStatus: 'all' | 'seen' | 'unseen' | 'completed' | 'pending' = 'all'; 
+isSeenSelected = false;
+isUnseenSelected = false;
+isCompletedSelected = false;
+isPendingSelected = false;
+
   searchQuery: string = '';
   filteredActivities: EmployeeActivity[] = [];
 
@@ -143,38 +148,82 @@ export class ActivitySummary implements OnInit {
 }
 
   applyFilters(): void {
-    if (!this.activityData) return;
+    // if (!this.activityData) return;
 
-    let filtered = [...this.activityData.employee_activities];
+    // let filtered = [...this.activityData.employee_activities];
 
-    // Apply status filter
-    switch (this.filterStatus) {
-      case 'seen':
-        filtered = filtered.filter(emp => emp.is_seen);
-        break;
-      case 'unseen':
-        filtered = filtered.filter(emp => !emp.is_seen);
-        break;
-      case 'completed':
-        filtered = filtered.filter(emp => emp.is_completed);
-        break;
-      case 'pending':
-        filtered = filtered.filter(emp => !emp.is_completed);
-        break;
-    }
+    // // Apply status filter
+    // switch (this.filterStatus) {
+    //   case 'seen':
+    //     filtered = filtered.filter(emp => emp.is_seen);
+    //     break;
+    //   case 'unseen':
+    //     filtered = filtered.filter(emp => !emp.is_seen);
+    //     break;
+    //   case 'completed':
+    //     filtered = filtered.filter(emp => emp.is_completed);
+    //     break;
+    //   case 'pending':
+    //     filtered = filtered.filter(emp => !emp.is_completed);
+    //     break;
+    // }
 
-    // Apply search filter
-    if (this.searchQuery.trim()) {
-      const query = this.searchQuery.toLowerCase();
-      filtered = filtered.filter(emp =>
-        emp.employee_name.toLowerCase().includes(query) ||
-        emp.email.toLowerCase().includes(query) ||
-        emp.department?.toLowerCase().includes(query) ||
-        emp.branch?.toLowerCase().includes(query)
-      );
-    }
+    // // Apply search filter
+    // if (this.searchQuery.trim()) {
+    //   const query = this.searchQuery.toLowerCase();
+    //   filtered = filtered.filter(emp =>
+    //     emp.employee_name.toLowerCase().includes(query) ||
+    //     emp.email.toLowerCase().includes(query) ||
+    //     emp.department?.toLowerCase().includes(query) ||
+    //     emp.branch?.toLowerCase().includes(query)
+    //   );
+    // }
 
-    this.filteredActivities = filtered;
+    // this.filteredActivities = filtered;
+if (!this.activityData) return;
+
+  let filtered = [...this.activityData.employee_activities];
+
+  // Seen
+  if (this.isSeenSelected) {
+    filtered = filtered.filter(emp => emp.is_seen);
+  }
+
+  // Unseen
+  if (this.isUnseenSelected) {
+    filtered = filtered.filter(emp => !emp.is_seen);
+  }
+
+  // Completed
+  if (this.isCompletedSelected) {
+    filtered = filtered.filter(emp => emp.is_completed);
+  }
+
+  // Pending
+  if (this.isPendingSelected) {
+    filtered = filtered.filter(emp => emp.is_seen && !emp.is_completed);
+  }
+
+  // Search
+  if (this.searchQuery.trim()) {
+    const query = this.searchQuery.toLowerCase();
+
+    filtered = filtered.filter(emp =>
+      emp.employee_name.toLowerCase().includes(query) ||
+      emp.email.toLowerCase().includes(query) ||
+      (emp.department ?? '').toLowerCase().includes(query) ||
+      (emp.branch ?? '').toLowerCase().includes(query)
+    );
+  }
+
+  this.filteredActivities = filtered;
+
+
+
+
+
+
+
   }
 
   getStatusBadgeClass(status: string): string {
@@ -251,6 +300,50 @@ export class ActivitySummary implements OnInit {
     link.download = `circular_${this.activityData.circular_code}_activity.csv`;
     link.click();
     window.URL.revokeObjectURL(url);
-  }
+  } 
+
+
+
+toggleSeen() {
+  this.isSeenSelected = !this.isSeenSelected;
+  this.applyFilters();
+}
+
+toggleUnseen() {
+  this.isUnseenSelected = !this.isUnseenSelected;
+  this.applyFilters();
+}
+
+toggleCompleted() {
+  this.isCompletedSelected = !this.isCompletedSelected;
+  this.applyFilters();
+}
+
+togglePending() {
+  this.isPendingSelected = !this.isPendingSelected;
+  this.applyFilters();
+}
+
+clearFilters() {
+  this.isSeenSelected = false;
+  this.isUnseenSelected = false;
+  this.isCompletedSelected = false;
+  this.isPendingSelected = false;
+  this.applyFilters();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }

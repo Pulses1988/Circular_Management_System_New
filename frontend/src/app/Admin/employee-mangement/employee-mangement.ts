@@ -26,9 +26,22 @@ import * as XLSX from 'xlsx';
 export class EmployeeMangement {
   employees: any[] = [];
   allRoles: any[] = [];
-  roles: any[] = [];
+  roles: any[] = []; 
+
+roleLevels: any[] = [
+  { value: 'TOP', label: 'Top' },
+  { value: 'MIDDLE', label: 'Middle' },
+  { value: 'LOWER', label: 'Lower' }
+];
+
+
+
   departments: any[] = [];
-  branches: any[] = [];
+  branches: any[] = []; 
+
+  //manager
+  managers: any[] = [];
+
   hasDepartments: boolean = true;
 
   employeeForm: FormGroup;
@@ -52,7 +65,13 @@ export class EmployeeMangement {
   searchTerm: string = '';
   selectedDepartment: string = 'all';
   filteredEmployees: any[] = [];
-  isLoading: boolean = false;
+  isLoading: boolean = false; 
+
+    selectedBranch: string = 'all';
+    filterDepartments: any[] = [];
+
+
+
 
   @ViewChild('employeeFormRef') employeeFormRef!: ElementRef;
   private scrollToForm = false;
@@ -85,13 +104,18 @@ export class EmployeeMangement {
         ],
       ],
       role_id: ['', Validators.required],
+      
+      role_level: ['', Validators.required],
+
       department_id: [''],
       branch_id: [''],
       employee_id: [
         '',
         [Validators.required, Validators.pattern(/^\S+$/)], // no spaces
       ],
-      password: ['', [Validators.required, this.passwordValidator]],
+      password: ['', [Validators.required, this.passwordValidator]], 
+
+       reporting_officer_id: [''],  
       can_create_circular: [false],
       can_approve_circular: [false],
     });
@@ -126,18 +150,31 @@ export class EmployeeMangement {
 
     this.loadData();
 
+    // this.employeeForm
+    //   .get('department_id')
+    //   ?.valueChanges.pipe(takeUntil(this.destroy$))
+    //   .subscribe((value) => {
+    //     if (this.hasDepartments && value) {
+    //       this.loadRolesForDepartment(value);
+    //     } else if (!this.hasDepartments) {
+    //       this.roles = [...this.allRoles];
+    //     } else {
+    //       this.roles = [];
+    //     }
+    //   });
     this.employeeForm
-      .get('department_id')
-      ?.valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe((value) => {
-        if (this.hasDepartments && value) {
-          this.loadRolesForDepartment(value);
-        } else if (!this.hasDepartments) {
-          this.roles = [...this.allRoles];
-        } else {
-          this.roles = [];
-        }
-      });
+  .get('department_id')
+  ?.valueChanges
+  .pipe(takeUntil(this.destroy$))
+  .subscribe((value) => {
+
+    if (this.hasDepartments && value) {
+      this.loadRolesForDepartment(value);
+    } else {
+      this.roles = [];
+    }
+
+  });
 
     this.employeeForm
       .get('department_id')
@@ -151,31 +188,470 @@ export class EmployeeMangement {
       ?.valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         this.checkDepartmentValidation();
-      });
-  }
+      });  
 
-  applyFilters(): void {
-    this.filteredEmployees = this.employees.filter((emp) => {
-      // Search filter
-      const matchesSearch =
-        !this.searchTerm ||
-        (emp.first_name &&
-          emp.first_name.toLowerCase().startsWith(this.searchTerm.toLowerCase())) ||
-        (emp.last_name && emp.last_name.toLowerCase().startsWith(this.searchTerm.toLowerCase())) ||
-        (emp.employee_id && emp.employee_id.toLowerCase().includes(this.searchTerm.toLowerCase()));
+// ================= BRANCH CHANGE =================
+  // ⭐ ADD THIS PART HERE 
+  
+  // ================= BRANCH CHANGE =================
 
-      // Department filter - handle null department_id
-      const matchesDepartment =
-        this.selectedDepartment === 'all' ||
-        (emp.department_id && emp.department_id === parseInt(this.selectedDepartment)) ||
-        (!emp.department_id && this.selectedDepartment === 'all');
+this.employeeForm
+  .get('branch_id')
+  ?.valueChanges
+  .pipe(takeUntil(this.destroy$))
+  .subscribe((branchId) => {
 
-      return matchesSearch && matchesDepartment;
+    console.log('Selected Branch:', branchId);
+
+    // Clear previously selected department
+    this.employeeForm.patchValue({
+      department_id: '',
+      role_id: '',
+      reporting_officer_id: ''
+    }, { emitEvent: false });
+
+    // Clear roles
+    this.roles = [];
+
+    // ================= HEAD OFFICE =================
+    if (branchId === 'HEAD_OFFICE') {
+
+  console.log('Loading Head Office departments...');
+
+  this.userService
+    .getDepartmentsByHeadOffice(this.userAssignment.id)
+    .subscribe({
+      next: (data: any[]) => {
+
+        console.log('All departments returned from API:', data);
+
+        // ONLY Head Office departments
+        // Head Office department = branch_id is NULL
+        this.departments = (data || []).filter(
+          (dept: any) =>
+            dept.branch_id === null ||
+            dept.branch_id === undefined
+        );
+
+        console.log(
+          'Only Head Office Departments:',
+          this.departments
+        );
+
+        this.hasDepartments = this.departments.length > 0;
+
+        this.checkDepartmentValidation();
+
+        // Clear roles until department is selected
+        this.roles = [];
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Error loading Head Office departments:',
+          error
+        );
+
+        this.departments = [];
+        this.hasDepartments = false;
+        this.roles = [];
+      }
     });
 
-    // Reset to first page when filters change
-    this.currentPage = 1;
+  // Head Office should not have branch reporting officers
+  this.managers = [];
+}
+
+    // ================= ACTUAL BRANCH =================
+    else if (branchId) {
+
+      console.log('Loading Branch departments for:', branchId);
+
+      // Load managers for selected branch
+      this.loadManagersByBranch(Number(branchId));
+
+      // Load departments for selected branch
+      this.userService
+        .getDepartmentsByBranch(Number(branchId))
+        .subscribe({
+          next: (data: any[]) => {
+
+            console.log('Branch Departments:', data);
+
+            this.departments = data || [];
+            this.hasDepartments = this.departments.length > 0;
+
+            this.checkDepartmentValidation();
+          },
+
+          error: (error) => {
+
+            console.error(
+              'Error loading Branch departments:',
+              error
+            );
+
+            this.departments = [];
+            this.hasDepartments = false;
+            this.roles = [];
+          }
+        });
+
+    }
+
+    // ================= NOTHING SELECTED =================
+    else {
+
+      this.departments = [];
+      this.roles = [];
+      this.managers = [];
+      this.hasDepartments = false;
+    }
+
+  });
+ 
+
+
+
+
+
   }
+
+ applyFilters(): void {
+
+  console.log('======================================');
+  console.log('APPLY FILTERS');
+
+  const search = this.searchTerm?.trim().toLowerCase();
+
+  console.log('Search Employee ID:', search);
+  console.log('Selected Branch:', this.selectedBranch);
+  console.log('Selected Department:', this.selectedDepartment);
+  console.log('Total Employees:', this.employees.length);
+
+
+  // =====================================================
+  // 1. EMPLOYEE ID SEARCH
+  // =====================================================
+
+  // If Employee ID is entered,
+  // search independently without Branch/Department restriction.
+
+ if (search) {
+
+  this.filteredEmployees = this.employees.filter((emp: any) => {
+
+    const employeeId =
+      emp.employee_id?.toString().trim().toLowerCase() || '';
+
+    const firstName =
+      emp.first_name?.toString().trim().toLowerCase() || '';
+
+    const middleName =
+      emp.middle_name?.toString().trim().toLowerCase() || '';
+
+    const lastName =
+      emp.last_name?.toString().trim().toLowerCase() || '';
+
+
+    // Search ONLY by Employee ID or Name
+    // Branch and Department are completely ignored here.
+
+    return (
+      employeeId.includes(search) ||
+      firstName.includes(search) ||
+      middleName.includes(search) ||
+      lastName.includes(search)
+    );
+
+  });
+
+  console.log(
+    'SEARCH RESULT - NAME / EMPLOYEE ID:',
+    this.filteredEmployees
+  );
+
+  this.currentPage = 1;
+
+  console.log(
+    'FINAL COUNT:',
+    this.filteredEmployees.length
+  );
+
+  console.log('======================================');
+
+  return;
+}
+
+
+  // =====================================================
+  // 2. NO SEARCH
+  // =====================================================
+
+  // If Employee ID search is empty,
+  // then Branch and Department filters work normally.
+
+  this.filteredEmployees = this.employees.filter((emp: any) => {
+
+
+    // =====================================================
+    // BRANCH
+    // =====================================================
+
+    let matchesBranch = true;
+
+    if (this.selectedBranch !== 'all') {
+
+      // -----------------------------
+      // HEAD OFFICE
+      // -----------------------------
+
+      if (this.selectedBranch === 'HEAD_OFFICE') {
+
+        matchesBranch =
+          emp.branch_id === null ||
+          emp.branch_id === undefined ||
+          emp.branch_id === '';
+
+      }
+
+      // -----------------------------
+      // ACTUAL BRANCH
+      // -----------------------------
+
+      else {
+
+        matchesBranch =
+          Number(emp.branch_id) ===
+          Number(this.selectedBranch);
+
+      }
+
+    }
+
+
+    // =====================================================
+    // DEPARTMENT
+    // =====================================================
+
+    let matchesDepartment = true;
+
+    if (
+      this.selectedDepartment !== 'all' &&
+      this.selectedDepartment !== '' &&
+      this.selectedDepartment !== null &&
+      this.selectedDepartment !== undefined
+    ) {
+
+      matchesDepartment =
+        Number(emp.department_id) ===
+        Number(this.selectedDepartment);
+
+    }
+
+
+    console.log(
+      'EMPLOYEE:',
+      emp.first_name,
+      '| branch:',
+      emp.branch_id,
+      '| department:',
+      emp.department_id,
+      '| branchMatch:',
+      matchesBranch,
+      '| departmentMatch:',
+      matchesDepartment
+    );
+
+
+    return (
+      matchesBranch &&
+      matchesDepartment
+    );
+
+  });
+
+
+  console.log(
+    'FINAL FILTERED EMPLOYEES:',
+    this.filteredEmployees
+  );
+
+  console.log(
+    'FINAL COUNT:',
+    this.filteredEmployees.length
+  );
+
+  console.log('======================================');
+
+  this.currentPage = 1;
+}
+
+
+//Loadfilter Method for head_office employee_management 
+loadFilterDepartments(branchId: any): void {
+
+  console.log('========== FILTER BRANCH CHANGE ==========');
+  console.log('Selected Branch:', branchId);
+
+  this.selectedBranch = branchId;
+  this.selectedDepartment = 'all';
+
+  // =====================================================
+  // ALL BRANCHES
+  // =====================================================
+  if (branchId === 'all') {
+
+    console.log('Loading departments for ALL branches');
+
+    if (this.role === 'HO_ADMIN') {
+
+      this.userService
+        .getDepartmentsByHeadOffice(this.userAssignment.id)
+        .subscribe({
+          next: (data: any[]) => {
+
+            console.log('Departments API - ALL:', data);
+
+            this.filterDepartments = data || [];
+
+            console.log(
+              'Filter Departments:',
+              this.filterDepartments
+            );
+
+            this.applyFilters();
+          },
+
+          error: (error) => {
+
+            console.error(
+              'Error loading all departments:',
+              error
+            );
+
+            this.filterDepartments = [];
+            this.applyFilters();
+          }
+        });
+
+    } else {
+
+      this.filterDepartments = [...this.departments];
+      this.applyFilters();
+    }
+
+    return;
+  }
+
+
+  // =====================================================
+  // HEAD OFFICE
+  // =====================================================
+  if (branchId === 'HEAD_OFFICE') {
+
+    console.log('Loading HEAD OFFICE departments');
+
+    this.userService
+      .getDepartmentsByHeadOffice(this.userAssignment.id)
+      .subscribe({
+
+        next: (data: any[]) => {
+
+          console.log(
+            'HEAD OFFICE Departments API:',
+            data
+          );
+
+          // IMPORTANT:
+          // Only departments whose branch_id is NULL
+          this.filterDepartments = (data || []).filter(
+            (dept: any) =>
+              dept.branch_id === null ||
+              dept.branch_id === undefined
+          );
+
+          console.log(
+            'HEAD OFFICE FILTER DEPARTMENTS:',
+            this.filterDepartments
+          );
+
+          this.applyFilters();
+        },
+
+        error: (error) => {
+
+          console.error(
+            'Error loading Head Office departments:',
+            error
+          );
+
+          this.filterDepartments = [];
+          this.applyFilters();
+        }
+
+      });
+
+    return;
+  }
+
+
+  // =====================================================
+  // ACTUAL BRANCH
+  // =====================================================
+  if (branchId) {
+
+    console.log(
+      'Loading departments for branch:',
+      branchId
+    );
+
+    this.userService
+      .getDepartmentsByBranch(Number(branchId))
+      .subscribe({
+
+        next: (data: any[]) => {
+
+          console.log(
+            'BRANCH Departments API:',
+            data
+          );
+
+          this.filterDepartments = data || [];
+
+          console.log(
+            'BRANCH FILTER DEPARTMENTS:',
+            this.filterDepartments
+          );
+
+          this.applyFilters();
+        },
+
+        error: (error) => {
+
+          console.error(
+            'Error loading branch departments:',
+            error
+          );
+
+          this.filterDepartments = [];
+          this.applyFilters();
+        }
+
+      });
+
+  } else {
+
+    this.filterDepartments = [];
+    this.applyFilters();
+
+  }
+}
+  
+
+
+
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -212,25 +688,118 @@ export class EmployeeMangement {
 
   loadData() {
     this.isLoading = true;
-    if (this.role === 'HO_ADMIN') {
-      this.userService.getDepartmentsByHeadOffice(this.userAssignment.id).subscribe((data) => {
-        this.departments = data;
-        this.hasDepartments = data.length > 0;
-        this.checkDepartmentValidation();
-      });
+    if (this.role === 'HO_ADMIN') { 
+  //      this.userService.getBranchesByHeadOffice(this.userAssignment.id).subscribe((data: any) => { 
+  //               console.log("Branches API Response", data);
+  // console.log("Is Array ?", Array.isArray(data));
+  // this.branches = data.data; 
 
-      this.userService.getRolesByHeadOffice(this.userAssignment.id).subscribe((data) => {
-        this.allRoles = data;
-        if (!this.hasDepartments) {
-          this.roles = [...this.allRoles];
-        }
-      });
+this.userService.getBranchesByHeadOffice(this.userAssignment.id).subscribe((data: any) => { 
+  console.log("Branches API Response", data);
+  console.log("Is Array ?", Array.isArray(data.data));
 
-      this.userService.getEmployeeByHeadOfficeId(this.userAssignment.id).subscribe((data: any) => {
-        this.employees = data;
-        this.applyFilters(); // Apply filters after loading data
-        this.isLoading = false;
-      });
+  const actualBranches = data.data || [];
+
+  // Add Head Office as a frontend-only option
+  this.branches = [
+    {
+      id: 'HEAD_OFFICE',
+      name: 'Head Office'
+    },
+    ...actualBranches
+  ];
+
+  console.log("Branches with Head Office:", this.branches);
+  //LoadBranches 
+// Load departments for employee table filter
+this.loadFilterDepartments('all');
+
+});
+
+
+
+
+
+
+
+
+
+// Departments will be loaded after selecting Branch
+this.departments = [];
+this.hasDepartments = false;
+
+      // this.userService.getRolesByHeadOffice(this.userAssignment.id).subscribe((data) => {
+      //   this.allRoles = data;
+      //   if (!this.hasDepartments) {
+      //     this.roles = [...this.allRoles];
+      //   }
+      // });
+
+this.userService.getRolesByHeadOffice(this.userAssignment.id).subscribe((data) => {
+  this.allRoles = data;
+  this.roles = [];
+});
+
+
+
+ this.userService.getAllEmployee().subscribe((data: any) => {
+
+  console.log('======================================');
+  console.log('ALL EMPLOYEE API DEBUG');
+  console.log('API Response:', data);
+  console.log('Is Array:', Array.isArray(data));
+  console.log('Total employees received:', data?.length);
+
+  this.employees = data; 
+console.table(
+  this.employees.map((emp: any) => ({
+    name: emp.first_name + ' ' + emp.last_name,
+    branch_id: emp.branch_id,
+    department_id: emp.department_id
+  }))
+);
+
+  console.log('======================================');
+  console.log('TOTAL EMPLOYEES:', this.employees.length);
+
+  // Branch 21
+  const branch21Employees = this.employees.filter(
+    (emp: any) => Number(emp.branch_id) === 21
+  );
+
+  console.log('BRANCH 21 EMPLOYEES:', branch21Employees);
+  console.log('BRANCH 21 COUNT:', branch21Employees.length);
+
+  // Department 16
+  const department16Employees = this.employees.filter(
+    (emp: any) => Number(emp.department_id) === 16
+  );
+
+  console.log('DEPARTMENT 16 EMPLOYEES:', department16Employees);
+  console.log('DEPARTMENT 16 COUNT:', department16Employees.length);
+
+  // Branch 21 + Department 16
+  const branch21Department16Employees = this.employees.filter(
+    (emp: any) =>
+      Number(emp.branch_id) === 21 &&
+      Number(emp.department_id) === 16
+  );
+
+  console.log(
+    'SHAHUPURIPPP + MANAGEMENT EMPLOYEES:',
+    branch21Department16Employees
+  );
+
+  console.log(
+    'SHAHUPURIPPP + MANAGEMENT COUNT:',
+    branch21Department16Employees.length
+  );
+
+  console.log('======================================');
+
+  this.applyFilters();
+  this.isLoading = false;
+});
     } else if (this.role === 'BRANCH_ADMIN') {
       this.userService.getBranchById(this.userAssignment.id).subscribe((branch: any) => {
         this.branches = [branch];
@@ -240,14 +809,26 @@ export class EmployeeMangement {
         this.departments = data;
         this.hasDepartments = data.length > 0;
         this.checkDepartmentValidation();
+
+// Departments for employee table filter
+  this.filterDepartments = data || [];
+
+
       });
 
-      this.userService.getRolesByBranch(this.userAssignment.id).subscribe((data) => {
-        this.allRoles = data;
-        if (!this.hasDepartments) {
-          this.roles = [...this.allRoles];
-        }
-      });
+      // this.userService.getRolesByBranch(this.userAssignment.id).subscribe((data) => {
+      //   this.allRoles = data;
+      //   if (!this.hasDepartments) {
+      //     this.roles = [...this.allRoles];
+      //   }
+      // });
+
+this.userService.getRolesByBranch(this.userAssignment.id).subscribe((data) => {
+  this.allRoles = data;
+  this.roles = [];
+});
+
+
 
       this.userService.getEmployeeByBranchId(this.userAssignment.id).subscribe((data: any) => {
         this.employees = data;
@@ -255,7 +836,98 @@ export class EmployeeMangement {
         this.isLoading = false;
       });
     }
+  }  
+
+
+
+  // ================= MANAGERS BY BRANCH =================
+  loadManagersByBranch(branchId: number) {
+    if (!branchId) {
+      this.managers = [];
+      return;
+    }
+
+    this.userService.getManagersByBranch(branchId).subscribe({
+      next: (response: any) => {
+        console.log('Managers API Response:', response);
+
+        this.managers = response.data || [];
+
+        console.log('Managers:', this.managers);
+      },
+      error: (error) => {
+        console.error('Error loading managers:', error);
+        this.managers = [];
+      },
+    });
   }
+
+//Whether the Reporting officer is required or not 
+isReportingOfficerRequired(): boolean {
+  const roleId = this.employeeForm.get('role_id')?.value;
+
+  if (!roleId) {
+    return false;
+  } 
+
+  const selectedRole = this.allRoles.find(
+    (role) => Number(role.id) === Number(roleId)
+  );
+
+  if (!selectedRole) {
+    return false;
+  }
+
+  const roleName = selectedRole.name?.toLowerCase();
+
+  const excludedRoles = [
+    'manager',
+    'director',
+    'managing director',
+    'chairman',
+    'vice chairman'
+  ];
+
+  return !excludedRoles.includes(roleName);
+}
+
+//Whether the selcted_officer is clerk or not 
+// Check whether the selected role is Clerk
+isClerkSelected(): boolean {
+  const roleId = this.employeeForm.get('role_id')?.value;
+
+  if (!roleId) {
+    return false;
+  }
+
+  const selectedRole = this.allRoles.find(
+    (role) => Number(role.id) === Number(roleId)
+  );
+
+  const roleName = selectedRole?.name
+    ?.toString()
+    .trim()
+    .toLowerCase();
+
+  return roleName === 'clerk' || roleName === 'clark';
+}
+
+//method Clear previous reporting officer when branch changes 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   toggleForm() {
     this.showForm = !this.showForm;
@@ -312,6 +984,8 @@ export class EmployeeMangement {
       'Phone',
       'Employee ID',
       'Password',
+       // ⭐ NEW
+  'Role Level',
       'Role',
     ];
 
@@ -320,11 +994,20 @@ export class EmployeeMangement {
       if (this.hasDepartments) {
         columns.push('Department');
       }
-    } else if (this.role === 'HO_ADMIN') {
+    } else
+      
+      
+      if (this.role === 'HO_ADMIN') {
       if (this.hasDepartments) {
         columns.push('Department');
       }
     }
+
+
+
+
+
+
 
     columns.push('Can Create Circular', 'Can Approve Circular');
 
@@ -354,7 +1037,15 @@ export class EmployeeMangement {
           break;
         case 'Role':
           exampleRow[col] = this.roles[0]?.name || 'Manager';
-          break;
+          break; 
+        
+          case 'Role Level':
+            
+            exampleRow[col] = 'MIDDLE';
+             break;
+
+
+
         case 'Branch':
           exampleRow[col] = this.branches[0]?.name || '';
           break;
@@ -372,7 +1063,76 @@ export class EmployeeMangement {
       }
     });
 
-    const worksheet = XLSX.utils.json_to_sheet([exampleRow], { header: columns });
+    // const worksheet = XLSX.utils.json_to_sheet([exampleRow], { header: columns });
+const secondExampleRow: any = {};
+
+columns.forEach((col) => {
+  switch (col) {
+    case 'First Name':
+      secondExampleRow[col] = 'Amit';
+      break;
+
+    case 'Middle Name':
+      secondExampleRow[col] = 'R';
+      break;
+
+    case 'Last Name':
+      secondExampleRow[col] = 'Patil';
+      break;
+
+    case 'Email':
+      secondExampleRow[col] = 'amit.patil@example.com';
+      break;
+
+    case 'Phone':
+      secondExampleRow[col] = '9876543212';
+      break;
+
+    case 'Employee ID':
+      secondExampleRow[col] = 'EMP002';
+      break;
+
+    case 'Password':
+      secondExampleRow[col] = 'Pass@123';
+      break;
+
+    case 'Role':
+      secondExampleRow[col] = 'Director';
+      break;
+
+    case 'Role Level':
+  secondExampleRow[col] = 'TOP';
+  break;
+
+    case 'Branch':
+      secondExampleRow[col] = this.branches[0]?.name || '';
+      break;
+
+    case 'Department':
+      secondExampleRow[col] = this.departments[0]?.name || '';
+      break;
+
+    case 'Can Create Circular':
+      secondExampleRow[col] = true;
+      break;
+
+    case 'Can Approve Circular':
+      secondExampleRow[col] = false;
+      break;
+
+    default:
+      secondExampleRow[col] = '';
+  }
+});
+
+const worksheet = XLSX.utils.json_to_sheet(
+  [exampleRow, secondExampleRow],
+  { header: columns }
+);
+
+
+
+
 
     columns.forEach((col, idx) => {
       const cellAddress = XLSX.utils.encode_cell({ r: 0, c: idx });
@@ -402,6 +1162,7 @@ export class EmployeeMangement {
       const roleName = row['Role'];
       const branchName = row['Branch'];
       const departmentName = row['Department'];
+      const roleLevel = row['Role Level'];
       const canCreate = row['Can Create Circular'];
       const canApprove = row['Can Approve Circular'];
 
@@ -439,6 +1200,14 @@ export class EmployeeMangement {
         continue;
       }
 
+      const validRoleLevels = ['TOP', 'MIDDLE', 'LOWER'];
+
+if (!roleLevel || !validRoleLevels.includes(roleLevel.toString().trim().toUpperCase())) {
+  this.excelErrors.push(
+    `Invalid Role Level "${roleLevel}" for employee ${firstName} ${lastName}. Allowed values: TOP, MIDDLE, LOWER`
+  );
+  continue;
+}
       // --- Duplicate Checks (Frontend Pre-check, Backend is final) ---
       let isDuplicate = false;
       try {
@@ -485,12 +1254,12 @@ export class EmployeeMangement {
           continue;
         }
       } else if (this.role === 'HO_ADMIN') {
-        if (branchName) {
-          this.excelErrors.push(
-            `Row skipped: HO_ADMIN cannot assign employees to a branch for employee ${firstName} ${lastName}`
-          );
-          continue;
-        }
+        // if (branchName) {
+        //   this.excelErrors.push(
+        //     `Row skipped: HO_ADMIN cannot assign employees to a branch for employee ${firstName} ${lastName}`
+        //   );
+        //   continue;
+        // }
       }
 
       // --- Check Department ---
@@ -535,9 +1304,22 @@ export class EmployeeMangement {
         phone_no: phone,
         employee_id: employeeId,
         password: password,
-        branch_id: this.role === 'BRANCH_ADMIN' ? this.branches[0].id : null,
+        // branch_id: this.role === 'BRANCH_ADMIN' ? this.branches[0].id : null,
+      branch_id:
+  this.role === 'BRANCH_ADMIN'
+    ? this.branches[0].id
+    : row['Branch']?.toLowerCase() === 'head office'
+      ? null
+      : row['Branch']
+        ? this.branches.find(
+            (b) => b.name.toLowerCase() === row['Branch'].toLowerCase()
+          )?.id
+        : null,
+
         department_id: departmentId,
-        role_id: validRole.id,
+        role_id: validRole.id, 
+        role_level: roleLevel.toString().trim().toUpperCase(),
+
         head_office_id: this.role === 'HO_ADMIN' ? this.userAssignment.id : null,
         can_create_circular: canCreate,
         can_approve_circular: canApprove,
@@ -599,16 +1381,49 @@ export class EmployeeMangement {
     }
 
     // --- Prepare employee object ---
-    const employee = { ...this.employeeForm.value };
+    const employee = { ...this.employeeForm.value }; 
+
+
     if (this.isEditMode && !employee.password) delete employee.password;
 
-    if (this.role === 'HO_ADMIN') {
-      employee.head_office_id = this.userAssignment.head_office_id || this.userAssignment.id;
-      employee.branch_id = null;
-    } else if (this.role === 'BRANCH_ADMIN') {
-      employee.branch_id = this.userAssignment.branch_id || this.userAssignment.id;
-      employee.head_office_id = null;
-    }
+    // if (this.role === 'HO_ADMIN') {
+    //   employee.head_office_id = this.userAssignment.head_office_id || this.userAssignment.id;
+    //   employee.branch_id = null;
+    // } 
+   if (this.role === 'HO_ADMIN') {
+  employee.head_office_id =
+    this.userAssignment.head_office_id || this.userAssignment.id;
+
+  const selectedBranch = this.employeeForm.value.branch_id;
+
+  if (selectedBranch === 'HEAD_OFFICE') {
+    // Employee belongs to Head Office
+    employee.branch_id = null;
+  } else {
+    // Employee belongs to an actual branch
+    employee.branch_id = selectedBranch || null;
+  }
+}
+else if (this.role === 'BRANCH_ADMIN') {
+  employee.branch_id =
+    this.userAssignment.branch_id || this.userAssignment.id;
+
+  employee.head_office_id = null;
+}
+
+//For the explicitly handling the excluded roles
+if (this.isReportingOfficerRequired()) {
+  employee.reporting_officer_id =
+    this.employeeForm.get('reporting_officer_id')?.value || null;
+} else {
+  employee.reporting_officer_id = null;
+}
+
+
+
+
+
+
 
     // --- Submit data ---
     if (this.isEditMode && this.editEmployeeId !== null) {
@@ -673,8 +1488,12 @@ export class EmployeeMangement {
         email: emp.email,
         phone_no: emp.phone_no,
         role_id: emp.role_id,
+          // ⭐ NEW
+  role_level: emp.role_level,
+
         department_id: emp.department_id,
-        branch_id: emp.branch_id,
+      //  branch_id: emp.branch_id, 
+      branch_id: emp.branch_id ?? 'HEAD_OFFICE',
         employee_id: emp.employee_id,
         password: '',
         can_create_circular: emp.can_create_circular,
@@ -704,6 +1523,9 @@ export class EmployeeMangement {
       department_id: '',
       branch_id: '',
       role_id: '',
+         // ⭐ NEW
+  role_level: '',
+
       password: '',
       employee_id: '',
     });
@@ -733,7 +1555,9 @@ export class EmployeeMangement {
     this.employeeForm
       .get('email')
       ?.setValidators([Validators.required, Validators.email, this.noWhitespaceValidator]);
-    this.employeeForm.get('role_id')?.setValidators([Validators.required]);
+    this.employeeForm.get('role_id')?.setValidators([Validators.required]); 
+
+    this.employeeForm.get('role_level')?.setValidators([Validators.required]);
 
     this.employeeForm
       .get('employee_id')
@@ -756,5 +1580,32 @@ export class EmployeeMangement {
     }
     this.showForm = false;
     this.loadData();
-  }
+  } 
+clearForm(): void {
+  this.employeeForm.reset();
+
+  // Keep the form open
+  this.showForm = true;
+
+  // Keep Add mode
+  this.isEditMode = false;
+
+  // Reset password visibility
+  this.showPassword = false;
+
+  // Reset dependent dropdown data if required
+  this.managers = [];
+
+  // Reset form values that should have default values
+  this.employeeForm.patchValue({
+    can_create_circular: false,
+    can_approve_circular: false,
+    role_level: ''
+  });
+
+  // Clear validation messages
+  this.employeeForm.markAsPristine();
+  this.employeeForm.markAsUntouched();
+}
+
 }

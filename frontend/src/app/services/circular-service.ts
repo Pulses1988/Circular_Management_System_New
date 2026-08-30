@@ -412,7 +412,20 @@ leaveCircularChatRoom(circular_id: number) {
     return this.http.get(`${this.apiUrl}/api/circular-tracking/seen/${id}`, {
       headers: this.getHeaders(),
     });
-  }
+  } 
+
+// ================= Reading History Statistics =================
+getStatistics(employeeId: number) {
+  return this.http.get(
+    `${this.apiUrl}/api/circular-tracking/statistics/${employeeId}`,
+    {
+      headers: this.getHeaders(),
+    }
+  );
+}
+
+
+
 
  markCircularAsSeenForEmp(data: { circularId: number; employeeId: number }) {
   return this.http.post(`${this.apiUrl}/api/circular-tracking/mark-seen`, data, {
@@ -556,5 +569,82 @@ getRecurrenceHistory(circular_id: number): Observable<any> {
   return this.http.get(`${this.apiUrl}/api/circular-recurrence/history/${circular_id}`, {
     headers: this.getHeaders()
   });
+} 
+
+//Maximum Approver
+// Maximum Approver
+getMaxApprovers(): Observable<any> {
+  return this.http.get(
+    `${this.apiUrl}/api/settings/max-approvers`,
+    { headers: this.getHeaders() }
+  );
 }
+
+updateMaxApprovers(maxApprovers: number): Observable<any> {
+  return this.http.put(
+    `${this.apiUrl}/api/settings/max-approvers`,
+    { maxApprovers },
+    { headers: this.getHeaders() }
+  );
+}
+
+
+
+//APi for mark_as_completed
+
+creatorMarkCompleted(circularId: number): Observable<any> {
+  return this.http.post(
+    `${this.apiUrl}/api/circular/creator-mark-completed`,
+    {
+      circularId
+    },
+    {
+      headers: this.getHeaders()
+    }
+  );
+}  
+
+
+
+
+//api for event log
+getEventLogs() {
+  return this.http.get(`${this.apiUrl}/api/event-master`);
+}
+
+// Event Execution History
+getRuleExecutions(): Observable<any[]> {
+  return this.http.get<any[]>(
+    `${this.apiUrl}/api/rule-executions`,
+    {
+      headers: this.getHeaders()
+    }
+  );
+}
+
+//Api for Load higher Authority
+
+getAssignedCirculars(employeeId: number) {
+  return this.http.get<any>(
+    `${this.apiUrl}/api/higher-authority/pending/${employeeId}`,
+    {
+      headers: this.getHeaders()
+    }
+  );
+}   
+
+
+//Api for branch and head office 
+
+
+
+
+// getBranchesByHeadOfficeId(headOfficeId: number) {
+//   return this.http.get(
+//     `${this.apiUrl}/api/branches/head-office/${headOfficeId}/branches`
+//   );
+// }
+
+
+
 }

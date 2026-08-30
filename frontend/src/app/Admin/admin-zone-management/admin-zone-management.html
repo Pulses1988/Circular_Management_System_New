@@ -1,0 +1,246 @@
+<div class="zone-container">
+
+  <!-- Header -->
+  <!-- Header -->
+<div class="page-header">
+
+  <div>
+    <h2>Zone Management</h2>
+    <p>Manage Zones under Regions</p>
+  </div>
+
+</div>
+
+<!-- Add Zone Button -->
+<!-- <button class="create-btn" (click)="toggleForm()">
+  <mat-icon>add</mat-icon>
+  Add Zone
+</button> --> 
+<!-- Add / Close Zone Button -->
+<!-- <button class="create-btn" (click)="toggleForm()"> -->
+  <!-- <mat-icon>{{ showForm ? 'close' : 'add' }}</mat-icon>
+  {{ showForm ? 'Close Form' : 'Add Zone' }}
+</button> -->
+
+<!-- Add Zone Button - visible only when form is closed -->
+<button
+  *ngIf="!showForm"
+  class="create-btn"
+  type="button"
+  (click)="toggleForm()">
+
+  Add Zone
+
+</button>
+
+
+
+  <!-- Form -->
+
+  <div class="form-card" *ngIf="showForm">
+
+    <form [formGroup]="zoneForm" (ngSubmit)="submitForm()">
+
+      <div class="form-grid">
+
+        <!-- Region -->
+
+        <div class="form-group">
+
+          <label>Region <span>*</span></label>
+
+          <select formControlName="region_id">
+
+            <option value="">
+              Select Region
+            </option>
+
+            <option
+              *ngFor="let region of regions"
+              [value]="region.id">
+
+              {{ region.name }}
+
+            </option>
+
+          </select>
+
+        </div>
+
+        <!-- Zone Name -->
+
+        <div class="form-group">
+
+          <label>Zone Name <span>*</span></label>
+
+          <input
+            type="text"
+            formControlName="name"
+            placeholder="Enter Zone Name">
+
+        </div>
+
+      </div>
+
+      <div class="button-group">
+
+        <button
+          type="submit"
+          class="save-btn"
+          [disabled]="isButtonLoading">
+
+          {{ isEditMode ? 'Update Zone' : 'Create Zone' }}
+
+        </button>
+
+        <button
+          type="button"
+          class="cancel-btn"
+          (click)="resetForm()">
+
+          Quite
+
+        </button> 
+
+          <!-- Clear - clears fields but keeps form open -->
+  <button
+    type="button"
+    class="close-form-btn"
+    (click)="clearForm()">
+
+    Clear
+
+  </button>
+
+
+
+
+
+      </div>
+
+    </form>
+
+  </div>
+
+  <!-- Table -->
+
+  <div class="table-card">
+
+    <table>
+
+      <thead>
+
+        <tr>
+
+          <th>#</th>
+          <th>Zone Name</th>
+          <th>Region</th>
+          <th>Created At</th>
+          <th>Actions</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        <!-- <tr *ngFor="let zone of zones; let i = index"> -->
+<tr *ngFor="let zone of paginatedZones(); let i = index">
+          <!-- <td>{{ i + 1 }}</td> -->
+           <td>
+  {{ (currentPage - 1) * itemsPerPage + i + 1 }}
+</td>
+
+          <td>{{ zone.name }}</td>
+
+          <td>{{ zone.region_name }}</td>
+
+          <td>
+            {{ zone.created_at | date:'dd/MM/yyyy' }}
+          </td>
+
+        <td>
+
+  <div class="action-buttons">
+
+    <button
+      type="button"
+      class="action-btn edit-btn"
+      (click)="editZone(zone)"
+    >
+      Edit
+    </button>
+
+    <button
+      type="button"
+      class="action-btn delete-btn"
+      (click)="deleteZone(zone.id)"
+    >
+      Delete
+    </button>
+
+  </div>
+
+</td>
+
+        </tr>
+
+        <tr *ngIf="zones.length === 0">
+
+          <td colspan="5" class="no-data">
+
+            No Zones Found
+
+          </td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+
+
+<!-- Pagination Controls -->
+
+<div
+  class="pagination"
+  *ngIf="totalPages > 1">
+
+  <button
+    type="button"
+    (click)="changePage(currentPage - 1)"
+    [disabled]="currentPage === 1">
+
+    Previous
+
+  </button>
+
+  <button
+    type="button"
+    *ngFor="let page of [].constructor(totalPages); let p = index"
+    (click)="changePage(p + 1)"
+    [class.active]="currentPage === p + 1">
+
+    {{ p + 1 }}
+
+  </button>
+
+  <button
+    type="button"
+    (click)="changePage(currentPage + 1)"
+    [disabled]="currentPage === totalPages">
+
+    Next
+
+  </button>
+
+</div>
+
+
+
+
+
+</div>

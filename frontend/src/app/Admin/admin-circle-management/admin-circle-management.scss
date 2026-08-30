@@ -1,0 +1,335 @@
+.circle-container {
+  padding: 24px;
+  background: #f5f7fb;
+  min-height: 100vh;
+}
+
+/* Header */
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 600;
+    color: #2c3e50;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: #777;
+    font-size: 14px;
+  }
+}
+
+/* Create Button */
+
+.create-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  background: #16a34a;
+  color: white;
+
+  border: none;
+  border-radius: 8px;
+
+  padding: 10px 20px;
+
+  cursor: pointer;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  margin-bottom: 20px;
+
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background: #15803d;
+  }
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Form Card */
+
+.form-card {
+  background: white;
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 25px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+
+  label {
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #444;
+  }
+
+  span {
+    color: red;
+  }
+
+  input,
+  select {
+    padding: 11px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    outline: none;
+    font-size: 14px;
+
+    &:focus {
+      border-color: #2563eb;
+    }
+  }
+}
+
+/* Buttons */
+
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.save-btn {
+  background: #16a34a;
+  color: white;
+  border: none;
+  padding: 11px 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+
+  &:hover {
+    background: #15803d;
+  }
+
+  &:disabled {
+    background: #999;
+    cursor: not-allowed;
+  }
+}
+
+.cancel-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 11px 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+
+  &:hover {
+    background: #dc2626;
+  }
+}
+
+/* Table */
+
+.table-card {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: #2563eb;
+  color: white;
+}
+
+thead th {
+  padding: 14px;
+  text-align: left;
+  font-size: 14px;
+}
+
+tbody td {
+  padding: 14px;
+  border-bottom: 1px solid #ececec;
+}
+
+tbody tr:hover {
+  background: #f8fafc;
+}
+
+/* Action Buttons */
+
+.icon-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+.edit-btn {
+  color: #2563eb;
+}
+
+.delete-btn {
+  color: #dc2626;
+}
+
+.no-data {
+  text-align: center;
+  padding: 20px;
+  color: #888;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+
+  .save-btn,
+  .cancel-btn {
+    width: 100%;
+  }
+
+  .table-card {
+    overflow-x: auto;
+  }
+
+  table {
+    min-width: 700px;
+  }
+}  
+
+
+/* ================= ACTION BUTTONS ================= */
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.action-btn {
+  border: none;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  line-height: 1.5;
+}
+
+/* ================= EDIT BUTTON ================= */
+
+.edit-btn {
+  background-color: #eab308;
+}
+
+.edit-btn:hover {
+  background-color: #ca8a04;
+}
+
+/* ================= DELETE BUTTON ================= */
+
+.delete-btn {
+  background-color: #ef4444;
+}
+
+.delete-btn:hover {
+  background-color: #dc2626;
+} 
+
+
+
+/* ================= PAGINATION ================= */
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.pagination button {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 12px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+
+  background: #fff;
+  color: #374151;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination button:hover:not(:disabled) {
+  background: #eff6ff;
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.pagination button.active {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+} 
+
+//Css  for clear button
+.close-form-btn {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 8px;
+  background-color: #2563eb;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.close-form-btn:hover {
+  background-color: #1d4ed8;
+}

@@ -8,13 +8,21 @@
   </div>
 
   <!-- Add Button -->
-  <button
+  <!-- <button
     (click)="toggleForm()"
     class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors mb-6"
   >
     {{ showForm ? 'Close Form' : 'Add New Branch' }}
-  </button>
-
+  </button> -->
+<!-- Add Branch Button - visible only when form is closed -->
+<button
+  *ngIf="!showForm"
+  type="button"
+  (click)="toggleForm()"
+  class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors mb-6"
+>
+  Add New Branch
+</button>
   <!-- Branch Form -->
   <form
     *ngIf="showForm"
@@ -23,7 +31,8 @@
     (ngSubmit)="submitForm()"
     class="bg-white p-6 rounded-lg shadow-md mb-6"
   >
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    
       <div>
         <label class="block text-sm font-medium mb-2 text-gray-700">Branch Name</label>
         <input
@@ -66,28 +75,86 @@
           </div>
         </div>
       </div>
-      <div>
-        <label class="block text-sm font-medium mb-2 text-gray-700">Head Office</label>
-        <select
-          formControlName="head_office_id"
-          class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="" disabled>Select Head Office</option>
-          <option *ngFor="let office of headOffice" [value]="office.id">
-            {{ office.name }}
-          </option>
-        </select>
-        <div
-          *ngIf="
-            branchForm.get('head_office_id')?.touched && branchForm.get('head_office_id')?.invalid
-          "
-          class="text-red-500 text-sm mt-1"
-        >
-          Head Office selection is required.
-        </div>
-      </div>
+     
+
+
+      <!-- REGION DROPDOWN -->
+ <!-- REGION DROPDOWN -->
+<div>
+  <label class="block text-sm font-medium mb-2 text-gray-700">
+    Region
+  </label>
+
+  <select
+    formControlName="region_id"
+    (change)="loadZones(+$any($event.target).value)"
+    class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+  >
+    <option value="">Select Region</option>
+
+    <option
+      *ngFor="let region of regions"
+      [value]="region.id"
+    >
+      {{ region.name }}
+    </option>
+  </select>
+</div>
+
+<!-- ZONE DROPDOWN --> 
+
+<!-- ZONE DROPDOWN -->
+<div>
+  <label class="block text-sm font-medium mb-2 text-gray-700">
+    Zone
+  </label>
+
+  <select
+    formControlName="zone_id"
+    (change)="loadCircles(+$any($event.target).value)"
+    class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+  >
+    <option value="">Select Zone</option>
+
+    <option
+      *ngFor="let zone of zones"
+      [value]="zone.id"
+    >
+      {{ zone.name }}
+    </option>
+  </select>
+</div>
+
+
+<!-- CIRCLE DROPDOWN -->
+<div>
+  <label class="block text-sm font-medium mb-2 text-gray-700">
+    Circle
+  </label>
+
+  <select
+    formControlName="circle_id"
+    class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+  >
+    <option value="">Select Circle</option>
+
+    <option
+      *ngFor="let circle of circles"
+      [value]="circle.circle_id"
+    >
+      {{ circle.circle_name }}
+    </option>
+  </select>
+</div>
+
+
+
+
+
+
+
     </div>
-    <div class="mt-6 flex gap-3">
+    <!-- <div class="mt-6 flex gap-3">
       <button
         type="submit"
         class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -110,7 +177,48 @@
       >
         Cancel
       </button>
-    </div>
+    </div> -->
+  
+ <div class="mt-6 flex gap-3">
+
+  <!-- Add / Update -->
+  <button
+    type="submit"
+    class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors min-w-[135px]"
+    [disabled]="branchForm.invalid || isButtonLoading"
+  >
+    {{
+      isButtonLoading
+        ? isEditMode
+          ? 'Updating...'
+          : 'Adding...'
+        : isEditMode
+        ? 'Update Branch'
+        : 'Add Branch'
+    }}
+  </button>
+
+  <!-- Cancel -->
+  <button
+    type="button"
+    (click)="resetForm()"
+    class="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors min-w-[90px]"
+  >
+    Cancel
+  </button>
+
+  <!-- Clear -->
+  <button
+    type="button"
+    (click)="clearForm()"
+    class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors min-w-[90px]"
+  >
+    Clear
+  </button>
+
+</div>
+  
+  
   </form>
 
   <!-- Loader -->
@@ -130,13 +238,26 @@
         <table class="min-w-full">
           <thead class="bg-gray-50 border-b">
             <tr>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">#</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Name</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Address</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Head Office</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Created At</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Admin</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+  #
+</th>
+
+<th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+  Branch Name
+</th>
+  <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Address</th>
+    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Head Office</th> 
+     <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Created At</th>
+    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Region</th>
+    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Zone</th>
+    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Circle</th>
+    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Created At</th>
+    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Admin</th>
+    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+
+
+
+
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
@@ -150,6 +271,29 @@
               <td class="px-6 py-4 text-sm text-gray-500">
                 {{ branch.created_at | date : 'dd/MM/yyyy' }}
               </td>
+             
+              <!-- <td class="px-6 py-4 text-sm text-gray-900">
+  {{ branch.head_office_name }}
+</td> -->
+
+<td class="px-6 py-4 text-sm text-gray-900">
+  {{ branch.region_name || '-' }}
+</td>
+
+<td class="px-6 py-4 text-sm text-gray-900">
+  {{ branch.zone_name || '-' }}
+</td>
+
+<td class="px-6 py-4 text-sm text-gray-900">
+  {{ branch.circle_name || '-' }}
+</td>
+
+<td class="px-6 py-4 text-sm text-gray-500">
+  {{ branch.created_at | date:'dd/MM/yyyy' }}
+</td>
+
+
+
               <td class="px-6 py-4">
                 <div *ngIf="branch.has_admin === 1" class="flex gap-2">
                   <button

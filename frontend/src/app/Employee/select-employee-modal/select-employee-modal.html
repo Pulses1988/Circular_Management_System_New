@@ -1,201 +1,1769 @@
-<h2 mat-dialog-title class="text-2xl font-semibold border-b pb-4">Select Receivers</h2>
+<!-- ========================================================= -->
+<!-- SELECT RECEIVERS DIALOG                                  -->
+<!-- ========================================================= -->
 
-<mat-dialog-content class="px-6 py-6">
-  <div class="grid grid-cols-2 gap-8">
-    <!-- Left Column: Department Section -->
-    <div class="flex flex-col space-y-4 bg-gray-50 p-5 rounded-lg border border-gray-200">
-      <div class="flex items-center space-x-2 pb-2 border-b border-gray-300">
-        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-          />
-        </svg>
-        <h3 class="text-lg font-semibold text-gray-800">Department</h3>
+<h2
+  mat-dialog-title
+  class="text-2xl font-semibold text-gray-800 px-6 pt-5 pb-4 border-b"
+>
+  Select Receivers
+</h2>
+
+<mat-dialog-content class="px-6 py-5 bg-white">
+
+  <!-- ======================================================= -->
+  <!-- HORIZONTAL STEPPER                                      -->
+  <!-- ======================================================= -->
+
+  <div *ngIf="isRegionWiseSelection()" class="w-full mb-6">
+
+    <div class="flex items-center justify-between">
+
+      <!-- REGION -->
+      <div class="flex flex-col items-center min-w-[90px]">
+
+        <div
+          class="w-10 h-10 rounded-full flex items-center justify-center
+                 font-semibold text-sm transition-all duration-300"
+          [ngClass]="
+            isRegionWiseSelection()
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'bg-gray-200 text-gray-500'
+          "
+        >
+          1
+        </div>
+
+        <span
+          class="mt-2 text-sm font-medium"
+          [ngClass]="
+            isRegionWiseSelection()
+              ? 'text-blue-700'
+              : 'text-gray-500'
+          "
+        >
+          Region
+        </span>
+
       </div>
 
-      <form [formGroup]="form">
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Select Department</mat-label>
-          <mat-select formControlName="department">
-            <mat-option *ngFor="let dept of departments" [value]="dept.id">
-              {{ dept.name }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-      </form>
 
-      <!-- Department Employees -->
-      <div *ngIf="selectedDepartmentId" class="mt-2">
-        <div class="flex items-center justify-between mb-3">
-          <h4 class="font-medium text-gray-700 text-sm">
-            {{ getDepartmentName(selectedDepartmentId) }} Employees
-          </h4>
-          <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">{{
-            employees.length
-          }}</span>
+      <!-- CONNECTOR -->
+      <div class="flex-1 h-[2px] mx-2 bg-gray-200"></div>
+
+
+      <!-- ZONE -->
+      <div class="flex flex-col items-center min-w-[90px]">
+
+        <div
+          class="w-10 h-10 rounded-full flex items-center justify-center
+                 font-semibold text-sm transition-all duration-300"
+          [ngClass]="
+            isZoneWiseSelection() ||
+            (isRegionWiseSelection() && showZoneSelection)
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'bg-gray-200 text-gray-500'
+          "
+        >
+          2
         </div>
-        <div class="bg-white rounded-md border border-gray-200 shadow-sm">
-          <mat-selection-list multiple class="w-full max-h-60 overflow-y-auto">
-            <mat-list-option
-              *ngFor="let emp of employees"
-              [value]="emp.id"
-              [selected]="isSelected(emp.id)"
-              (click)="toggleEmployee(emp)"
-              class="hover:bg-blue-50 transition-colors"
-            >
-              {{ emp.first_name }} {{ emp.last_name }}
-            </mat-list-option>
-          </mat-selection-list>
-        </div>
+
+        <span
+          class="mt-2 text-sm font-medium"
+          [ngClass]="
+            isZoneWiseSelection() ||
+            (isRegionWiseSelection() && showZoneSelection)
+              ? 'text-blue-700'
+              : 'text-gray-500'
+          "
+        >
+          Zone
+        </span>
+
       </div>
+
+
+      <!-- CONNECTOR -->
+      <div class="flex-1 h-[2px] mx-2 bg-gray-200"></div>
+
+
+      <!-- CIRCLE -->
+      <div class="flex flex-col items-center min-w-[90px]">
+
+        <div
+          class="w-10 h-10 rounded-full flex items-center justify-center
+                 font-semibold text-sm transition-all duration-300"
+          [ngClass]="
+            isCircleWiseSelection() ||
+            (isRegionWiseSelection() && showCircleSelection)
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'bg-gray-200 text-gray-500'
+          "
+        >
+          3
+        </div>
+
+        <span
+          class="mt-2 text-sm font-medium"
+          [ngClass]="
+            isCircleWiseSelection() ||
+            (isRegionWiseSelection() && showCircleSelection)
+              ? 'text-blue-700'
+              : 'text-gray-500'
+          "
+        >
+          Circle
+        </span>
+
+      </div>
+
+
+      <!-- CONNECTOR -->
+      <div class="flex-1 h-[2px] mx-2 bg-gray-200"></div>
+
+
+      <!-- BRANCH -->
+      <div class="flex flex-col items-center min-w-[90px]">
+
+        <div
+          class="w-10 h-10 rounded-full flex items-center justify-center
+                 font-semibold text-sm transition-all duration-300"
+          [ngClass]="
+            isBranchWiseSelection() ||
+            (isRegionWiseSelection() && showBranchSelection)
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'bg-gray-200 text-gray-500'
+          "
+        >
+          4
+        </div>
+
+        <span
+          class="mt-2 text-sm font-medium"
+          [ngClass]="
+            isBranchWiseSelection() ||
+            (isRegionWiseSelection() && showBranchSelection)
+              ? 'text-blue-700'
+              : 'text-gray-500'
+          "
+        >
+          Branch
+        </span>
+
+      </div>
+
+
+      <!-- CONNECTOR -->
+      <div class="flex-1 h-[2px] mx-2 bg-gray-200"></div>
+
+
+      <!-- DEPARTMENT -->
+      <div class="flex flex-col items-center min-w-[100px]">
+
+        <div
+          class="w-10 h-10 rounded-full flex items-center justify-center
+                 font-semibold text-sm bg-gray-200 text-gray-500"
+        >
+          5
+        </div>
+
+        <span class="mt-2 text-sm font-medium text-gray-500">
+          Department
+        </span>
+
+      </div>
+
+
+      <!-- CONNECTOR -->
+      <div class="flex-1 h-[2px] mx-2 bg-gray-200"></div>
+
+
+      <!-- EMPLOYEE -->
+      <div class="flex flex-col items-center min-w-[90px]">
+
+        <div
+          class="w-10 h-10 rounded-full flex items-center justify-center
+                 font-semibold text-sm bg-gray-200 text-gray-500"
+        >
+          6
+        </div>
+
+        <span class="mt-2 text-sm font-medium text-gray-500">
+          Employee
+        </span>
+
+      </div>
+
     </div>
 
-    <!-- Right Column: Branch Section -->
-    <div class="flex flex-col space-y-4 bg-gray-50 p-5 rounded-lg border border-gray-200">
-      <div class="flex items-center space-x-2 pb-2 border-b border-gray-300">
-        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-          />
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-          />
-        </svg>
-        <h3 class="text-lg font-semibold text-gray-800">Branch</h3>
+  </div>
+
+
+  <!-- ======================================================= -->
+  <!-- CURRENT SELECTION AREA                                  -->
+  <!-- ======================================================= -->
+
+  <div class="border-t border-gray-200 pt-5">
+
+
+    <!-- ===================================================== -->
+    <!-- HEAD OFFICE                                            -->
+    <!-- ===================================================== -->
+
+    <div
+      *ngIf="isHeadOfficeSelection()"
+      class="bg-gray-50 rounded-xl border border-gray-200 p-5"
+    >
+
+      <div class="flex items-center gap-3 mb-4">
+
+        <div
+          class="w-9 h-9 rounded-full bg-blue-100
+                 flex items-center justify-center"
+        >
+          <span class="text-blue-700 font-semibold">1</span>
+        </div>
+
+        <div>
+
+          <h3 class="text-lg font-semibold text-gray-800">
+            Head Office
+          </h3>
+
+          <p class="text-xs text-gray-500">
+            Select Head Office
+          </p>
+
+        </div>
+
       </div>
 
       <form [formGroup]="form">
+
         <mat-form-field appearance="outline" class="w-full">
+
+          <mat-label>Select Head Office</mat-label>
+
+          <mat-select
+            formControlName="headOffice"
+            multiple
+          >
+
+            <mat-option
+              *ngFor="let headOffice of headOffices"
+              [value]="headOffice.id"
+            >
+              {{ headOffice.name }}
+            </mat-option>
+
+          </mat-select>
+
+        </mat-form-field>
+
+      </form>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- REGION                                                 -->
+    <!-- ===================================================== -->
+
+    <div
+      *ngIf="isRegionWiseSelection()"
+      class="bg-gray-50 rounded-xl border border-gray-200 p-5"
+    >
+
+      <div class="flex items-center gap-3 mb-4">
+
+        <div
+          class="w-9 h-9 rounded-full bg-blue-100
+                 flex items-center justify-center"
+        >
+          <span class="text-blue-700 font-semibold">1</span>
+        </div>
+
+        <div>
+
+          <h3 class="text-lg font-semibold text-gray-800">
+            Region
+          </h3>
+
+          <p class="text-xs text-gray-500">
+            Select one or more regions
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <form [formGroup]="form">
+
+        <mat-form-field appearance="outline" class="w-full">
+
+          <mat-label>Select Region</mat-label>
+
+          <mat-select
+            formControlName="region"
+            multiple
+            (selectionChange)="onRegionSelectionChange($event)"
+          >
+
+            <!-- None / No Selection -->
+            <mat-option value="NONE">
+              No Region / None
+            </mat-option>
+
+            <mat-option
+              *ngFor="let region of regions"
+              [value]="region.id"
+            >
+              {{ region.name }}
+            </mat-option>
+
+          </mat-select>
+
+        </mat-form-field>
+
+      </form>
+
+
+      <!-- Selected region summary -->
+
+      <div
+        *ngIf="selectedRegionIds?.length"
+        class="mt-2 flex items-center gap-2"
+      >
+
+        <span class="text-sm text-gray-600">
+          Selected:
+        </span>
+
+        <span
+          class="px-3 py-1 rounded-full bg-blue-100
+                 text-blue-700 text-sm font-medium"
+        >
+          {{ selectedRegionIds.length }} Region(s)
+        </span>
+
+      </div>
+
+
+      <!-- ================================================= -->
+      <!-- ZONE QUESTION                                      -->
+      <!-- ================================================= -->
+
+      <div
+        *ngIf="
+          showZoneQuestion &&
+          !isNoneRegionSelected()
+        "
+        class="mt-5 bg-white rounded-lg border border-blue-100 p-4"
+      >
+
+        <div class="flex items-center justify-between gap-4">
+
+          <div>
+
+            <p class="font-medium text-gray-800">
+              Do you want to select Zone-wise?
+            </p>
+
+            <p class="text-xs text-gray-500 mt-1">
+              Continue to Zone selection for the selected region.
+            </p>
+
+          </div>
+
+         
+          <mat-form-field
+  appearance="outline"
+  class="w-40 !mb-[-1.25em]"
+>
+  <mat-label>Select Option</mat-label>
+
+  <input
+    matInput
+    list="zoneWiseOptions"
+    maxlength="3"
+    placeholder="Yes / No"
+    [value]="selectedZoneWise === true ? 'Yes' : selectedZoneWise === false ? 'No' : ''"
+    (input)="onZoneTextInput($event)"
+  />
+
+  <datalist id="zoneWiseOptions">
+    <option value="Yes"></option>
+    <option value="No"></option>
+  </datalist>
+
+</mat-form-field>
+
+
+
+
+
+
+
+
+
+
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- ZONE                                                   -->
+    <!-- ===================================================== -->
+
+    <div
+      *ngIf="
+        isZoneWiseSelection() ||
+        (isRegionWiseSelection() && showZoneSelection ===true) 
+
+      "
+      class="bg-gray-50 rounded-xl border border-gray-200 p-5"
+    >
+
+      <div class="flex items-center gap-3 mb-4">
+
+        <div
+          class="w-9 h-9 rounded-full bg-blue-100
+                 flex items-center justify-center"
+        >
+          <span class="text-blue-700 font-semibold">2</span>
+        </div>
+
+        <div>
+
+          <h3 class="text-lg font-semibold text-gray-800">
+            Zone
+          </h3>
+
+          <p class="text-xs text-gray-500">
+            Select zones
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <form [formGroup]="form">
+
+        <mat-form-field appearance="outline" class="w-full">
+
+          <mat-label>Select Zone</mat-label>
+
+          <mat-select
+            formControlName="zone"
+            multiple
+          >
+
+            <!-- ================================================= -->
+            <!-- REGION-WISE ONLY                                  -->
+            <!-- ================================================= -->
+
+            <mat-option
+              *ngIf="isRegionWiseSelection()"
+              value="NONE"
+            >
+              No Zone / None
+            </mat-option>
+
+
+            <mat-option
+              *ngFor="let zone of zones"
+              [value]="zone.id"
+            >
+              {{ zone.name }}
+            </mat-option>
+
+          </mat-select>
+
+        </mat-form-field>
+
+      </form>
+
+
+      <!-- NEXT QUESTION -->
+
+    
+
+    </div>
+
+
+
+<!-- circle question -->
+  <div
+        class="mt-4 bg-white rounded-lg border
+               border-gray-200 p-4"
+      >
+
+        <!-- CIRCLE QUESTION -->
+
+        <div
+          *ngIf="showCircleQuestion"
+          class="flex items-center justify-between gap-4"
+        >
+
+          <div>
+
+            <strong>
+              Do you want to select Circle-wise?
+            </strong>
+
+            <p class="text-xs text-gray-500 mt-1">
+              Continue to Circle selection for the selected zone.
+            </p>
+
+          </div>
+
+         <mat-form-field
+  appearance="outline"
+  class="w-40 !mb-[-1.25em]"
+>
+  <mat-label>Select Option</mat-label>
+
+  <input
+    matInput
+    list="circleWiseOptions"
+    maxlength="3"
+    placeholder="Yes / No"
+    [value]="
+      selectedCircleWise === true
+        ? 'Yes'
+        : selectedCircleWise === false
+        ? 'No'
+        : ''
+    "
+    (input)="onCircleTextInput($event)"
+  />
+
+  <datalist id="circleWiseOptions">
+    <option value="Yes"></option>
+    <option value="No"></option>
+  </datalist>
+
+</mat-form-field>
+
+        </div>
+
+      </div>
+
+
+
+
+
+    <!-- ===================================================== -->
+    <!-- CIRCLE                                                  -->
+    <!-- ===================================================== -->
+
+    <div
+      *ngIf="
+        isCircleWiseSelection() ||
+        (isRegionWiseSelection() && showCircleSelection)
+      "
+      class="bg-gray-50 rounded-xl border border-gray-200 p-5"
+    >
+
+      <div class="flex items-center gap-3 mb-4">
+
+        <div
+          class="w-9 h-9 rounded-full bg-blue-100
+                 flex items-center justify-center"
+        >
+          <span class="text-blue-700 font-semibold">3</span>
+        </div>
+
+        <div>
+
+          <h3 class="text-lg font-semibold text-gray-800">
+            Circle
+          </h3>
+
+          <p class="text-xs text-gray-500">
+            Select circles
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <form [formGroup]="form">
+
+        <mat-form-field appearance="outline" class="w-full">
+
+          <mat-label>Select Circle</mat-label>
+
+          <mat-select
+            formControlName="circle"
+            multiple
+          >
+
+            <!-- ================================================= -->
+            <!-- REGION-WISE ONLY                                  -->
+            <!-- ================================================= -->
+
+            <mat-option
+              *ngIf="isRegionWiseSelection()"
+              value="NONE"
+            >
+              No Circle / None
+            </mat-option>
+
+
+            <mat-option
+              *ngFor="let circle of circles"
+              [value]="circle.circle_id"
+            >
+              {{ circle.circle_name }}
+            </mat-option>
+
+          </mat-select>
+
+        </mat-form-field>
+
+      </form>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- BRANCH QUESTION                                    -->
+    <!-- ================================================= -->
+
+    <div
+      *ngIf="showBranchQuestion"
+      class="mt-4 bg-white rounded-lg border border-gray-200 p-4"
+    >
+
+      <div class="flex items-center justify-between gap-4">
+
+        <div>
+
+          <p class="font-medium text-gray-800">
+            Do you want to select Branch-wise?
+          </p>
+
+          <p class="text-xs text-gray-500 mt-1">
+            Continue to Branch selection for the selected circle.
+          </p>
+
+        </div>
+       
+        <mat-form-field
+  appearance="outline"
+  class="w-40 !mb-[-1.25em]"
+>
+  <mat-label>Select Option</mat-label>
+
+  <input
+    matInput
+    list="branchWiseOptions"
+    maxlength="3"
+    placeholder="Yes / No"
+    [value]="
+      selectedBranchWise === true
+        ? 'Yes'
+        : selectedBranchWise === false
+        ? 'No'
+        : ''
+    "
+    (input)="onBranchTextInput($event)"
+  />
+
+  <datalist id="branchWiseOptions">
+    <option value="Yes"></option>
+    <option value="No"></option>
+  </datalist>
+
+</mat-form-field>
+
+
+
+      </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- COMMITTEE                                              -->
+    <!-- ===================================================== -->
+
+    <div
+      *ngIf="isCommitteeWiseSelection()"
+      class="bg-gray-50 rounded-xl border border-gray-200 p-5"
+    >
+
+      <div class="flex items-center gap-3 mb-4">
+
+        <div
+          class="w-9 h-9 rounded-full bg-purple-100
+                 flex items-center justify-center"
+        >
+          <span class="text-purple-700 font-semibold">
+            C
+          </span>
+        </div>
+
+        <div>
+
+          <h3 class="text-lg font-semibold text-gray-800">
+            Committee
+          </h3>
+
+          <p class="text-xs text-gray-500">
+            Select committee
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <form [formGroup]="form">
+
+        <mat-form-field appearance="outline" class="w-full">
+
+          <mat-label>Select Committee</mat-label>
+
+          <mat-select
+            formControlName="committee"
+            multiple
+          >
+
+            <mat-option
+              *ngFor="let committee of committees"
+              [value]="committee.id"
+            >
+              {{ committee.committee_name }}
+            </mat-option>
+
+          </mat-select>
+
+        </mat-form-field>
+
+      </form>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- BRANCH                                                 -->
+    <!-- ===================================================== -->
+
+    <div
+      *ngIf="
+        isBranchWiseSelection() ||
+        (isRegionWiseSelection() && showBranchSelection)
+      "
+      class="bg-gray-50 rounded-xl border border-gray-200 p-5"
+    >
+
+      <div class="flex items-center gap-3 mb-4">
+
+        <div
+          class="w-9 h-9 rounded-full bg-green-100
+                 flex items-center justify-center"
+        >
+          <span class="text-green-700 font-semibold">4</span>
+        </div>
+
+        <div>
+
+          <h3 class="text-lg font-semibold text-gray-800">
+            Branch
+          </h3>
+
+          <p class="text-xs text-gray-500">
+            Select branches
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <form [formGroup]="form">
+
+        <mat-form-field appearance="outline" class="w-full">
+
           <mat-label>Select Branch</mat-label>
-          <mat-select formControlName="branch">
-            <mat-option *ngFor="let branch of branches" [value]="branch.id">
+
+          <mat-select
+            formControlName="branchWise"
+            multiple
+          >
+
+            <!-- ================================================= -->
+            <!-- REGION-WISE ONLY                                  -->
+            <!-- ================================================= -->
+
+            <mat-option
+              *ngIf="isRegionWiseSelection()"
+              value="NONE"
+            >
+              No Branch / None
+            </mat-option>
+
+
+            <mat-option
+              *ngFor="let branch of branches"
+              [value]="branch.id"
+            >
               {{ branch.name }}
             </mat-option>
+
           </mat-select>
+
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="w-full" *ngIf="hasBranchDepartments">
-          <mat-label>Select Branch Department</mat-label>
-          <mat-select formControlName="branchDepartment">
-            <mat-option *ngFor="let branchDept of branchDepartments" [value]="branchDept.id">
-              {{ branchDept.name }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
       </form>
 
-      <!-- Branch Employees -->
-      <div *ngIf="branchDepartmentsEmployee.length > 0" class="mt-2">
-        <div class="flex items-center justify-between mb-3">
-          <h4 class="font-medium text-gray-700 text-sm">Branch Employees</h4>
-          <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">{{
-            branchDepartmentsEmployee.length
-          }}</span>
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- DEPARTMENT QUESTION                                    -->
+    <!-- ===================================================== -->
+
+    <div
+      *ngIf="showDepartmentQuestion"
+      class="mt-4 bg-white rounded-lg border border-blue-100 p-4"
+    >
+
+      <div class="flex items-center justify-between gap-4">
+
+        <div>
+
+          <p class="font-medium text-gray-800">
+            Do you want to add Department?
+          </p>
+
+          <p class="text-xs text-gray-500 mt-1">
+            Continue to Department selection for the selected branch.
+          </p>
+
         </div>
-        <div class="bg-white rounded-md border border-gray-200 shadow-sm">
-          <mat-selection-list multiple class="w-full max-h-60 overflow-y-auto">
+
+       <mat-form-field
+  appearance="outline"
+  class="w-40 !mb-[-1.25em]"
+>
+  <mat-label>Select Option</mat-label>
+
+  <input
+    matInput
+    list="departmentWiseOptions"
+    maxlength="3"
+    placeholder="Yes / No"
+    [value]="
+      selectedDepartmentWise === true
+        ? 'Yes'
+        : selectedDepartmentWise === false
+        ? 'No'
+        : ''
+    "
+    (input)="onDepartmentTextInput($event)"
+  />
+
+  <datalist id="departmentWiseOptions">
+    <option value="Yes"></option>
+    <option value="No"></option>
+  </datalist>
+
+</mat-form-field>
+
+      </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- DEPARTMENT SELECTION                                   -->
+    <!-- ===================================================== -->
+
+    <div
+      *ngIf="showDepartmentSelection"
+      class="mt-4 bg-gray-50 rounded-xl border border-gray-200 p-5"
+    >
+
+      <div class="flex items-center gap-3 mb-4">
+
+        <div
+          class="w-9 h-9 rounded-full bg-blue-100
+                 flex items-center justify-center"
+        >
+          <span class="text-blue-700 font-semibold">
+            5
+          </span>
+        </div>
+
+        <div>
+
+          <h3 class="text-lg font-semibold text-gray-800">
+            Department
+          </h3>
+
+          <p class="text-xs text-gray-500">
+            Select departments
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <form [formGroup]="form">
+
+        <mat-form-field appearance="outline" class="w-full">
+
+          <mat-label>Select Department</mat-label>
+
+          <mat-select
+            formControlName="branchDepartmentWise"
+            multiple
+          >
+
+            <!-- ================================================= -->
+            <!-- REGION-WISE ONLY                                  -->
+            <!-- ================================================= -->
+
+            <mat-option
+              *ngIf="isRegionWiseSelection()"
+              value="NONE"
+            >
+              No Department / None
+            </mat-option>
+
+
+            <mat-option
+              *ngFor="
+                let department of departmentsForSelectedBranches
+              "
+              [value]="department.id"
+            >
+              {{ department.name }}
+            </mat-option>
+
+          </mat-select>
+
+        </mat-form-field>
+
+      </form>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- DESIGNATION                                             -->
+    <!-- ===================================================== -->
+
+    <div
+      *ngIf="isDesignationWiseSelection()"
+      class="bg-gray-50 rounded-xl border border-gray-200 p-5"
+    >
+
+      <div class="flex items-center gap-3 mb-4">
+
+        <div
+          class="w-9 h-9 rounded-full bg-purple-100
+                 flex items-center justify-center"
+        >
+          <span class="text-purple-700 font-semibold">
+            D
+          </span>
+        </div>
+
+        <div>
+
+          <h3 class="text-lg font-semibold text-gray-800">
+            Designation
+          </h3>
+
+          <p class="text-xs text-gray-500">
+            Select designation
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <form [formGroup]="form">
+
+        <mat-form-field appearance="outline" class="w-full">
+
+          <mat-label>Select Designation</mat-label>
+
+          <mat-select
+            formControlName="designation"
+            multiple
+          >
+
+            <mat-option
+              *ngFor="let designation of designations"
+              [value]="designation.id"
+            >
+              {{ designation.name }}
+            </mat-option>
+
+          </mat-select>
+
+        </mat-form-field>
+
+      </form>
+
+
+      <!-- Designation employees -->
+
+      <div
+        *ngIf="selectedEmployees.length > 0"
+        class="mt-4"
+      >
+
+        <div class="flex items-center justify-between mb-3">
+
+          <h4 class="font-medium text-gray-700 text-sm">
+            Selected Designation Employees
+          </h4>
+
+          <span
+            class="text-xs bg-purple-100 text-purple-700
+                   px-2 py-1 rounded-full"
+          >
+            {{ selectedEmployees.length }}
+          </span>
+
+        </div>
+
+
+        <div
+          class="bg-white rounded-md border
+                 border-gray-200 shadow-sm"
+        >
+
+          <mat-selection-list
+            multiple
+            class="w-full max-h-60 overflow-y-auto"
+          >
+
             <mat-list-option
-              *ngFor="let emp of branchDepartmentsEmployee"
+              [selected]="
+                selectedEmployees.length > 0 &&
+                selectedEmployees.length === designationEmployeeList.length
+              "
+              (click)="toggleAllDesignationEmployees()"
+            >
+
+              <strong>
+                ✔ Select All Employees
+              </strong>
+
+            </mat-list-option>
+
+
+            <mat-list-option
+              *ngFor="let emp of designationEmployeeList"
               [value]="emp.id"
               [selected]="isSelected(emp.id)"
               (click)="toggleEmployee(emp)"
-              class="hover:bg-green-50 transition-colors"
             >
-              {{ emp.first_name }} {{ emp.last_name }}
-            </mat-list-option>
-          </mat-selection-list>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Selected Employees Chips -->
-  <div
-    *ngIf="selectedEmployees.length > 0"
-    class="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 p-5 rounded-lg border border-blue-200"
-  >
-    <div class="flex items-center justify-between mb-3">
-      <h4 class="font-semibold text-gray-800 flex items-center">
-        <svg
-          class="w-5 h-5 mr-2 text-blue-600"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-        Selected Employees
-      </h4>
-      <span class="text-sm bg-blue-600 text-white px-3 py-1 rounded-full font-medium">{{
-        selectedEmployees.length
-      }}</span>
+              {{ emp.first_name }} {{ emp.last_name }}
+
+            </mat-list-option>
+
+          </mat-selection-list>
+
+        </div>
+
+      </div>
+
     </div>
-    <div class="flex flex-wrap gap-2">
-      <span
-        *ngFor="let emp of selectedEmployees"
-        class="flex items-center bg-white border border-blue-300 text-gray-800 px-4 py-2 rounded-full text-sm shadow-sm hover:shadow-md transition-shadow"
-      >
-        <span class="font-medium">{{ emp.first_name }} {{ emp.last_name }}</span>
-        <span class="mx-2 text-gray-400">•</span>
-        <span class="text-gray-600 text-xs">{{ getDepartmentName(emp.department_id) }}</span>
-        <button
-          type="button"
-          (click)="removeEmployee(emp)"
-          class="ml-3 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full p-1 focus:outline-none transition-colors"
-          title="Remove"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
+
+
+    <!-- ===================================================== -->
+    <!-- ROLE / SPECIAL TYPES                                    -->
+    <!-- ===================================================== -->
+
+    <!-- ===================================================== -->
+<!-- ROLE / SPECIAL TYPES                                  -->
+<!-- ===================================================== -->
+
+<div
+  *ngIf="
+    isRoleWiseSelection() ||
+    isBoardOfDirectorsSelection() ||
+    isMdCeoSelection() ||
+    isCorporateOfficeSelection()
+  "
+  class="bg-gray-50 rounded-xl border border-gray-200 p-5"
+>
+
+  <!-- HEADER -->
+  <div class="flex items-center gap-3 mb-4">
+
+    <div
+      class="w-9 h-9 rounded-full bg-indigo-100
+             flex items-center justify-center"
+    >
+      <span class="text-indigo-700 font-semibold">
+        R
       </span>
     </div>
+
+    <div>
+
+      <!-- MD / CEO -->
+      <ng-container *ngIf="isMdCeoSelection(); else normalRoleHeader">
+
+        <h3 class="text-lg font-semibold text-gray-800">
+          Employee
+        </h3>
+
+        <p class="text-xs text-gray-500">
+          Select MD / CEO employee
+        </p>
+
+      </ng-container>
+
+
+      <!-- NORMAL ROLE -->
+      <ng-template #normalRoleHeader>
+
+        <h3 class="text-lg font-semibold text-gray-800">
+          Role
+        </h3>
+
+        <p class="text-xs text-gray-500">
+          Select role
+        </p>
+
+      </ng-template>
+
+    </div>
+
   </div>
+
+
+  <!-- ================================================= -->
+  <!-- DROPDOWN                                         -->
+  <!-- ================================================= -->
+
+  <form [formGroup]="form">
+
+    <mat-form-field
+      appearance="outline"
+      class="w-full"
+    >
+
+      <!-- MD / CEO -->
+      <ng-container *ngIf="isMdCeoSelection(); else normalRoleDropdown">
+
+        <mat-label>
+          Select Employee
+        </mat-label>
+
+       <mat-select
+  formControlName="topEmployee"
+  multiple
+  (selectionChange)="onTopEmployeeSelectionChange($event)"
+>
+
+  <mat-option
+    *ngFor="let employee of employees"
+    [value]="employee.id"
+  >
+    {{ employee.first_name }}
+    {{ employee.last_name }}
+    -- {{ employee.employee_id }}
+  </mat-option>
+
+</mat-select>
+
+      </ng-container>
+
+
+      <!-- NORMAL ROLE -->
+      <ng-template #normalRoleDropdown>
+
+        <mat-label>
+          Select Role
+        </mat-label>
+
+        <mat-select
+          formControlName="role"
+          multiple
+        >
+
+          <mat-option
+            *ngFor="let role of roles"
+            [value]="role.id"
+          >
+            {{ role.name }}
+            -
+            {{ role.department_name || 'No Department' }}
+          </mat-option>
+
+        </mat-select>
+
+      </ng-template>
+
+    </mat-form-field>
+
+  </form>
+
+</div>
+
+
+
+<!-- ===================================================== -->
+<!-- USER WISE                                               -->
+<!-- ===================================================== -->
+
+<div
+  *ngIf="isUserWiseSelection()"
+  class="bg-gray-50 rounded-xl border border-gray-200 p-5"
+>
+
+  <div class="flex items-center gap-3 mb-5">
+
+    <div
+      class="w-9 h-9 rounded-full bg-blue-100
+             flex items-center justify-center"
+    >
+      <span class="text-blue-700 font-semibold">
+        6
+      </span>
+    </div>
+
+    <div>
+
+      <h3 class="text-lg font-semibold text-gray-800">
+        Employees
+      </h3>
+
+      <p class="text-xs text-gray-500">
+        Select one or more employees
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <!-- SEARCH EMPLOYEE -->
+
+  <mat-form-field
+    appearance="outline"
+    class="w-full"
+  >
+
+    <mat-label>
+      Search Employee
+    </mat-label>
+
+    <input
+      matInput
+      type="text"
+      [(ngModel)]="employeeSearchText"
+      (input)="searchEmployees()"
+      placeholder="Search by name,employee ID"
+    />
+
+  </mat-form-field>
+
+
+  <!-- EMPLOYEE COUNT -->
+
+  <div
+    class="flex items-center justify-between mb-3"
+  >
+
+    <h4 class="font-medium text-gray-700 text-sm">
+      All Employees
+    </h4>
+
+    <span
+      class="text-xs bg-blue-100 text-blue-700
+             px-2 py-1 rounded-full"
+    >
+      {{ employees.length }}
+    </span>
+
+  </div>
+
+
+  <!-- EMPLOYEE LIST -->
+
+  <div
+    class="bg-white rounded-md border
+           border-gray-200 shadow-sm"
+  >
+
+    <mat-selection-list
+      multiple
+      class="w-full max-h-60 overflow-y-auto"
+    >
+
+      <!-- SELECT ALL -->
+
+      <mat-list-option
+        [selected]="
+          selectedEmployees.length === employees.length &&
+          employees.length > 0
+        "
+        (click)="toggleAllEmployees()"
+      >
+
+        <strong>
+          ✔ Select All Employees
+        </strong>
+
+      </mat-list-option>
+
+
+      <!-- EMPLOYEES -->
+
+      <mat-list-option
+        *ngFor="let emp of employees"
+        [value]="emp.id"
+        [selected]="isSelected(emp.id)"
+        (click)="toggleEmployee(emp)"
+      >
+
+        <div class="flex flex-col">
+
+          <span class="font-medium">
+            {{ emp.first_name }}
+            {{ emp.last_name }}
+           -- {{ emp.employee_id }}
+          </span>
+
+ <span class="text-xs text-gray-500">
+
+  </span>
+
+
+          <span
+            class="text-xs text-gray-500"
+          >
+            <!-- {{ emp.email || '' }} -->
+          </span>
+
+        </div>
+
+      </mat-list-option>
+
+
+      <!-- NO EMPLOYEES -->
+
+      <div
+        *ngIf="employees.length === 0"
+        class="p-5 text-center text-gray-500"
+      >
+        No employees found.
+      </div>
+
+    </mat-selection-list>
+
+  </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- ===================================================== -->
+    <!-- DEPARTMENT + EMPLOYEE                                   -->
+    <!-- ===================================================== -->
+
+   <!-- ===================================================== -->
+<!-- DEPARTMENT + EMPLOYEE                                 -->
+<!-- ===================================================== -->
+
+<div
+  *ngIf="
+    !isHeadOfficeSelection() &&
+    !isRegionWiseSelection() &&
+    !isZoneWiseSelection() &&
+    !isCircleWiseSelection() &&
+    !isBranchWiseSelection() &&
+    !isRoleWiseSelection() &&
+    !isBoardOfDirectorsSelection() &&
+    !isMdCeoSelection() &&
+    !isCorporateOfficeSelection() &&
+    !isCommitteeWiseSelection() &&
+    !isUserWiseSelection()
+  "
+  class="bg-gray-50 rounded-xl border border-gray-200 p-5"
+>
+
+  <!-- HEADER -->
+  <div class="flex items-center gap-3 mb-5">
+
+    <div
+      class="w-9 h-9 rounded-full bg-blue-100
+             flex items-center justify-center"
+    >
+      <span class="text-blue-700 font-semibold">
+        5
+      </span>
+    </div>
+
+    <div>
+      <h3 class="text-lg font-semibold text-gray-800">
+        Department & Employee
+      </h3>
+
+      <p class="text-xs text-gray-500">
+        Select department and employees
+      </p>
+    </div>
+
+  </div>
+
+
+  <!-- ================================================= -->
+  <!-- DEPARTMENT -->
+  <!-- ================================================= -->
+
+  <form [formGroup]="form">
+
+    <mat-form-field
+      appearance="outline"
+      class="w-full"
+    >
+
+      <mat-label>
+        Select Department
+      </mat-label>
+
+      <mat-select
+        formControlName="department"
+      
+      >
+
+        <mat-option
+          *ngFor="let dept of departments"
+          [value]="dept.id"
+        >
+          {{ dept.name }}
+        </mat-option>
+
+      </mat-select>
+
+    </mat-form-field>
+
+  </form>
+
+
+  <!-- ================================================= -->
+  <!-- DEPARTMENT EMPLOYEES -->
+  <!-- ================================================= -->
+
+  <div
+    *ngIf="selectedDepartmentId"
+    class="mt-3"
+  >
+
+    <div
+      class="flex items-center justify-between mb-3"
+    >
+
+      <h4 class="font-medium text-gray-700 text-sm">
+
+        {{ getDepartmentName(selectedDepartmentId) }}
+        Employees
+
+      </h4>
+
+      <span
+        class="text-xs bg-blue-100 text-blue-700
+               px-2 py-1 rounded-full"
+      >
+        {{ employees.length }}
+      </span>
+
+    </div>
+
+
+    <div
+      class="bg-white rounded-md border
+             border-gray-200 shadow-sm"
+    >
+
+      <mat-selection-list
+        multiple
+        class="w-full max-h-60 overflow-y-auto"
+      >
+
+        <!-- SELECT ALL -->
+
+        <mat-list-option
+          [selected]="
+            selectedEmployees.length === employees.length &&
+            employees.length > 0
+          "
+          (click)="toggleAllEmployees()"
+        >
+
+          <strong>
+            ✔ Select All Employees
+          </strong>
+
+        </mat-list-option>
+
+
+        <!-- EMPLOYEES -->
+
+        <mat-list-option
+          *ngFor="let emp of employees"
+          [value]="emp.id"
+          [selected]="isSelected(emp.id)"
+          (click)="toggleEmployee(emp)"
+        >
+
+          {{ emp.first_name }}
+          {{ emp.last_name }}
+
+        </mat-list-option>
+
+
+        <!-- NO EMPLOYEES -->
+
+        <div
+          *ngIf="employees.length === 0"
+          class="p-5 text-center text-gray-500"
+        >
+          No employees found.
+        </div>
+
+      </mat-selection-list>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+    <!-- ===================================================== -->
+    <!-- SELECTED EMPLOYEES                                      -->
+    <!-- ===================================================== -->
+
+    <div
+      *ngIf="
+        selectedEmployees.length > 0 &&
+        !isUserWiseSelection() &&
+        !isHeadOfficeSelection() &&
+        !isRegionWiseSelection() &&
+        !isZoneWiseSelection() &&
+        !isCircleWiseSelection() &&
+        !isBranchWiseSelection() &&
+        !isRoleWiseSelection() &&
+        !isBoardOfDirectorsSelection() &&
+        !isMdCeoSelection() &&
+        !isCorporateOfficeSelection() &&
+        !isCommitteeWiseSelection()
+      "
+      class="mt-5 bg-blue-50 p-4 rounded-xl border border-blue-200"
+    >
+
+      <div class="flex items-center justify-between mb-3">
+
+        <h4 class="font-semibold text-gray-800">
+          Selected Employees
+        </h4>
+
+        <span
+          class="text-sm bg-blue-600 text-white
+                 px-3 py-1 rounded-full font-medium"
+        >
+          {{ selectedEmployees.length }}
+        </span>
+
+      </div>
+
+
+      <div class="flex flex-wrap gap-2">
+
+        <span
+          *ngFor="let emp of selectedEmployees"
+          class="flex items-center bg-white
+                 border border-blue-200
+                 text-gray-800 px-3 py-2
+                 rounded-full text-sm shadow-sm"
+        >
+
+          <span class="font-medium">
+
+            {{ emp.first_name }}
+            {{ emp.last_name }}
+
+          </span>
+
+          <span class="mx-2 text-gray-400">
+            •
+          </span>
+
+          <span class="text-gray-600 text-xs">
+            {{ getDepartmentName(emp.department_id) }}
+          </span>
+
+          <button
+            type="button"
+            (click)="removeEmployee(emp)"
+            class="ml-2 text-red-500
+                   hover:text-red-700
+                   rounded-full p-1"
+            title="Remove"
+          >
+            ✕
+          </button>
+
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
 </mat-dialog-content>
 
-<mat-dialog-actions align="end" class="px-6 pb-4 pt-4 border-t bg-gray-50">
-  <!-- New Close button -->
+
+<!-- ========================================================= -->
+<!-- FOOTER                                                     -->
+<!-- ========================================================= -->
+
+<mat-dialog-actions
+  align="end"
+  class="px-6 py-4 border-t bg-gray-50"
+>
+
   <button
     mat-button
     (click)="closeOnly()"
-    *ngIf="selectedEmployees.length > 0 && initialSelection.length > 0"
-    class="mr-2 border border-gray-300"
+    *ngIf="
+      selectedEmployees.length > 0 &&
+      initialSelection.length > 0
+    "
+    class="mr-2"
   >
     Close
   </button>
 
-  <!-- Old Cancel button renamed -->
-  <button mat-button (click)="cancelSelection()" class="mr-2 border border-gray-300">
-    {{ selectedEmployees.length > 0 && initialSelection.length > 0 ? 'Cancel & Reset' : 'Close' }}
+
+  <button
+    mat-button
+    (click)="cancelSelection()"
+    class="mr-2"
+  >
+    {{
+      selectedEmployees.length > 0 &&
+      initialSelection.length > 0
+        ? 'Cancel & Reset'
+        : 'Close'
+    }}
   </button>
 
-  <!-- Confirm button -->
+
   <button
     mat-flat-button
     color="primary"
     (click)="confirmSelection()"
     class="px-6"
-    [disabled]="selectedEmployees.length === 0"
+    [disabled]="
+      isHeadOfficeSelection()
+        ? selectedHeadOfficeIds.length === 0 ||
+          isLoadingHeadOfficeEmployees
+
+        : isRegionWiseSelection()
+        ? selectedRegionIds.length === 0
+
+        : isZoneWiseSelection()
+        ? selectedZoneIds.length === 0
+
+        : isCircleWiseSelection()
+        ? selectedCircleIds.length === 0
+
+        : isBranchWiseSelection()
+        ? selectedBranchIds.length === 0
+ 
+
+         : isMdCeoSelection()
+? selectedEmployees.length === 0
+
+        : (
+            isRoleWiseSelection() ||
+            isBoardOfDirectorsSelection() ||
+          
+           
+            isCorporateOfficeSelection()
+          )
+        ? selectedRoleIds.length === 0
+
+        : isCommitteeWiseSelection()
+        ? selectedCommitteeIds.length === 0
+
+        : selectedEmployees.length === 0
+    "
   >
-    Confirm Selection ({{ selectedEmployees.length }})
+
+    Confirm Selection
+
+    ({{
+      isHeadOfficeSelection()
+        ? selectedHeadOfficeIds.length
+
+        : isRegionWiseSelection()
+        ? getRegionWiseSelectionCount()
+
+        : isZoneWiseSelection()
+        ? selectedZoneIds.length
+
+        : isCircleWiseSelection()
+        ? selectedCircleIds.length
+
+        : isBranchWiseSelection()
+        ? selectedBranchIds.length
+
+        :isMdCeoSelection()
+? selectedEmployees.length
+
+
+        : (
+            isRoleWiseSelection() ||
+            isBoardOfDirectorsSelection() ||
+          
+          
+            isCorporateOfficeSelection()
+          )
+        ? selectedRoleIds.length
+
+        : isCommitteeWiseSelection()
+        ? selectedCommitteeIds.length
+
+        : selectedEmployees.length
+    }})
+
   </button>
+
 </mat-dialog-actions>

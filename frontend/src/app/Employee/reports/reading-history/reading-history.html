@@ -1,0 +1,305 @@
+<div class="history-container">
+
+  <!-- Header -->
+  <div class="header-section">
+
+    <div class="header-content">
+
+      <div class="header-left">
+
+        <h1 class="page-title">
+          <mat-icon class="title-icon">history</mat-icon>
+          Reading History
+        </h1>
+
+        <p class="page-subtitle">
+          View all circulars that you have already read.
+        </p>
+
+      </div>  
+
+
+
+
+
+
+
+      <!-- Statistics Cards -->
+      <div class="header-stats">
+
+        <!-- Total Circulars -->
+        <div class="stat-card">
+
+          <div class="stat-icon total">
+            <mat-icon>library_books</mat-icon>
+          </div>
+
+          <div class="stat-details">
+            <span class="stat-value">{{ totalCirculars }}</span>
+            <span class="stat-label">Total Circulars</span>
+          </div>
+
+        </div>
+
+        <!-- Read Circulars -->
+        <div class="stat-card">
+
+          <div class="stat-icon read">
+            <mat-icon>check_circle</mat-icon>
+          </div>
+
+          <div class="stat-details">
+            <span class="stat-value">{{ totalRead }}</span>
+            <span class="stat-label">Read</span>
+          </div>
+
+        </div>
+
+        <!-- Unread Circulars -->
+        <div class="stat-card">
+
+          <div class="stat-icon unread">
+            <mat-icon>visibility_off</mat-icon>
+          </div>
+
+          <div class="stat-details">
+            <span class="stat-value">{{ unreadCirculars }}</span>
+            <span class="stat-label">Unread</span>
+          </div>
+
+        </div>
+
+        <!-- Compliance -->
+        <div class="stat-card">
+
+          <div class="stat-icon compliance">
+            <mat-icon>verified</mat-icon>
+          </div>
+
+          <div class="stat-details">
+            <span class="stat-value">{{ compliance }}%</span>
+            <span class="stat-label">Compliance</span>
+          </div>
+
+        </div>
+
+          <div class="export-section">
+
+    <button
+      class="export-btn"
+      (click)="openExportDialog()">
+
+      <mat-icon>download</mat-icon>
+
+      Export Report
+
+    </button>
+
+  </div>
+
+
+
+
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Main Content -->
+  <div class="content-wrapper">
+
+    <!-- Left Sidebar -->
+    <aside class="sidebar">
+
+      <div class="search-box">
+
+        <mat-icon>search</mat-icon>
+
+        <input
+          type="text"
+          placeholder="Search Circular..."
+        >
+
+      </div>
+
+      <div class="filter-section">
+
+        <h3>Filters</h3>
+
+        <div class="filter-group">
+
+          <label>Read Status</label>
+
+         <select (change)="onReadStatusChange($event)">
+
+    <option value="all">All</option>
+
+    <option value="read">Read</option>
+
+    <option value="unread">Unread</option>
+
+  </select>
+
+        </div>
+
+        <div class="filter-group">
+
+          <label>Priority</label>
+
+          <select  (change)="onPriorityChange($event)">
+            <option>All</option>
+            <option>Urgent</option>
+            <option>High</option>
+            <option>Medium</option>
+            <option>Low</option>
+          </select>
+
+        </div>
+
+        <div class="filter-group">
+
+          <label>Department</label>
+
+          <select (change)="onDepartmentChange($event)">
+            <option>All</option>
+            <option>Operations</option>
+            <option>Finance</option>
+            <option>HR</option>
+            <option>IT</option>
+          </select>
+
+        </div>
+
+      </div>
+
+    </aside>
+
+    <!-- Reading History -->
+    <main class="main-content">
+
+      <div
+        class="history-card"
+        *ngFor="let item of readingHistory">
+
+        <div class="card-header">
+
+          <div>
+
+            <span class="priority high">
+              {{ item.priority }}
+            </span>
+
+            <h3>
+              {{ item.title }}
+            </h3>
+
+            <p class="code">
+              {{ item.circular_code }}
+            </p>
+
+          </div>
+
+          <div class="read-badge">
+
+            <mat-icon>check_circle</mat-icon>
+
+            Read
+
+          </div>
+
+        </div>
+
+        <div class="card-body">
+
+          <div class="meta">
+
+            <span>
+              <mat-icon>business</mat-icon>
+              {{ item.department }}
+            </span>
+
+            <span>
+              <mat-icon>person</mat-icon>
+              {{ item.created_by }}
+            </span>
+
+            <span>
+              <mat-icon>calendar_today</mat-icon>
+              {{ item.readDate }}
+            </span>
+
+            <span>
+              <mat-icon>schedule</mat-icon>
+              {{ item.readTime }}
+            </span>
+
+          </div>
+
+        </div>
+
+        <div class="card-footer">
+
+          <button class="view-btn"
+           (click)="viewCircular(item.circular_id)">
+
+            <mat-icon>visibility</mat-icon>
+
+            View Circular
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- Right Sidebar -->
+    <aside class="years-sidebar">
+
+      <div class="years-header">
+
+        <mat-icon>calendar_month</mat-icon>
+
+        <h3>Years</h3>
+
+      </div>
+
+      <!-- <button class="year active">
+        2026
+      </button>
+
+      <button class="year">
+        2025
+      </button>
+
+      <button class="year">
+        2024
+      </button>
+
+      <button class="year">
+        2023
+      </button> -->
+      <button class="year active" (click)="onYearChange(2026)">
+  2026
+</button>
+
+<button class="year" (click)="onYearChange(2025)">
+  2025
+</button>
+
+<button class="year" (click)="onYearChange(2024)">
+  2024
+</button>
+
+<button class="year" (click)="onYearChange(2023)">
+  2023
+</button>
+
+    </aside>
+
+  </div>
+
+</div>

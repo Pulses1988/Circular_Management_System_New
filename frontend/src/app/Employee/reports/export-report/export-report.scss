@@ -1,0 +1,272 @@
+/* Export Report Dialog */
+
+:host {
+  display: block;
+}
+
+
+/* Title */
+
+.dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  margin: 0;
+  padding: 18px 24px;
+
+  font-size: 22px;
+  font-weight: 700;
+
+  color: #1f2937;
+
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dialog-title mat-icon {
+  color: #2563eb;
+}
+
+
+/* Body */
+
+.dialog-body {
+
+  padding: 24px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+}
+
+
+/* Form Group */
+
+.form-group {
+
+  display: flex;
+  flex-direction: column;
+
+}
+
+
+.form-group label {
+
+  margin-bottom: 8px;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  color: #374151;
+
+}
+
+
+/* Inputs */
+
+input,
+select {
+
+  height: 44px;
+
+  width: 100%;
+
+  padding: 0 14px;
+
+  border-radius: 8px;
+
+  border: 1px solid #d1d5db;
+
+  background: white;
+
+  font-size: 14px;
+
+  color: #374151;
+
+}
+
+
+input:focus,
+select:focus {
+
+  outline: none;
+
+  border-color: #2563eb;
+
+  box-shadow: 0 0 0 2px rgba(37,99,235,.15);
+
+}
+
+
+
+/* Date Row */
+
+.form-row {
+
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 20px;
+
+}
+
+
+
+/* Radio */
+
+
+.radio-group {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 25px;
+
+}
+
+
+.radio-group label {
+
+  display:flex;
+
+  flex-direction:row;
+
+  align-items:center;
+
+  gap:8px;
+
+  font-weight:500;
+
+}
+
+
+.radio-group input {
+
+  width:auto;
+
+  height:auto;
+
+}
+
+
+/* Footer */
+
+.dialog-footer {
+
+
+  display:flex;
+
+  justify-content:flex-end;
+
+  gap:14px;
+
+
+  padding:18px 24px;
+
+
+  border-top:1px solid #e5e7eb;
+
+
+}
+
+
+
+.dialog-footer button {
+
+
+  height:42px;
+
+  padding:0 22px;
+
+  border-radius:8px;
+
+  font-size:14px;
+
+  font-weight:600;
+
+  cursor:pointer;
+
+}
+
+
+
+.cancel-btn {
+
+
+  background:white;
+
+  border:1px solid #d1d5db;
+
+  color:#374151;
+
+
+}
+
+
+.cancel-btn:hover {
+
+ background:#f9fafb;
+
+}
+
+
+
+.export-btn {
+
+
+ display:flex;
+
+ align-items:center;
+
+ gap:8px;
+
+ border:none;
+
+ background:#2563eb;
+
+ color:white;
+
+
+}
+
+
+.export-btn:hover {
+
+ background:#1d4ed8;
+
+}
+
+
+
+
+/* Mobile */
+
+@media(max-width:768px){
+
+
+.form-row{
+
+ grid-template-columns:1fr;
+
+}
+
+
+.dialog-footer{
+
+ flex-direction:column;
+
+}
+
+
+.dialog-footer button{
+
+ width:100%;
+
+}
+
+
+}

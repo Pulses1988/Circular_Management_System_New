@@ -1,0 +1,61 @@
+<div class="event-container">
+
+    <h2>Event Log</h2>
+
+    <table class="event-table">
+
+        <thead>
+
+            <tr>
+                <th>ID</th>
+                <th>Event Name</th>
+                <th>Entity Type</th>
+                <th>Entity ID</th>
+                <th>Triggered By</th>
+                <th>Description</th>
+                <th>Created At</th>
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            <tr *ngIf="loading">
+                <td colspan="7">
+                    Loading...
+                </td>
+            </tr>
+
+            <tr *ngFor="let event of eventLogs">
+
+                <td>{{event.id}}</td>
+
+                <td>{{event.event_name}}</td>
+
+                <td>{{event.entity_type}}</td>
+
+                <td>{{event.entity_id}}</td>
+
+                <td>{{event.triggered_by}}</td>
+
+                <td>{{event.description}}</td>
+
+                <td>
+                    {{event.created_at | date:'dd/MM/yyyy HH:mm:ss'}}
+                </td>
+
+            </tr>
+
+            <tr *ngIf="!loading && eventLogs.length===0">
+
+                <td colspan="7">
+                    No Events Found
+                </td>
+
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</div>

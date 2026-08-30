@@ -7,7 +7,7 @@ import { ToastComponent } from './toast/toast-component/toast-component';
 import { AdminSidebar } from './Admin/admin-sidebar/admin-sidebar';
 import { Navbar } from "./Employee/navbar/navbar";
 import { EmployeeSidebar } from './Employee/employee-sidebar/employee-sidebar';
-
+import { ThemeService } from './services/theme';
 @Component({
   selector: 'app-root',
   imports: [FormsModule, CommonModule, RouterModule, ToastComponent, AdminSidebar, EmployeeSidebar, Navbar],
@@ -22,8 +22,9 @@ export class App {
 
   currentRoute: string = '';
 
-  constructor(private userService: User, private router: Router) {
-    router.events.subscribe((event: any) => {
+  constructor(private userService: User, private router: Router,  private themeService: ThemeService) {
+    router.events.subscribe((event: any) => { 
+      this.themeService.applyTheme(this.themeService.getTheme());
       if (event instanceof NavigationEnd) {
         this.currentRoute = event.urlAfterRedirects;
       }
@@ -39,11 +40,25 @@ export class App {
   }
 
   showNavbar(): boolean {
-  const isAdminRoute = this.currentRoute.startsWith('/admin');
-  const isEmployeeLogin = this.currentRoute.includes('/employee-login');
+  // const isAdminRoute = this.currentRoute.startsWith('/admin');
+  // const isEmployeeLogin = this.currentRoute.includes('/employee-login');
 
-  // Show navbar everywhere except admin pages and employee-login
-  return !isAdminRoute && !isEmployeeLogin;
+  // // Show navbar everywhere except admin pages and employee-login
+  // return !isAdminRoute && !isEmployeeLogin;
+ const isAdminRoute = this.currentRoute.startsWith('/admin');
+
+  const isEmployeeLogin =
+    this.currentRoute.includes('/employee-login');
+
+  const isForgotPassword =
+    this.currentRoute.includes('/forgot-password');
+
+  return !isAdminRoute &&
+         !isEmployeeLogin &&
+         !isForgotPassword;
+
+
+
 }
 
   ngOnInit() {}

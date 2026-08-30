@@ -126,7 +126,7 @@ export class EmployeeSidebar implements OnInit, OnDestroy {
           queryParams: { type: 'urgent' }
         },
          {
-          label: 'Manage Circulars',
+          label: 'Create Circulars',
           icon: 'assignment',
           route: '/employee/circular-creater',
         },
@@ -142,21 +142,37 @@ export class EmployeeSidebar implements OnInit, OnDestroy {
       icon: 'account_circle',
       route: '/employee/profile',
       subItems: [
-        {
-          label: 'Personal Info',
-          icon: 'person',
-          route: '/employee/profile/personal',
-        },
-        {
-          label: 'Security Settings',
-          icon: 'security',
-          route: '/employee/profile/security',
-        },
-        {
-          label: 'Preferences',
-          icon: 'settings',
-          route: '/employee/profile/preferences',
-        },
+        // {
+        //   label: 'Personal Info',
+        //   icon: 'person',
+        //   route: '/employee/profile/personal',
+        // },
+        // {
+        //   label: 'Security Settings',
+        //   icon: 'security',
+        //   route: '/employee/profile/security',
+        // },
+        // {
+        //   label: 'Preferences',
+        //   icon: 'settings',
+        //   route: '/employee/profile/preferences',
+        // }, 
+
+          {
+      label: 'Personal Info',
+      icon: 'person',
+      route: '/employee/profile',
+    },
+    {
+      label: 'Security Settings',
+      icon: 'security',
+      route: '/employee/profile/security',
+    },
+    {
+      label: 'Preferences',
+      icon: 'settings',
+      route: '/employee/profile/preferences',
+    },
       ],
     },
     {
@@ -164,16 +180,28 @@ export class EmployeeSidebar implements OnInit, OnDestroy {
       icon: 'assessment',
       route: '/employee/reports',
       subItems: [
-        {
-          label: 'Reading History',
-          icon: 'history',
-          route: '/employee/reports/reading-history',
-        },
-        {
-          label: 'Activity Summary',
-          icon: 'summarize',
-          route: '/employee/reports/activity',
-        },
+       {
+  label: 'Reading History',
+  icon: 'history',
+  route: '/employee/reading-history',
+},
+      {
+      label: 'Activity Summary',
+      icon: 'summarize',
+      route: '/employee/report-activity-summary',
+    }, 
+         {
+      label: 'Event Log',
+      icon: 'history',
+      route: '/employee/event-log',
+    },
+   {
+  label: 'Rule Execution History',
+  icon: 'history',
+  route: '/employee/rule-execution-history',
+},
+
+
       ],
     },
     {

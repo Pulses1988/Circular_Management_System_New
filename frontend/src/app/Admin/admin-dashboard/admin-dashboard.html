@@ -1,66 +1,187 @@
 <div class="min-h-screen p-6 bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200">
   <div class="max-w-7xl mx-auto">
+
     <!-- Header -->
     <div class="text-center mb-8">
-      <h1 class="text-4xl font-bold text-gray-800">Admin Dashboard</h1>
-      <p class="text-gray-600 mt-2">Overview of your organization's structure and employees</p>
+      <h1 class="text-4xl font-bold text-gray-800">
+        Admin Dashboard
+      </h1>
+
+      <p class="text-gray-600 mt-2">
+        Overview of your organization's structure and employees
+      </p>
     </div>
 
+
     <!-- Global Loader -->
-    <div *ngIf="isLoading" class="flex items-center justify-center py-10">
+    <div
+      *ngIf="isLoading"
+      class="flex items-center justify-center py-10"
+    >
       <div class="flex flex-col items-center gap-4">
+
         <div
           class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
         ></div>
-        <p class="text-gray-700 text-lg font-semibold animate-pulse">Loading...</p>
+
+        <p class="text-gray-700 text-lg font-semibold animate-pulse">
+          Loading...
+        </p>
+
       </div>
     </div>
 
+
+    <!-- Dashboard Content -->
     <div *ngIf="!isLoading">
+
       <!-- Dashboard Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white rounded-xl shadow hover:shadow-lg p-6 transition-shadow">
+      <div
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
+      >
+
+        <!-- Total Departments -->
+        <div
+          class="bg-white rounded-xl shadow hover:shadow-lg p-6 transition-shadow"
+        >
           <div class="flex items-center space-x-4">
+
             <div class="bg-blue-100 p-3 rounded-full">
-              <mat-icon class="text-blue-600 text-3xl">domain</mat-icon>
+              <mat-icon class="text-blue-600 text-3xl">
+                domain
+              </mat-icon>
             </div>
+
             <div>
-              <h3 class="text-lg font-semibold text-gray-700">Total Departments</h3>
-              <p class="text-2xl font-bold text-gray-900">{{ totalDepartments }}</p>
+              <h3 class="text-lg font-semibold text-gray-700">
+                Total Departments
+              </h3>
+
+              <p class="text-2xl font-bold text-gray-900">
+                {{ totalDepartments }}
+              </p>
             </div>
+
           </div>
         </div>
 
+
+        <!-- Total Branches -->
         <div
           *ngIf="isHoAdmin"
           class="bg-white rounded-xl shadow hover:shadow-lg p-6 transition-shadow"
         >
           <div class="flex items-center space-x-4">
+
             <div class="bg-green-100 p-3 rounded-full">
-              <mat-icon class="text-green-600 text-3xl">account_tree</mat-icon>
+              <mat-icon class="text-green-600 text-3xl">
+                account_tree
+              </mat-icon>
             </div>
+
             <div>
-              <h3 class="text-lg font-semibold text-gray-700">Total Branches</h3>
-              <p class="text-2xl font-bold text-gray-900">{{ totalBranches }}</p>
+              <h3 class="text-lg font-semibold text-gray-700">
+                Total Branches
+              </h3>
+
+              <p class="text-2xl font-bold text-gray-900">
+                {{ totalBranches }}
+              </p>
             </div>
+
           </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow hover:shadow-lg p-6 transition-shadow">
+
+        <!-- Total Employees -->
+        <div
+          class="bg-white rounded-xl shadow hover:shadow-lg p-6 transition-shadow"
+        >
           <div class="flex items-center space-x-4">
+
             <div class="bg-purple-100 p-3 rounded-full">
-              <mat-icon class="text-purple-600 text-3xl">people</mat-icon>
+              <mat-icon class="text-purple-600 text-3xl">
+                people
+              </mat-icon>
             </div>
+
             <div>
-              <h3 class="text-lg font-semibold text-gray-700">Total Employees</h3>
-              <p class="text-2xl font-bold text-gray-900">{{ totalEmployees }}</p>
+              <h3 class="text-lg font-semibold text-gray-700">
+                Total Employees
+              </h3>
+
+              <p class="text-2xl font-bold text-gray-900">
+                {{ totalEmployees }}
+              </p>
             </div>
+
           </div>
         </div>
+
+
+        <!-- Head Office Departments -->
+        <div
+          *ngIf="isHoAdmin"
+          class="bg-white rounded-xl shadow hover:shadow-lg p-6 transition-shadow"
+        >
+          <div class="flex items-center space-x-4">
+
+            <div class="bg-orange-100 p-3 rounded-full">
+              <mat-icon class="text-orange-600 text-3xl">
+                business
+              </mat-icon>
+            </div>
+
+            <div>
+              <h3 class="text-lg font-semibold text-gray-700">
+                Head Office Departments
+              </h3>
+
+              <p class="text-2xl font-bold text-gray-900">
+                {{ totalHeadOfficeDepartments }}
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+
+        <!-- Branch Departments -->
+        <div
+          *ngIf="isHoAdmin"
+          class="bg-white rounded-xl shadow hover:shadow-lg p-6 transition-shadow"
+        >
+          <div class="flex items-center space-x-4">
+
+            <div class="bg-yellow-100 p-3 rounded-full">
+              <mat-icon class="text-yellow-600 text-3xl">
+                account_tree
+              </mat-icon>
+            </div>
+
+            <div>
+              <h3 class="text-lg font-semibold text-gray-700">
+                Branch Departments
+              </h3>
+
+              <p class="text-2xl font-bold text-gray-900">
+                {{ totalBranchDepartments }}
+              </p>
+            </div>
+
+          </div>
+        </div>
+
       </div>
+      <!-- Dashboard Cards END -->
+
 
       <!-- Add Head Office Section -->
-      <div *ngIf="isHoAdmin && !hasHeadOffice" class="mb-8">
+      <div
+        *ngIf="isHoAdmin && !hasHeadOffice"
+        class="mb-8"
+      >
+
         <button
           (click)="toggleHeadOfficeForm()"
           class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors"
@@ -68,13 +189,29 @@
           {{ showHeadOfficeForm ? 'Close Form' : 'Add Head Office' }}
         </button>
 
+
+        <!-- Head Office Form -->
         <div
           *ngIf="showHeadOfficeForm"
           class="mt-4 bg-white rounded-xl shadow-md p-6 space-y-4 transition-all"
         >
-          <h3 class="text-lg font-semibold text-gray-700">Add Head Office</h3>
-          <form (ngSubmit)="addHeadOffice()" #headOfficeForm="ngForm" novalidate>
-            <label>Head Office Name</label>
+
+          <h3 class="text-lg font-semibold text-gray-700">
+            Add Head Office
+          </h3>
+
+
+          <form
+            (ngSubmit)="addHeadOffice()"
+            #headOfficeForm="ngForm"
+            novalidate
+          >
+
+            <!-- Head Office Name -->
+            <label>
+              Head Office Name
+            </label>
+
             <input
               type="text"
               name="hoName"
@@ -83,7 +220,13 @@
               placeholder="Enter name"
               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 mb-2"
             />
-            <label>Bank Name</label>
+
+
+            <!-- Bank Name -->
+            <label>
+              Bank Name
+            </label>
+
             <input
               type="text"
               name="hobank_name"
@@ -92,7 +235,13 @@
               placeholder="Enter Bank Name"
               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 mb-2"
             />
-            <label>Address</label>
+
+
+            <!-- Address -->
+            <label>
+              Address
+            </label>
+
             <input
               type="text"
               name="hoAddress"
@@ -101,7 +250,11 @@
               placeholder="Enter address"
               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 mb-2"
             />
+
+
+            <!-- Form Buttons -->
             <div class="flex justify-end space-x-2">
+
               <button
                 type="submit"
                 [disabled]="!headOfficeForm.form.valid"
@@ -109,6 +262,7 @@
               >
                 Add
               </button>
+
               <button
                 type="button"
                 (click)="toggleHeadOfficeForm()"
@@ -116,10 +270,16 @@
               >
                 Cancel
               </button>
+
             </div>
+
           </form>
+
         </div>
+
       </div>
+
     </div>
+
   </div>
 </div>

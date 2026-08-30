@@ -16,6 +16,14 @@ router.post(
   upload.single("pdfFile"),
   circularController.createCircular
 );
+ 
+
+
+//Completion Route
+router.post(
+ "/creator-mark-completed",
+ circularController.creatorMarkCompleted
+);
 
 // get All Approved Circulars
 router.get(
@@ -52,6 +60,8 @@ router.put("/:id", upload.single("pdfFile"), circularController.updateCircular);
 router.get('/activity-summary/:circular_id', circularController.getCircularActivitySummary);
 
 // Delete
-router.delete("/:id", circularController.deleteCircular);
+router.delete("/:id", circularController.deleteCircular); 
+
+
 
 module.exports = router;

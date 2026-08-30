@@ -29,7 +29,15 @@ import { CreateBranchAdminForm } from '../Model/create-branch-admin-form/create-
 export class AdminBranchManagement implements OnInit {
   branches: any = [];
   brancheswithstatus: any = [];
-  headOffice: any = [];
+  
+ 
+  //adding three variables//
+  regions: any[] = [];
+  zones: any[] = [];
+  circles: any[] = [];
+   
+
+
   branchForm: FormGroup;
   showForm = false;
   isEditMode = false;
@@ -42,6 +50,10 @@ export class AdminBranchManagement implements OnInit {
   selectedBranchName: string | null = null;
   isButtonLoading: boolean = false;
   loading: boolean = false;
+   organizationConfig: any = {};
+
+
+
 
   @ViewChild('branchFormRef') branchFormRef!: ElementRef;
   private scrollToForm = false;
@@ -52,30 +64,76 @@ export class AdminBranchManagement implements OnInit {
     private toast: Toast,
     private cdr: ChangeDetectorRef
   ) {
-    this.branchForm = this.fb.group({
-      name: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(3),
-          (control: any) =>
-            control.value && control.value.trim().length === 0 ? { whitespace: true } : null,
-          (control: any) =>
-            control.value && /[0-9]/.test(control.value) ? { numbersNotAllowed: true } : null,
-        ],
-      ],
-      address: [
-        '',
-        (control: any) =>
-          control.value && /^[0-9]+$/.test(control.value) ? { numbersOnlyNotAllowed: true } : null,
-      ],
-      head_office_id: ['', Validators.required],
-    });
-  }
+       this.branchForm = this.fb.group({
+  name: [
+    '',
+    [
+      Validators.required,
+      Validators.minLength(3),
+      (control: any) =>
+        control.value && control.value.trim().length === 0
+          ? { whitespace: true }
+          : null,
+      (control: any) =>
+        control.value && /[0-9]/.test(control.value)
+          ? { numbersNotAllowed: true }
+          : null,
+    ],
+  ],
+
+  address: [
+    '',
+    (control: any) =>
+      control.value && /^[0-9]+$/.test(control.value)
+        ? { numbersOnlyNotAllowed: true }
+        : null,
+  ],
+
+  region_id: [''],
+  zone_id: [''],
+  circle_id: [''],
+});
+
+
+
+
+
+
+     }
 
   ngOnInit(): void {
     this.loadBranches();
-  }
+    // this.loadConfiguration(); 
+    this.loadRegions();
+  } 
+
+// loadConfiguration() {
+
+//     this.userService
+//         .getHeadOfficeConfiguration()
+//         .subscribe({
+
+//             next: (res: any) => {
+
+//                 this.organizationConfig = res;
+
+//             },
+
+//             error: (err) => {
+
+//                 console.log(err);
+
+//             }
+
+//         });
+
+// }
+
+
+
+
+
+
 
   ngAfterViewChecked(): void {
     if (this.scrollToForm && this.branchFormRef) {
@@ -88,28 +146,142 @@ export class AdminBranchManagement implements OnInit {
   }
 
   loadBranches() {
-    this.loading = true;
-    this.userService.fetchAllBranches().subscribe((branchesData: any) => {
-      const branchesArray = branchesData as any[]; // ✅ force array type
+  this.loading = true;
 
-      this.userService.getBranchesWithAdminStatus().subscribe((statusData: any) => {
-        const statusArray = statusData as any[]; // ✅ force array type
+  this.userService.fetchAllBranches().subscribe({
+    next: (branchesData: any) => {
+      const branchesArray = branchesData as any[];
 
-        this.branches = branchesArray.map((branch: any) => {
-          const match = statusArray.find((s: any) => s.id === branch.id);
-          return {
-            ...branch,
-            has_admin: match ? match.has_admin : 0,
-          };
-        });
+      this.userService.getBranchesWithAdminStatus().subscribe({
+        next: (statusData: any) => {
+          const statusArray = statusData as any[];
+
+          this.branches = branchesArray.map((branch: any) => {
+            const match = statusArray.find(
+              (s: any) => s.id === branch.id
+            );
+
+            return {
+              ...branch,
+              has_admin: match ? match.has_admin : 0,
+            };
+          });
+
+          this.loading = false;
+        },
+
+        error: (err) => {
+          console.error('Failed to load branch admin status:', err);
+          this.loading = false;
+        }
       });
+    },
+
+    error: (err) => {
+      console.error('Failed to load branches:', err);
+      this.loading = false;
+    }
+  });
+}
+
+
+
+  
+
+ //LoadRegions  
+loadRegions() {
+  this.regions = [];
+  this.zones = [];
+  this.circles = [];
+
+  this.branchForm.patchValue({
+    region_id: '',
+    zone_id: '',
+    circle_id: ''
+  });
+
+  this.userService.fetchAllRegions().subscribe({
+    next: (data: any) => {
+      this.regions = data;
+    },
+    error: (err) => {
+      console.error('Failed to load regions:', err);
+    }
+  });
+}
+
+
+
+ 
+
+
+
+
+//loadZones 
+loadZones(regionId: number) {
+  if (!regionId) {
+    this.zones = [];
+    this.circles = [];
+
+    this.branchForm.patchValue({
+      zone_id: '',
+      circle_id: ''
     });
 
-    this.userService.fetchAllHeadOffice().subscribe((data: any) => {
-      this.headOffice = data;
-      this.loading = false;
-    });
+    return;
   }
+
+  this.userService.fetchZonesByRegion(regionId).subscribe({
+    next: (data: any) => {
+      this.zones = data;
+
+      this.circles = [];
+
+      this.branchForm.patchValue({
+        zone_id: '',
+        circle_id: ''
+      });
+    },
+
+    error: (err) => {
+      console.error('Failed to load zones:', err);
+    }
+  });
+}
+
+//loadcircles 
+
+loadCircles(zoneId: number) {
+  if (!zoneId) {
+    this.circles = [];
+
+    this.branchForm.patchValue({
+      circle_id: ''
+    });
+
+    return;
+  }
+
+  this.userService.fetchCirclesByZone(zoneId).subscribe({
+    next: (data: any) => {
+      this.circles = data;
+
+      this.branchForm.patchValue({
+        circle_id: ''
+      });
+    },
+
+    error: (err) => {
+      console.error('Failed to load circles:', err);
+    }
+  });
+}
+
+
+
+
+
+
 
   toggleForm() {
     this.showForm = !this.showForm;
@@ -152,12 +324,30 @@ export class AdminBranchManagement implements OnInit {
 
   submitForm() {
     if (this.branchForm.invalid) return;
-    const branch = { ...this.branchForm.value };
-    Object.keys(branch).forEach((key) => {
-      if (typeof branch[key] === 'string') {
-        branch[key] = branch[key].trim();
-      }
-    });
+
+  console.log('Form Value:', this.branchForm.value);
+
+  const branch = {
+    name: this.branchForm.value.name,
+    address: this.branchForm.value.address,
+
+    circle_id:
+      !this.branchForm.value.circle_id ||
+      this.branchForm.value.circle_id === '0'
+        ? null
+        : this.branchForm.value.circle_id
+  };
+
+  console.log('Branch payload:', branch);
+
+  // Object.keys(branch).forEach((key) => {
+  //   if (typeof branch[key] === 'string') {
+  //     branch[key] = branch[key].trim();
+  //   }
+  // });
+  
+     
+ 
     this.isButtonLoading = true;
     if (this.isEditMode && this.editBranchId) {
       this.userService.updateBranches(this.editBranchId, branch).subscribe({
@@ -196,25 +386,69 @@ export class AdminBranchManagement implements OnInit {
       });
     }
   }
-  editBranch(branch: any) {
-    this.isEditMode = true;
-    this.editBranchId = branch.id;
+ editBranch(branch: any) {
+  this.isEditMode = true;
+  this.editBranchId = branch.id;
 
-    this.branchForm.patchValue({
-      name: branch.name,
-      address: branch.address,
-      head_office_id: branch.head_office_id,
+  this.branchForm.patchValue({
+    name: branch.name,
+    address: branch.address,
+    region_id: branch.region_id || '',
+    zone_id: '',
+    circle_id: ''
+  });
+
+  this.showForm = true;
+
+  this.scrollToForm = true;
+  this.cdr.detectChanges();
+
+  // Load zones for selected region
+  if (branch.region_id) {
+    this.userService.fetchZonesByRegion(branch.region_id).subscribe({
+      next: (data: any) => {
+        this.zones = data;
+
+        this.branchForm.patchValue({
+          zone_id: branch.zone_id || ''
+        });
+
+        // Load circles for selected zone
+        if (branch.zone_id) {
+          this.userService.fetchCirclesByZone(branch.zone_id).subscribe({
+            next: (circlesData: any) => {
+              this.circles = circlesData;
+
+              this.branchForm.patchValue({
+                circle_id: branch.circle_id || ''
+              });
+            },
+
+            error: (err) => {
+              console.error('Failed to load circles:', err);
+            }
+          });
+        }
+      },
+
+      error: (err) => {
+        console.error('Failed to load zones:', err);
+      }
     });
-    this.showForm = true;
-
-    this.scrollToForm = true; // mark that we should scroll on next view check
-    this.cdr.detectChanges();
   }
+}
 
   resetForm() {
     this.isEditMode = false;
     this.editBranchId = null;
     this.branchForm.reset();
     this.showForm = false;
-  }
+  } 
+
+clearForm() {
+  this.branchForm.reset();
+}
+
+
+
 }

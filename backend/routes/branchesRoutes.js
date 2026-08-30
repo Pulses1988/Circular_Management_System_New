@@ -22,13 +22,29 @@ router.get(
   "/getAdminStatus",
   authenticateToken,
   branchController.getBranchesWithAdminStatus
+);  
+
+
+router.get(
+  "/head-office/:headOfficeId/branches",
+  authenticateToken,
+  branchController.getBranchesByHeadOfficeId
 );
 
 router.get("/:id", authenticateToken, branchController.getBranchById);
 router.post("/", authenticateToken, branchController.createBranch);
 router.delete("/:id", authenticateToken, branchController.deleteBranch);
 router.put("/:id", authenticateToken, branchController.updateBranch);
-router.get("/head-office/:headOfficeId/count", authenticateToken, branchController.getBranchCountByHeadOfficeId);
+router.get("/head-office/:headOfficeId/count", 
+    
+    (req, res, next) => {
+    console.log("✅ Route reached");
+    next();
+  },
+
+
+  authenticateToken, 
+  branchController.getBranchCountByHeadOfficeId);
 
 
 module.exports = router;

@@ -1,0 +1,193 @@
+<div class="activity-report">
+
+  <!-- Report Header -->
+  <div class="report-header">
+    <div>
+      <h2>Activity Summary Report</h2>
+      <p>Employee circular activity overview</p>
+    </div>
+  </div>
+
+  <!-- Employee Information -->
+  <div class="employee-info" *ngIf="currentEmployee">
+
+    <div>
+      <span class="label">Employee</span>
+      <strong>{{ getEmployeeName() }}</strong>
+    </div>
+
+    <div>
+      <span class="label">Department</span>
+      <strong>{{ currentEmployee?.department_name || '-' }}</strong>
+    </div>
+
+    <div>
+      <span class="label">Branch / Office</span>
+      <strong>{{ getEmployeeLocation() }}</strong>
+    </div>
+
+    <div>
+      <span class="label">Role</span>
+      <strong>{{ currentEmployee?.role_name || '-' }}</strong>
+    </div>
+
+  </div>
+
+
+  <!-- Summary Cards -->
+  <div class="summary-grid">
+
+    <div class="summary-card">
+      <span>Total Circulars</span>
+      <h3>{{ totalCirculars }}</h3>
+    </div>
+
+    <div class="summary-card">
+      <span>Circulars Read</span>
+      <h3>{{ readCirculars }}</h3>
+    </div>
+
+    <div class="summary-card">
+      <span>Unread Circulars</span>
+      <h3>{{ unreadCirculars }}</h3>
+    </div>
+
+    <div class="summary-card">
+      <span>Compliance Rate</span>
+      <h3>{{ compliance }}%</h3>
+    </div>
+
+  </div>
+
+
+  <!-- Approval Summary -->
+  <div class="summary-grid">
+
+    <div class="summary-card">
+      <span>Approved</span>
+      <h3>{{ approvedCount }}</h3>
+    </div>
+
+    <div class="summary-card">
+      <span>Rejected</span>
+      <h3>{{ rejectedCount }}</h3>
+    </div>
+
+    <div class="summary-card">
+      <span>Pending Approval</span>
+      <h3>{{ pendingApprovalCount }}</h3>
+    </div>
+
+  </div>
+
+
+  <!-- Activity Details -->
+  <div class="activity-section">
+
+    <h3>Activity Details</h3>
+
+
+    <!-- Loading -->
+    <div *ngIf="isLoading">
+      Loading activity details...
+    </div>
+
+
+    <!-- Activity Table -->
+    <div
+      class="table-wrapper"
+      *ngIf="!isLoading && activityData.length > 0"
+    >
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Date & Time</th>
+            <th>Circular Code</th>
+            <th>Circular Title</th>
+            <th>Priority</th>
+            <th>Activity</th>
+            <th>Read Status</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+
+        <tbody>
+
+          <tr *ngFor="let activity of activityData">
+
+            <!-- Date -->
+            <td>
+              {{
+                activity.activity_date
+                  ? (activity.activity_date | date:'dd MMM yyyy, hh:mm a')
+                  : '-'
+              }}
+            </td>
+
+
+            <!-- Circular Code -->
+            <td>
+              {{ activity.circular_code }}
+            </td>
+
+
+            <!-- Circular Title -->
+            <td>
+              {{ activity.title }}
+            </td>
+
+
+            <!-- Priority -->
+            <td>
+              {{ activity.priority }}
+            </td>
+
+
+            <!-- Activity -->
+            <td>
+              {{ activity.activity }}
+            </td>
+
+
+            <!-- Read Status -->
+            <td>
+              {{ activity.read_status }}
+            </td>
+
+
+            <!-- Status -->
+            <td>
+
+              <span
+                class="status"
+                [class.completed]="activity.status === 'Completed'"
+                [class.pending]="activity.status === 'Pending'"
+              >
+                {{ activity.status }}
+              </span>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+    <!-- No Activity -->
+    <div
+      *ngIf="!isLoading && activityData.length === 0"
+      class="no-data"
+    >
+      No activity found.
+    </div>
+
+  </div>
+
+</div>

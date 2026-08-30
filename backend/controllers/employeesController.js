@@ -1,10 +1,16 @@
 const employeeModel = require("../models/employeesModal");
 const bcrypt = require("bcrypt");
+const transporter = require("../config/mailConfig");
+const otpGenerator = require("otp-generator");
 const jwt = require("jsonwebtoken");
+
 
 const JWT_SECRET =
   process.env.JWT_SECRET ||
   "f47da57fdab5d8fdbe2b7855db15c11304197f2941d340cd302bbcddee0f04117f4ae1a5fbdb1e0a64f8f727587e3442bf9b44be6811f7f9c383f4860380b7f7";
+
+
+const otpStore = {};
 
 // Get all employees
 exports.getAllEmployees = async (req, res) => {
@@ -20,6 +26,20 @@ exports.getAllEmployees = async (req, res) => {
 exports.loginEmployee = async (req, res) => {
   try {
     const { employee_id, password } = req.body;
+
+const employeeIdPattern = /^EMP\d{3}$/;
+
+if (!employeeIdPattern.test(employee_id)) {
+  return res.status(400).json({
+    success: false,
+    message: "Employee ID must be in the format EMP001.",
+  });
+}
+
+
+
+
+
 
     // Validation
     if (!employee_id || !password) {
@@ -114,6 +134,42 @@ exports.getEmployeesByHeadOfficeWithoutBranch = async (req, res) => {
     const [rows] = await employeeModel.getEmployeesByHeadOfficeWithoutBranch(
       hoId
     );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch employees" });
+  }
+};
+
+// Get employees for a specific Region
+exports.getEmployeesByRegion = async (req, res) => {
+  const { id: regionId } = req.params;
+  try {
+    const [rows] = await employeeModel.getEmployeesByRegion(regionId);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch employees" });
+  }
+};
+
+// Get employees for a specific Zone
+exports.getEmployeesByZone = async (req, res) => {
+  const { id: zoneId } = req.params;
+  try {
+    const [rows] = await employeeModel.getEmployeesByZone(zoneId);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch employees" });
+  }
+};
+
+// Get employees for a specific Circle
+exports.getEmployeesByCircle = async (req, res) => {
+  const { id: circleId } = req.params;
+  try {
+    const [rows] = await employeeModel.getEmployeesByCircle(circleId);
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -267,5 +323,344 @@ exports.BranchEmployeeCount = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch Branch employees count" });
+  }
+};
+
+
+
+// Get logged-in employee profile
+exports.getMyProfile = async (req, res) => {
+  try {
+
+    const employeeId = req.user.employeeId;
+
+    const [rows] = await employeeModel.getCurrentEmployeeProfile(employeeId);
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: rows[0]
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch profile"
+    });
+  }
+};    
+
+
+
+exports.sendForgotPasswordOtp = async (req, res) => {
+
+    try{
+
+        const {employee_id,email}=req.body;
+
+        if(!employee_id || !email){
+
+            return res.status(400).json({
+                success:false,
+                message:"Employee ID and Email are required"
+            });
+
+        }
+
+        const [rows]=await employeeModel.findEmployeeForForgotPassword(employee_id,email);
+
+        if(rows.length===0){
+
+            return res.status(404).json({
+                success:false,
+                message:"Employee not found"
+            });
+
+        }
+
+        const otp=otpGenerator.generate(6,{
+            upperCaseAlphabets:false,
+            lowerCaseAlphabets:false,
+            specialChars:false
+        });
+
+        otpStore[employee_id]={
+            otp:otp,
+            expires:Date.now()+5*60*1000
+        };
+
+        await transporter.sendMail({
+
+            from:'pragati1.pulsestechnology@gmail.com',
+            to:email,
+            subject:"Password Reset OTP",
+
+            text:`Your OTP is ${otp}`
+
+        });
+
+        res.json({
+
+            success:true,
+            message:"OTP Sent Successfully"
+
+        });
+
+    }
+    catch(err){
+
+        console.log(err);
+
+        res.status(500).json({
+
+            success:false,
+            message:"Server Error"
+
+        });
+
+    }
+
+}   
+
+
+exports.verifyOtp = async(req,res)=>{
+
+    try{
+
+        const {employee_id,otp}=req.body;
+
+        if(!otpStore[employee_id]){
+
+            return res.status(400).json({
+
+                success:false,
+                message:"OTP Not Found"
+
+            });
+
+        }
+
+        if(Date.now()>otpStore[employee_id].expires){
+
+            delete otpStore[employee_id];
+
+            return res.status(400).json({
+
+                success:false,
+                message:"OTP Expired"
+
+            });
+
+        }
+
+        if(otpStore[employee_id].otp!=otp){
+
+            return res.status(400).json({
+
+                success:false,
+                message:"Invalid OTP"
+
+            });
+
+        }
+
+        res.json({
+
+            success:true,
+            message:"OTP Verified"
+
+        });
+
+    }
+
+    catch(err){
+
+        console.log(err);
+
+        res.status(500).json({
+
+            success:false,
+            message:"Server Error"
+
+        });
+
+    }
+
+}   
+
+
+
+exports.resetPassword=async(req,res)=>{
+
+    try{
+
+        const {employee_id,newPassword}=req.body;
+
+        const hash=await bcrypt.hash(newPassword,10);
+
+        const [rows]=await employeeModel.findByEmployeeId(employee_id);
+
+        if(rows.length===0){
+
+            return res.status(404).json({
+
+                success:false,
+                message:"Employee Not Found"
+
+            });
+
+        }
+
+        await employeeModel.updatePassword(rows[0].id,hash);
+
+        delete otpStore[employee_id];
+
+        res.json({
+
+            success:true,
+            message:"Password Changed Successfully"
+
+        });
+
+    }
+
+    catch(err){
+
+        console.log(err);
+
+        res.status(500).json({
+
+            success:false,
+            message:"Server Error"
+
+        });
+
+    }
+
+}   
+
+
+//COntroller For HIGHER AUTORITY API
+
+exports.testHigherAuthority = async (req, res) => {
+
+    const employeeId = req.params.employeeId;
+
+    const [rows] =
+        await employeeModel.getHigherAuthority(employeeId);
+
+    res.json(rows);
+
+}
+ 
+
+//Rolewsie employee controller 
+exports.getEmployeesByRole = async (req, res) => {
+
+  const { id: roleId } = req.params;
+
+  try {
+
+    const [rows] = await employeeModel.getEmployeesByRole(roleId);
+
+    res.json(rows);
+
+  } catch (err) {
+
+    console.error(err);
+
+    res.status(500).json({
+      error: "Failed to fetch employees"
+    });
+
+  }
+
+};   
+
+
+//Logic for get employee Count by using Head_office 
+
+exports.HeadOfficeEmployeeCount = async (req, res) => {
+  try {
+    const { headOfficeId } = req.params;
+
+    const [result] =
+      await employeeModel.getEmployeesCountByHeadOffice(headOfficeId);
+
+    res.json(result[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: "Failed to fetch employee count",
+    });
+  }
+};  
+
+//Add new controller for reporting Offficer 
+// Get Branch Managers - used as Reporting Officers
+exports.getBranchManagers = async (req, res) => {
+  try {
+    const { branchId } = req.params;
+
+    if (!branchId) {
+      return res.status(400).json({
+        success: false,
+        message: "branchId is required"
+      });
+    }
+
+    const [rows] = await employeeModel.getBranchManagers(branchId);
+
+    res.json({
+      success: true,
+      data: rows
+    });
+
+  } catch (err) {
+    console.error("Get Branch Managers Error:", err);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch branch managers"
+    });
+  }
+};  
+
+
+
+// Get employees by role level
+exports.getEmployeesByRoleLevel = async (req, res) => {
+  const { roleLevel } = req.params;
+
+  try {
+    if (!roleLevel) {
+      return res.status(400).json({
+        success: false,
+        message: "roleLevel is required"
+      });
+    }
+
+    const [rows] = await employeeModel.getEmployeesByRoleLevel(roleLevel);
+
+    res.json({
+      success: true,
+      data: rows
+    });
+
+  } catch (err) {
+    console.error("Get Employees By Role Level Error:", err);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch employees by role level"
+    });
   }
 };

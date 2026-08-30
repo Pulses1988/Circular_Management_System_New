@@ -1,16 +1,270 @@
 @keyframes shake {
-  0%, 100% { transform: rotate(0deg); }
-  10%, 30%, 50%, 70%, 90% { transform: rotate(-10deg); }
-  20%, 40%, 60%, 80% { transform: rotate(10deg); }
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+
+  10%, 30%, 50%, 70%, 90% {
+    transform: rotate(-10deg);
+  }
+
+  20%, 40%, 60%, 80% {
+    transform: rotate(10deg);
+  }
 }
 
 .notification-bell.shake {
   animation: shake 0.5s ease-in-out;
 }
 
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+/* ==============================
+   FULL SCREEN OVERLAY
+============================== */
+
+.notification-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+
+  background: rgba(0, 0, 0, 0.35);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 9999;
+
+  padding: 20px;
+}
+
+/* ==============================
+   CENTER NOTIFICATION POPUP
+============================== */
+
+.notification-popup {
+  width: 650px;
+  max-width: 95vw;
+
+  height: 600px;
+  max-height: 85vh;
+
+  background: white;
+  color: #1e293b;
+
+  border-radius: 14px;
   overflow: hidden;
+
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.25);
+
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==============================
+   HEADER
+============================== */
+
+.notification-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 20px 24px;
+
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.notification-popup-header h3 {
+  margin: 0;
+
+  font-size: 22px;
+  font-weight: 600;
+
+  color: #0f172a;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.mark-all-btn {
+  border: none;
+  background: transparent;
+
+  color: #2563eb;
+
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.mark-all-btn:hover {
+  text-decoration: underline;
+}
+
+.close-btn {
+  border: none;
+  background: transparent;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #64748b;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  color: #0f172a;
+}
+
+/* ==============================
+   NOTIFICATION LIST
+============================== */
+
+.notification-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* ==============================
+   NOTIFICATION ITEM
+============================== */
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 16px;
+
+  padding: 18px 24px;
+
+  border-bottom: 1px solid #e2e8f0;
+
+  cursor: pointer;
+
+  transition: background 0.2s ease;
+}
+
+.notification-item:hover {
+  background: #f8fafc;
+}
+
+/* ==============================
+   ICON
+============================== */
+
+.notification-item-icon {
+  width: 48px;
+  height: 48px;
+
+  min-width: 48px;
+
+  border-radius: 50%;
+
+  background: #dbeafe;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #2563eb;
+}
+
+.notification-item-icon mat-icon {
+  font-size: 25px;
+  width: 25px;
+  height: 25px;
+}
+
+/* ==============================
+   CONTENT
+============================== */
+
+.notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.sender-name {
+  margin: 0;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  color: #0f172a;
+}
+
+.circular-title {
+  margin: 4px 0 0;
+
+  font-size: 14px;
+
+  color: #475569;
+}
+
+.notification-message {
+  margin: 6px 0 0;
+
+  font-size: 14px;
+  line-height: 1.5;
+
+  color: #64748b;
+
+  white-space: pre-line;
+line-height: 1.6;
+}
+
+.notification-time {
+  margin: 6px 0 0;
+
+  font-size: 12px;
+
+  color: #94a3b8;
+}
+
+/* ==============================
+   NO NOTIFICATIONS
+============================== */
+
+.no-notifications {
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  color: #64748b;
+}
+
+.no-notifications mat-icon {
+  font-size: 50px;
+  width: 50px;
+  height: 50px;
+
+  margin-bottom: 10px;
+}
+
+/* ==============================
+   MOBILE RESPONSIVE
+============================== */
+
+@media (max-width: 768px) {
+
+  .notification-popup {
+    width: 95vw;
+    height: 80vh;
+  }
+
+  .notification-popup-header {
+    padding: 16px;
+  }
+
+  .notification-item {
+    padding: 16px;
+  }
 }

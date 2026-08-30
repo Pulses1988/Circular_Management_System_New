@@ -87,4 +87,20 @@ exports.getEmployeesByCircular = async (circular_id) => {
     [circular_id]
   );
   return rows;
+};   
+
+
+// Get employee IDs by role
+exports.getEmployeesByRole = async (roleId) => {
+
+    const sql = `
+        SELECT id
+        FROM employees
+        WHERE role_id = ?
+    `;
+
+    const [rows] = await db.query(sql, [roleId]);
+
+    return rows.map(row => row.id);
+
 };

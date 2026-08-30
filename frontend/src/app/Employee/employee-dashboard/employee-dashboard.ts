@@ -145,7 +145,10 @@ export class EmployeeDashboard {
   urgentCirculars: Circular[] = [];
   showUrgentModal = false;
   showUnSeenModal = false;
-  showSeenModal=false;
+  showSeenModal=false; 
+  pendingApprovals: any[] = [];
+showPendingApprovalModal = false;
+pendingApprovalCount = 0;
   unSeenCirculars:Circulars[] = [];
   seenCirculars:Circulars[]=[];
 
@@ -160,13 +163,22 @@ export class EmployeeDashboard {
     this.employeeData = await this.employeeService.getCurrentEmployee();
     if (this.employeeData?.id) {
       this.loadCirculars();
+      this.loadPendingApprovals();
     }
   }
   loadCirculars() {
     if (!this.employeeData?.id) {
       console.warn('Employee ID missing, skipping circular load');
       return;
-    }
+    } 
+
+
+
+
+
+
+
+
 
     this.circularService.fetchCircularAssignToEmpById(this.employeeData.id).subscribe(
       (res: any) => {
@@ -210,7 +222,57 @@ export class EmployeeDashboard {
       this.seenCirculars=res.data || [];
       this.circularStats.seen=this.seenCirculars.length;
     })
+  } 
+
+
+
+loadPendingApprovals() {
+
+  if (!this.employeeData?.id) {
+    return;
   }
+
+  this.circularService
+    .getAssingedCircularForApproval(this.employeeData.id)
+    .subscribe({
+
+      next: (res: any) => {
+
+        const approvals = res.data || [];
+
+        this.pendingApprovals = approvals.filter(
+          (c: any) => c.circular_status === 'PENDING_APPROVAL'
+        );
+
+        this.pendingApprovalCount = this.pendingApprovals.length;
+
+      },
+
+      error: (err) => {
+        console.error(err);
+        this.pendingApprovalCount = 0;
+      }
+
+    });
+
+}
+
+viewPendingApproval(approval: any) {
+  this.closePendingApprovalModal();
+
+  this.router.navigate(['/employee/circular-approval'], {
+    queryParams: {
+      circularId: approval.id
+    }
+  });
+}
+
+
+
+
+
+
+
   openUrgentModal() {
     this.showUrgentModal = true;
   }
@@ -222,6 +284,15 @@ export class EmployeeDashboard {
   openSeenModal(){
     this.showSeenModal=true;
   }
+
+openPendingApprovalModal() {
+  this.showPendingApprovalModal = true;
+}
+
+closePendingApprovalModal() {
+  this.showPendingApprovalModal = false;
+}
+
 
   closeUrgentModal() {
     this.showUrgentModal = false;

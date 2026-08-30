@@ -31,7 +31,9 @@ body {
   font: var(--mat-sys-body-medium);
 
   // Reset the user agent margin.
-  margin: 0;
+  margin: 0; 
+  background: var(--page-bg);
+  color: var(--text-color);
 }
 /* You can add global styles to this file, and also import other style files */
 @tailwind base;
@@ -56,5 +58,28 @@ html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .logout-dialog-backdrop{
 backdrop-filter: blur(4px); 
-      background-color: rgba(0, 0, 0, 0.5);
+background-color: rgba(0, 0, 0, 0.5); 
+      
+}   
+
+
+:root,
+.light-theme {
+
+  --page-bg: #f7f9fc;
+  --card-bg: #ffffff;
+  --text-color: #172033;
+
 }
+
+.dark-theme {
+
+  --page-bg: #0f172a;
+  --card-bg: #1e293b;
+  --text-color: #ffffff;
+
+}
+// .dark-theme * {
+//   background-color: #5a5151 !important;
+//   color: white !important;
+// }

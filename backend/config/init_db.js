@@ -281,6 +281,58 @@ CREATE TABLE IF NOT EXISTS circular_recurrence_log (
 );
 `;
 
+// Rule-engine tables existed only in deployed databases. Keep the bootstrap
+// schema in sync and make the reminder additions safe for existing installs.
+const createRuleMasterQuery = `
+CREATE TABLE IF NOT EXISTS rule_master (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  rule_name VARCHAR(200), event_name VARCHAR(100), action_name VARCHAR(100),
+  status ENUM('ACTIVE','INACTIVE') DEFAULT 'ACTIVE', created_by INT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  condition_field VARCHAR(100), condition_operator VARCHAR(20), condition_value VARCHAR(255),
+  reminder_frequency_value INT NULL, reminder_frequency_unit VARCHAR(20) NULL,
+  notify_creator BOOLEAN DEFAULT FALSE
+);`;
+const createRuleTargetsQuery = `
+CREATE TABLE IF NOT EXISTS rule_targets (
+  id INT AUTO_INCREMENT PRIMARY KEY, rule_id INT, target_type VARCHAR(100), target_id INT NULL,
+  FOREIGN KEY (rule_id) REFERENCES rule_master(id) ON DELETE CASCADE
+);`;
+const createRuleExecutionHistoryQuery = `
+CREATE TABLE IF NOT EXISTS rule_execution_history (
+  id INT AUTO_INCREMENT PRIMARY KEY, rule_id INT NULL, event_name VARCHAR(100) NOT NULL,
+  rule_name VARCHAR(100) NOT NULL, action_name VARCHAR(100) NOT NULL,
+  status VARCHAR(20) DEFAULT 'SUCCESS', entity_id INT NULL,
+  executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);`;
+
+async function addColumnIfMissing(table, column, definition) {
+  const [rows] = await db.query(
+    `SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
+    [table, column]
+  );
+  if (!rows.length) await db.query(`ALTER TABLE \`${table}\` ADD COLUMN \`${column}\` ${definition}`);
+}
+
+async function ensureRuleEngineSchema() {
+  await db.query(createRuleMasterQuery);
+  await db.query(createRuleTargetsQuery);
+  await db.query(createRuleExecutionHistoryQuery);
+  await addColumnIfMissing('rule_master', 'reminder_frequency_value', 'INT NULL');
+  await addColumnIfMissing('rule_master', 'reminder_frequency_unit', 'VARCHAR(20) NULL');
+  await addColumnIfMissing('rule_master', 'notify_creator', 'BOOLEAN DEFAULT FALSE');
+  await addColumnIfMissing('rule_execution_history', 'rule_id', 'INT NULL');
+  await addColumnIfMissing('circular_tracking', 'last_reminder_at', 'TIMESTAMP NULL');
+  // The old enum cannot represent the admin reminder target; avoid a table
+  // alteration on every application start once it has been migrated.
+  const [targetColumn] = await db.query(
+    `SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'rule_targets' AND COLUMN_NAME = 'target_type'`
+  );
+  if (targetColumn[0] && targetColumn[0].COLUMN_TYPE.startsWith('enum(')) {
+    await db.query('ALTER TABLE rule_targets MODIFY COLUMN target_type VARCHAR(100) NULL');
+  }
+}
+
 async function initializeDatabase() {
   try {
     await db.query(createHeadOfficeTableQuery);
@@ -335,6 +387,9 @@ async function initializeDatabase() {
 
     await db.query(circularRecurrenceLog);
     console.log('Reccurnce table is ready')
+
+    await ensureRuleEngineSchema();
+    console.log('Rule Engine tables are ready');
     
   } catch (err) {
     console.error("Error initializing database:", err);

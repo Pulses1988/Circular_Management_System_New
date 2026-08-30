@@ -49,6 +49,8 @@ employeeData!: EmployeeData;
   unreadCount: number = 0;
   showNotifications: boolean = false;
   hasNewNotification: boolean = false;
+
+  showProfileMenu: boolean = false;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -62,23 +64,53 @@ employeeData!: EmployeeData;
   }
 
   async loadEmployee() {
-    this.employeeData = await this.employeeService.getCurrentEmployee();
-    
-    if (this.employeeData) {
-      this.loadNotifications();
-      this.subscribeToNotifications();
-    }
+    this.employeeData =
+    await this.employeeService.getCurrentEmployee();
+
+  if (this.employeeData) {
+
+    // true = automatically open notification popup after login
+    this.loadNotifications(true);
+
+    this.subscribeToNotifications();
+  }
   }
 
-  loadNotifications() {
-    this.circularService.getUnreadNotifications(this.employeeData.id).subscribe({
-      next: (notifications) => {
-        this.notifications = notifications;
-        this.unreadCount = notifications.length;
+  loadNotifications(openPopup: boolean = false): void {
+
+  this.circularService
+    .getUnreadNotifications(this.employeeData.id)
+    .subscribe({
+      next: (notifications: Notification[]) => {
+
+        console.log('Notifications API Response:', notifications);
+
+        this.notifications = notifications || [];
+
+        // Automatically open popup after login
+        if (openPopup && this.notifications.length > 0) {
+          this.showNotifications = true;
+        }
       },
-      error: (err) => console.error('Error loading notifications:', err)
+
+      error: (err) => {
+        console.error('Error loading notifications:', err);
+      }
     });
-  }
+
+
+  this.circularService
+    .getUnreadCount(this.employeeData.id)
+    .subscribe({
+      next: (res: any) => {
+        this.unreadCount = res.count || 0;
+      },
+
+      error: (err) => {
+        console.error('Error loading unread count:', err);
+      }
+    });
+}
 
   subscribeToNotifications() {
     this.circularService.subscribeToNotifications(this.employeeData.id);
@@ -97,19 +129,39 @@ employeeData!: EmployeeData;
       });
   }
 
-  @HostListener('document:click', ['$event'])
+//   @HostListener('document:click', ['$event'])
+// onDocumentClick(event: MouseEvent) {
+//   const target = event.target as HTMLElement;
+//   const clickedInside = target.closest('.notification-container');
+  
+//   if (!clickedInside && this.showNotifications) {
+//     this.showNotifications = false;
+//   }
+// }
+
+@HostListener('document:click', ['$event'])
 onDocumentClick(event: MouseEvent) {
   const target = event.target as HTMLElement;
-  const clickedInside = target.closest('.notification-container');
-  
-  if (!clickedInside && this.showNotifications) {
+
+  if (!target.closest('.notification-container')) {
     this.showNotifications = false;
   }
+
+  if (!target.closest('.profile-container')) {
+    this.showProfileMenu = false;
+  }
 }
+
+
 
 toggleNotifications(event: MouseEvent) {
   event.stopPropagation(); // Prevent immediate closing
   this.showNotifications = !this.showNotifications;
+} 
+
+toggleProfileMenu(event: MouseEvent) {
+  event.stopPropagation();
+  this.showProfileMenu = !this.showProfileMenu;
 }
 
   openCircular(notification: Notification) {
@@ -153,6 +205,20 @@ toggleNotifications(event: MouseEvent) {
     return type === 'message' ? 'message' : 'attachment';
   }
 
+//FOrmatting the notification 
+formatNotificationMessage(message: string): string {
+  if (!message) {
+    return '';
+  }
+
+  return message
+    .replace(/Circular:/g, '\nCircular:')
+    .replace(/Completed Employees:/g, '\nCompleted Employees:\n')
+    .replace(/Not Completed Employees:/g, '\nNot Completed Employees:\n')
+    .trim();
+}
+
+
   formatTime(dateString: string): string {
     const date = new Date(dateString);
     const now = new Date();
@@ -167,6 +233,12 @@ toggleNotifications(event: MouseEvent) {
     if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString();
   }
+
+  logout() {
+  this.circularService.logout();
+}
+
+
 
   ngOnDestroy() {
     this.destroy$.next();

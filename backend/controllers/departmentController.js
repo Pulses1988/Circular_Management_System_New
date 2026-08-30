@@ -45,12 +45,29 @@ exports.createDepartment = async (req, res) => {
   }
 
   // Check if either head_office_id or branch_id is provided (but not both)
-  if ((!head_office_id && !branch_id) || (head_office_id && branch_id)) {
-    return res.status(400).json({
-      error:
-        "Department must belong to either a head office or a branch, not both or neither",
-    });
-  }
+  // if ((!head_office_id && !branch_id) || (head_office_id && branch_id)) {
+  //   return res.status(400).json({
+  //     error:
+  //       "Department must belong to either a head office or a branch, not both or neither",
+  //   });
+  // } 
+// At least one ID must be provided
+
+
+// if (!head_office_id && !branch_id) {
+//   return res.status(400).json({
+//     error: "Department must belong to a head office or a branch.",
+//   });
+// }  
+
+if ((!head_office_id && !branch_id) || (head_office_id && branch_id)) {
+  return res.status(400).json({
+    error:
+      "Department must belong to either a head office or a branch, not both.",
+  });
+}
+
+
 
   try {
     // Check if department name already exists

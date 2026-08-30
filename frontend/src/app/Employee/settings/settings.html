@@ -1,0 +1,382 @@
+<div [class.dark]="isDarkMode" class="settings-page">
+
+  <!-- Page Header -->
+  <div class="settings-header">
+
+    <div class="header-title">
+      <div class="header-icon">
+        <mat-icon>settings</mat-icon>
+      </div>
+
+      <div>
+        <h1>Settings</h1>
+        <p>Manage your application preferences and account settings.</p>
+      </div>
+    </div>
+
+    <div class="header-decoration">
+      <mat-icon>tune</mat-icon>
+    </div>
+
+  </div>
+
+
+  <div class="settings-layout">
+
+    <!-- ========================= -->
+    <!-- Settings Category Sidebar -->
+    <!-- ========================= -->
+
+    <aside class="settings-menu">
+
+      <h3>Settings Categories</h3>
+
+      <button class="menu-item active">
+        <mat-icon>settings</mat-icon>
+        General
+      </button>
+
+      <button class="menu-item">
+        <mat-icon>notifications_none</mat-icon>
+        Notifications
+      </button>
+
+      <button class="menu-item">
+        <mat-icon>desktop_windows</mat-icon>
+        Display
+      </button>
+
+      <button class="menu-item">
+        <mat-icon>person_outline</mat-icon>
+        Account
+      </button>
+
+      <button class="menu-item">
+        <mat-icon>shield</mat-icon>
+        Security
+      </button>
+
+      <button class="menu-item">
+        <mat-icon>lock_outline</mat-icon>
+        Data & Privacy
+      </button>
+
+      <button class="menu-item">
+        <mat-icon>info_outline</mat-icon>
+        About
+      </button>
+
+    </aside>
+
+
+    <!-- ========================= -->
+    <!-- Main Settings -->
+    <!-- ========================= -->
+
+    <main class="settings-content">
+
+      <!-- Appearance -->
+      <div class="setting-card appearance-card">
+
+        <div class="card-heading">
+
+          <div class="icon-box purple">
+            <mat-icon>dark_mode</mat-icon>
+          </div>
+
+          <div>
+            <h3>Appearance</h3>
+            <p>Choose your preferred application theme</p>
+          </div>
+
+        </div>
+
+        <!-- <div class="theme-options">
+
+          <label class="radio-option">
+            <input
+              type="radio"
+              name="theme"
+              value="light"
+              checked>
+            <span>Light Theme</span>
+          </label>
+
+          <label class="radio-option">
+            <input
+              type="radio"
+              name="theme"
+              value="dark">
+            <span>Dark Theme</span>
+          </label>
+
+        </div> --> 
+       
+      <label class="radio-option">
+  <input
+    type="radio"
+    name="theme"
+    value="light"
+    [checked]="!isDarkMode"
+    (change)="changeTheme('light')">
+
+  <span>Light Theme</span>
+</label>
+
+<label class="radio-option">
+  <input
+    type="radio"
+    name="theme"
+    value="dark"
+    [checked]="isDarkMode"
+    (change)="changeTheme('dark')">
+
+  <span>Dark Theme</span>
+</label>
+
+
+
+
+
+      </div>
+
+
+      <!-- Email Notifications -->
+      <div class="setting-card">
+
+        <div class="card-top">
+
+          <div class="card-heading">
+
+            <div class="icon-box green">
+              <mat-icon>email</mat-icon>
+            </div>
+
+            <div>
+              <h3>Email Notifications</h3>
+              <p>Receive circular notifications by email</p>
+            </div>
+
+          </div>
+
+          <mat-slide-toggle checked></mat-slide-toggle>
+
+        </div>
+
+        <div class="notification-options">
+
+          <label>
+            <input type="checkbox" checked>
+            New Circulars
+          </label>
+
+          <label>
+            <input type="checkbox" checked>
+            Approvals
+          </label>
+
+          <label>
+            <input type="checkbox" checked>
+            Reminders
+          </label>
+
+          <label>
+            <input type="checkbox">
+            System Updates
+          </label>
+
+        </div>
+
+      </div>
+
+
+      <!-- Auto Refresh -->
+      <div class="setting-card">
+
+        <div class="card-top">
+
+          <div class="card-heading">
+
+            <div class="icon-box orange">
+              <mat-icon>refresh</mat-icon>
+            </div>
+
+            <div>
+              <h3>Auto Refresh</h3>
+              <p>Refresh circular list automatically</p>
+            </div>
+
+          </div>
+
+          <mat-slide-toggle checked></mat-slide-toggle>
+
+        </div>  
+         
+        
+
+
+
+
+        <div class="field-section">
+          <label>Refresh Interval</label>
+
+          <select>
+            <option>1 Minute</option>
+            <option selected>5 Minutes</option>
+            <option>10 Minutes</option>
+            <option>30 Minutes</option>
+          </select>
+        </div>
+
+      </div>
+
+
+      <div class="setting-card">
+
+  <div class="card-heading">
+
+    <div class="icon-box blue">
+      <mat-icon>groups</mat-icon>
+    </div>
+
+    <div>
+      <h3>Approval Configuration</h3>
+      <p>Set the maximum number of approvers allowed for a circular</p>
+    </div>
+
+  </div>
+
+  <div class="field-section">
+
+    <label>Maximum Approvers</label>
+        <input
+      type="number"
+      [(ngModel)]="maxApprovers"
+      (change)="onApproverLimitChange()"
+      min="1"
+      placeholder="Enter number of approvers">
+  </div>
+
+    
+
+  </div>
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      <!-- Language -->
+      <div class="setting-card">
+
+        <div class="card-heading">
+
+          <div class="icon-box violet">
+            <mat-icon>language</mat-icon>
+          </div>
+
+          <div>
+            <h3>Language</h3>
+            <p>Choose your preferred language</p>
+          </div>
+
+        </div>
+
+        <div class="field-section">
+          <select>
+            <option>English</option>
+            <option>Hindi</option>
+            <option>Marathi</option>
+          </select>
+        </div>
+
+      </div>
+
+
+      <!-- Password -->
+      <div class="setting-card">
+
+        <div class="card-heading">
+
+          <div class="icon-box red">
+            <mat-icon>lock</mat-icon>
+          </div>
+
+          <div>
+            <h3>Password</h3>
+            <p>Change your account password</p>
+          </div>
+
+        </div>
+
+        <div class="card-action">
+          <button class="primary-btn">
+            Change Password
+          </button>
+        </div>
+
+      </div>
+
+
+      <!-- Application -->
+      <div class="setting-card">
+
+        <div class="card-heading">
+
+          <div class="icon-box blue">
+            <mat-icon>info</mat-icon>
+          </div>
+
+          <div>
+            <h3>Application</h3>
+            <p>Application information and version</p>
+          </div>
+
+        </div>
+
+        <div class="version-info">
+          <span>Version 1.0.0</span>
+          <span class="status-badge">Up to date</span>
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+
+  <!-- Security Banner -->
+  <div class="security-banner">
+
+    <div class="security-info">
+
+      <div class="security-icon">
+        <mat-icon>verified_user</mat-icon>
+      </div>
+
+      <div>
+        <h4>Your security is our priority</h4>
+        <p>Keep your account secure and protect your data.</p>
+      </div>
+
+    </div>
+
+    <button class="security-btn">
+      Security Settings
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+
+  </div>
+
+</div>

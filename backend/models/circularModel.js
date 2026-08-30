@@ -12,6 +12,12 @@ exports.createCircular = (data) => {
     effective_from,
     send_type,
     repeat_cycle_id,
+is_recurring,
+       current_cycle_number,
+  last_recurrence_date,
+  next_recurrence_date,
+
+
     status,
     published_at,
     priority,
@@ -19,9 +25,12 @@ exports.createCircular = (data) => {
   } = data;
 
   return db.query(
-    `INSERT INTO circulars
-      (title, content, creator_employee_id, circular_pdf, reference_circular_id, circular_code, source_type_id, effective_from, send_type,repeat_cycle_id, status, published_at, priority, special_keyword)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    // `INSERT INTO circulars
+    //   (title, content, creator_employee_id, circular_pdf, reference_circular_id, circular_code, source_type_id, effective_from, send_type,repeat_cycle_id, status, published_at, priority, special_keyword)
+    //  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO circulars(title,content,creator_employee_id,circular_pdf,reference_circular_id,circular_code,source_type_id,effective_from,send_type,repeat_cycle_id,is_recurring,current_cycle_number,last_recurrence_date,next_recurrence_date,status,published_at,priority,special_keyword)
+VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?,?, ?, ?, ?)`,
+
     [
       title,
       content,
@@ -32,12 +41,22 @@ exports.createCircular = (data) => {
       source_type_id,
       effective_from,
       send_type,
-      repeat_cycle_id,
+      repeat_cycle_id, 
+
+       is_recurring,
+       current_cycle_number,
+  last_recurrence_date,
+  next_recurrence_date,
+
+
       status,
       published_at,
       priority,
       special_keyword,
-    ]
+    ] 
+
+
+    
   );
 };
 
@@ -162,7 +181,16 @@ exports.updateCircular = (id, data) => {
     source_type_id,
     effective_from,
     send_type,
-    repeat_cycle_id,
+    repeat_cycle_id, 
+
+ is_recurring,
+  current_cycle_number,
+  last_recurrence_date,
+  next_recurrence_date,
+
+
+
+
     status,
     published_at,
     priority,
@@ -252,7 +280,8 @@ exports.getCircularDetailsById = async (circularId) => {
   const [circularRows] = await db.query(
     `
     SELECT 
-      c.id,
+      c.id, 
+        c.creator_employee_id,
       c.title,
       c.content,
       c.circular_pdf,
@@ -466,4 +495,155 @@ exports.getCircularActivitySummary = async (circular_id) => {
   circular.employee_activities = activityRows;
 
   return circular;
+};   
+
+exports.getDueRecurringCirculars = () => {
+  return db.query(`
+    SELECT *
+    FROM circulars
+    WHERE
+        is_recurring = 1
+        AND next_recurrence_date IS NOT NULL
+        AND next_recurrence_date <= CURDATE()
+  `);
 };
+
+exports.updateRecurringCircular = (
+  id,
+  currentCycleNumber,
+  lastRecurrenceDate,
+  nextRecurrenceDate
+) => {
+  return db.query(
+    `
+    UPDATE circulars
+    SET
+      current_cycle_number = ?,
+      last_recurrence_date = ?,
+      next_recurrence_date = ?
+    WHERE id = ?
+    `,
+    [
+      currentCycleNumber,
+      lastRecurrenceDate,
+      nextRecurrenceDate,
+      id,
+    ]
+  );
+};
+
+
+
+
+exports.createRecurringCircular = (data) => {
+
+  const {
+    title,
+    content,
+    creator_employee_id,
+    reference_circular_id,
+    circular_code,
+    source_type_id,
+    effective_from,
+    send_type,
+    repeat_cycle_id,
+    is_recurring,
+    current_cycle_number,
+    last_recurrence_date,
+    next_recurrence_date,
+    status,
+    published_at,
+    priority,
+    special_keyword
+  } = data;
+
+
+  return db.query(
+    `
+    INSERT INTO circulars
+    (
+      title,
+      content,
+      creator_employee_id,
+      reference_circular_id,
+      circular_code,
+      source_type_id,
+      effective_from,
+      send_type,
+      repeat_cycle_id,
+      is_recurring,
+      current_cycle_number,
+      last_recurrence_date,
+      next_recurrence_date,
+      status,
+      published_at,
+      priority,
+      special_keyword
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    [
+      title,
+      content,
+      creator_employee_id,
+      reference_circular_id,
+      circular_code,
+      source_type_id,
+      effective_from,
+      send_type,
+      repeat_cycle_id,
+      is_recurring,
+      current_cycle_number,
+      last_recurrence_date,
+      next_recurrence_date,
+      status,
+      published_at,
+      priority,
+      special_keyword
+    ]
+  );
+
+};
+
+
+
+exports.markCircularCompleted = async (circularId) => {
+
+  const sql = `
+    UPDATE circulars
+    SET status = 'COMPLETED'
+    WHERE id = ?
+  `;
+
+  return db.query(sql,[circularId]);
+
+};
+
+// Creator_id
+
+// exports.getCircularById = async (circularId) => {
+//     return db.query(
+//         `SELECT creator_employee_id
+//          FROM circulars
+//          WHERE id = ?`,
+//         [circularId]
+//     );
+// };
+
+
+
+
+
+// ✅ Add this function below the last export
+// exports.getLastCircularCode = (year) => {
+//   return db.query(
+//     `
+//     SELECT circular_code
+//     FROM circulars
+//     WHERE circular_code LIKE ?
+//     ORDER BY id DESC
+//     LIMIT 1
+//     `,
+//     [`CIR-${year}-%`]
+//   );
+// };

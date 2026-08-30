@@ -64,3 +64,10 @@ exports.checkRepeatCycleDurationExists = (duration_days, excludeId = null) => {
 
   return db.query(query, params);
 };
+
+exports.getDurationById = (id) => {
+  return db.query(
+    "SELECT duration_days FROM repeat_cycles WHERE id = ?",
+    [id]
+  );
+};

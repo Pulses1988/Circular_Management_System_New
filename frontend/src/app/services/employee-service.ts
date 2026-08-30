@@ -233,6 +233,24 @@ private isTokenExpired(): boolean {
     });
   }
 
+  getEmployeeByRegionId(id: number) {
+    return this.http.get(`${this.apiUrl}/api/employees/employee-by-region/${id}`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  getEmployeeByZoneId(id: number) {
+    return this.http.get(`${this.apiUrl}/api/employees/employee-by-zone/${id}`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  getEmployeeByCircleId(id: number) {
+    return this.http.get(`${this.apiUrl}/api/employees/employee-by-circle/${id}`, {
+      headers: this.getHeaders(),
+    });
+  }
+
   getEmployeeByBranchId(id: number) {
     return this.http.get(`${this.apiUrl}/api/employees/employee-by-branch/${id}`, {
       headers: this.getHeaders(),
@@ -257,7 +275,14 @@ private isTokenExpired(): boolean {
     return this.http.get(`${this.apiUrl}/api/employees/`, {
       headers: this.getHeaders(),
     });
-  }
+  }  
+
+   getMyProfile(): Observable<any> {
+  return this.http.get(`${this.apiUrl}/api/employees/my-profile`, {
+    headers: this.getHeaders(),
+  });
+}
+
 
   // -------------------get branches----------------
 
@@ -297,5 +322,101 @@ private isTokenExpired(): boolean {
     return this.http.get(`${this.apiUrl}/api/circular/getAllDataById/${id}`, {
       headers: this.getHeaders(),
     });
-  }
+  }  
+
+ 
+
+
+  // ---------------- Forgot Password ----------------
+
+forgotPassword(data: any): Observable<any> {
+
+  console.log("API URL:", `${this.apiUrl}/api/employees/forgot-password`);
+  console.log("Request Data:", data);
+
+  return this.http.post(
+    `${this.apiUrl}/api/employees/forgot-password`,
+    data
+  );
+
 }
+
+verifyOtp(data: any): Observable<any> {
+  return this.http.post(
+    `${this.apiUrl}/api/employees/verify-otp`,
+    data
+  );
+}
+
+resetPassword(data: any): Observable<any> {
+  return this.http.post(
+    `${this.apiUrl}/api/employees/reset-password`,
+    data
+  );
+}
+
+//Get head office
+getBranchesByHeadOfficeId(headOfficeId: number) {
+  return this.http.get(
+    `${this.apiUrl}/api/branches/head-office/${headOfficeId}/branches`,
+    {
+      headers: this.getHeaders()
+    }
+  );
+}
+
+
+
+//employee by role 
+getEmployeeByRoleId(roleId: number) {
+  return this.http.get(
+    `${this.apiUrl}/api/employees/employee-by-role/${roleId}`,
+    {
+      headers: this.getHeaders(),
+    }
+  );
+} 
+
+// Get employees by role level
+getEmployeesByRoleLevel(roleLevel: string) {
+  return this.http.get(
+    `${this.apiUrl}/api/employees/employee-by-role-level/${roleLevel}`,
+    {
+      headers: this.getHeaders(),
+    }
+  );
+}
+
+
+
+
+
+//get employee by commitee 
+getEmployeeByCommitteeId(id:number){
+
+return this.http.get<any[]>(
+`${this.apiUrl}/api/committee/${id}/members`
+);
+
+}
+
+//get employee by committee
+
+// getEmployeeByCommitteeId(id:number){
+
+// return this.http.get<any[]>(
+// `${this.apiUrl}/api/committee/${id}/members`,
+// {
+//  headers:this.getHeaders()
+// }
+// );
+
+// }
+
+
+
+
+
+
+}
+

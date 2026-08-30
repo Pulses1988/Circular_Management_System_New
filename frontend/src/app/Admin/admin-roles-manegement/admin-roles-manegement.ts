@@ -49,7 +49,24 @@ interface UserAssignment {
 export class AdminRolesManegement {
   departments: any[] = [];
   selectedDepartment: any = null;
-  allowDirectRole = false;
+  allowDirectRole = false; 
+
+// All departments received for Head Office Admin
+allDepartments: any[] = [];
+
+// Departments currently displayed in UI
+headOfficeDepartments: any[] = [];
+branchDepartments: any[] = [];
+
+// Selected department type for Head Office Admin
+selectedDepartmentType: 'head_office' | 'branch' = 'head_office';
+
+
+
+
+
+
+
   showDirectRoleForm = false;
   roleName = '';
   selectedDepartmentIndex: number = -1;
@@ -66,7 +83,10 @@ export class AdminRolesManegement {
   // Loading states
   isCreatingRole = false;
   isDeletingRole = false;
-  isUpdatingRole = false;
+  isUpdatingRole = false; 
+
+  // Department deletion
+deletingDepartmentId: number | null = null;
   
   // Current user assignment and branch info
   currentAssignment: UserAssignment | null = null;
@@ -82,6 +102,9 @@ export class AdminRolesManegement {
     this.loadBranchInfo();
     this.loadDepartments();
     // this.loadExistingRoles();
+
+this.currentAssignment?.type === 'branch'
+
   }
 
   // Load current user assignment
@@ -189,6 +212,12 @@ export class AdminRolesManegement {
     return this.getDepartmentRoles(index).length > 0;
   }
 
+  canDeleteDepartment(index: number): boolean {
+  return !this.hasDepartmentRoles(index);
+}
+
+
+
   // Get next position for department roles
  getNextDepartmentPosition(deptIndex: number): number {
   const roles = this.getDepartmentRoles(deptIndex);
@@ -198,54 +227,243 @@ export class AdminRolesManegement {
 getNextBranchPosition(): number {
   return this.branchRoles.length > 0 ? Math.max(...this.branchRoles.map(r => r.position || 0)) + 1 : 1;
 }
-  loadDepartments() {
-    if (!this.currentAssignment) return;
 
-    if (this.currentAssignment.type === 'head_office') {
-      this.user.getDepartmentsByHeadOffice(this.currentAssignment.id).subscribe({
-        next: (res: any) => {
-          this.departments = res;
-          this.departments.forEach((_, index) => {
-            if (!this.departmentRoles[index]) {
-              this.departmentRoles[index] = [];
-            }
-          });
-          // Load department roles after departments are loaded
-          this.loadDepartmentRoles();
-        },
-        error: () => {
-          this.toast.show('Failed to load departments', 'error');
-        }
-      });
-    } else {
-      this.user.getDepartmentsByBranch(this.currentAssignment.id).subscribe({
-        next: (res: any) => {
-          this.user.getBranchById(this.currentAssignment!.id).subscribe((branchRes) => {
-            this.branchInfo = branchRes;
-          });
-          this.departments = res;
-          this.departments.forEach((_, index) => {
-            if (!this.departmentRoles[index]) {
-              this.departmentRoles[index] = [];
-            }
-          });
+
+
+// ADD THESE TWO METHODS
+
+isHeadOfficeDepartment(dept: any): boolean {
+  return dept.branch_id == null;
+}
+
+isBranchDepartment(dept: any): boolean {
+  return dept.branch_id != null;
+}
+
+
+
+
+
+
+
+
+
+  // loadDepartments() {
+  //   if (!this.currentAssignment) return;
+
+  //   if (this.currentAssignment.type === 'head_office') {
+    
+     
+
+  //     // NEW:
+  //   // Get both Head Office + Branch departments
+  //   this.user.getDepartmentsForHeadOfficeAdmin(this.currentAssignment.id).subscribe({
+  //     next: (res: any[]) => {
+
+  //       this.departments = res;
+
+  //       this.departments.forEach((_, index) => {
+  //         if (!this.departmentRoles[index]) {
+  //           this.departmentRoles[index] = [];
+  //         }
+  //       });
+
+  //       // Load roles for ALL departments
+  //       this.loadDepartmentRoles();
+  //     },
+
+  //     error: (err) => {
+  //       console.error('Failed to load HO departments:', err);
+  //       this.toast.show('Failed to load departments', 'error');
+  //     }
+  //   });
+
+  // }
+    
+    
+    
+    
+    
+  //   else {
+  //     this.user.getDepartmentsByBranch(this.currentAssignment.id).subscribe({
+  //       next: (res: any) => {
+  //         this.user.getBranchById(this.currentAssignment!.id).subscribe((branchRes) => {
+  //           this.branchInfo = branchRes;
+  //         });
+  //         this.departments = res;
+  //         this.departments.forEach((_, index) => {
+  //           if (!this.departmentRoles[index]) {
+  //             this.departmentRoles[index] = [];
+  //           }
+  //         });
           
-          // Load department roles after departments are loaded
-          if (this.departments.length > 0) {
-            this.loadDepartmentRoles();
-          }
+  //         // Load department roles after departments are loaded
+  //         if (this.departments.length > 0) {
+  //           this.loadDepartmentRoles();
+  //         }
           
-          // Update UI logic after loading departments
-          this.updateUILogic();
-        },
-        error: () => {
-          this.toast.show('Failed to load departments', 'error');
-        }
-      });
-    }
-  }
+  //         // Update UI logic after loading departments
+  //         this.updateUILogic();
+  //       },
+  //       error: () => {
+  //         this.toast.show('Failed to load departments', 'error');
+  //       }
+  //     });
+  //   }
+  // }
 
   // Add new method to handle UI logic
+  
+  loadDepartments() {
+  if (!this.currentAssignment) return;
+
+  // ==============================
+  // HEAD OFFICE ADMIN
+  // ==============================
+  if (this.currentAssignment.type === 'head_office') {
+
+    this.user.getDepartmentsForHeadOfficeAdmin(this.currentAssignment.id).subscribe({
+      next: (res: any[]) => {
+
+        console.log('All departments for HO Admin:', res);
+
+        // Keep complete API response
+        this.allDepartments = res || [];
+
+        // Separate departments
+        this.headOfficeDepartments = this.allDepartments.filter(
+          dept => dept.branch_id == null
+        );
+
+        this.branchDepartments = this.allDepartments.filter(
+          dept => dept.branch_id != null
+        );
+
+        console.log('Head Office Departments:', this.headOfficeDepartments);
+        console.log('Branch Departments:', this.branchDepartments);
+
+        // Initially show Head Office departments
+        this.selectedDepartmentType = 'head_office';
+        this.departments = [...this.headOfficeDepartments];
+
+        // Reset role data
+        this.departmentRoles = {};
+        this.selectedDepartmentIndex = -1;
+        this.selectedDepartment = null;
+
+        // Initialize department role arrays
+        this.departments.forEach((_, index) => {
+          this.departmentRoles[index] = [];
+        });
+
+        // Load roles for displayed departments
+        this.loadDepartmentRoles();
+
+        this.updateUILogic();
+      },
+
+      error: (err) => {
+        console.error('Failed to load HO departments:', err);
+        this.toast.show('Failed to load departments', 'error');
+      }
+    });
+
+  }
+
+  // ==============================
+  // BRANCH ADMIN
+  // ==============================
+  else {
+
+    this.user.getDepartmentsByBranch(this.currentAssignment.id).subscribe({
+      next: (res: any) => {
+
+        this.user.getBranchById(this.currentAssignment!.id).subscribe((branchRes) => {
+          this.branchInfo = branchRes;
+        });
+
+        this.departments = res;
+
+        this.departments.forEach((_, index) => {
+          if (!this.departmentRoles[index]) {
+            this.departmentRoles[index] = [];
+          }
+        });
+
+        // Load department roles after departments are loaded
+        if (this.departments.length > 0) {
+          this.loadDepartmentRoles();
+        }
+
+        this.updateUILogic();
+      },
+
+      error: () => {
+        this.toast.show('Failed to load departments', 'error');
+      }
+    });
+  }
+}
+  
+
+//Loaddepartment for head_office admin and branch admin
+ onDepartmentTypeChange() {
+
+  if (this.currentAssignment?.type !== 'head_office') {
+    return;
+  }
+
+  // Reset selected department
+  this.selectedDepartmentIndex = -1;
+  this.selectedDepartment = null;
+  this.currentRoleName = '';
+
+  // Clear old role mapping because indexes are changing
+  this.departmentRoles = {};
+
+  if (this.selectedDepartmentType === 'head_office') {
+
+    // Show Head Office departments
+    this.departments = [...this.headOfficeDepartments];
+
+  } else {
+
+    // Show Branch departments
+    this.departments = [...this.branchDepartments];
+  }
+
+  // Initialize role arrays
+  this.departments.forEach((_, index) => {
+    this.departmentRoles[index] = [];
+  });
+
+  // Load roles for currently displayed departments
+  if (this.departments.length > 0) {
+    this.loadDepartmentRoles();
+  }
+
+  this.updateUILogic();
+
+  console.log(
+    'Selected department type:',
+    this.selectedDepartmentType
+  );
+
+  console.log(
+    'Displayed departments:',
+    this.departments
+  );
+}
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   updateUILogic() {
     const noDepartments = this.departments.length === 0;
     const noBranchRoles = this.branchRoles.length === 0;
@@ -682,6 +900,97 @@ private syncPositionsWithBackend(deptIndex: number) {
   proceedWithoutDepartment() {
     this.showDirectRoleForm = true;
   }
+
+
+//Delet method for department 
+deleteDepartment(dept: any, index: number): void {
+
+  // Extra frontend protection
+  if (this.hasDepartmentRoles(index)) {
+    this.toast.show(
+      'This department cannot be deleted because roles are assigned to it.',
+      'error'
+    );
+    return;
+  }
+
+  const confirmed = confirm(
+    `Are you sure you want to delete the department "${dept.name}"?`
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  this.deletingDepartmentId = dept.id;
+
+  this.user.deleteDepartment(dept.id).subscribe({
+    next: (response) => {
+
+      console.log('Department deleted successfully:', response);
+
+      // Remove from currently displayed departments
+      this.departments.splice(index, 1);
+
+      // Remove from role mapping
+      delete this.departmentRoles[index];
+
+      // Rebuild role mapping because array indexes changed
+      const oldRoles = this.departmentRoles;
+      this.departmentRoles = {};
+
+      this.departments.forEach((department, newIndex) => {
+        const oldIndex = this.departments.findIndex(
+          d => d.id === department.id
+        );
+
+        this.departmentRoles[newIndex] = oldRoles[oldIndex] || [];
+      });
+
+      // Also remove from master arrays
+      this.allDepartments = this.allDepartments.filter(
+        d => d.id !== dept.id
+      );
+
+      this.headOfficeDepartments = this.headOfficeDepartments.filter(
+        d => d.id !== dept.id
+      );
+
+      this.branchDepartments = this.branchDepartments.filter(
+        d => d.id !== dept.id
+      );
+
+      // Close expanded department if deleted department was open
+      this.selectedDepartmentIndex = -1;
+      this.selectedDepartment = null;
+
+      this.toast.show(
+        'Department deleted successfully',
+        'success'
+      );
+
+      this.deletingDepartmentId = null;
+
+      // Recalculate UI
+      this.updateUILogic();
+    },
+
+    error: (err) => {
+
+      console.error('Error deleting department:', err);
+
+      this.toast.show(
+        err.error?.error ||
+        'Failed to delete department',
+        'error'
+      );
+
+      this.deletingDepartmentId = null;
+    }
+  });
+}
+
+
 
   cancelDirectRole() {
     this.showDirectRoleForm = false;

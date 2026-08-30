@@ -12,10 +12,18 @@ import { FilteredCirculars } from './filtered-circulars/filtered-circulars';
 import { EmployeeAuthGuard } from './Authentication/employee-auth.guard';
 import { EmployeePermissionGuard } from './Authentication/employee-permission.guard';
 import { Unauthorized } from './unauthorized/unauthorized';
+import { EmployeeProfile } from './employee-profile/employee-profile';
+import { ForgotPassword } from './forgot-password/forgot-password';
+import { ReadingHistory } from './reports/reading-history/reading-history';
+import { ReportActivitySummary } from './reports/report-activity-summary/report-activity-summary';
+import { Settings } from './settings/settings';
+import { EventLog } from './event-log/event-log';
+import { RuleExecutionHistoryComponent } from './rule-execution-history/rule-execution-history';
 
 export const Employee_ROUTS: Routes = [
   // { path: '', redirectTo: 'employee-login', pathMatch: 'full' },
   { path: 'employee-login', component: EmployeeLogin },
+    { path: 'forgot-password', component: ForgotPassword },
   {
     path: 'employee-dashboard',
     canActivate: [EmployeeAuthGuard],
@@ -47,7 +55,14 @@ export const Employee_ROUTS: Routes = [
     path: 'filtered-circulars',
      canActivate: [EmployeeAuthGuard],
     component: FilteredCirculars,
-  },
+  }, 
+
+  {
+  path: 'profile',
+  canActivate: [EmployeeAuthGuard],
+  component: EmployeeProfile,
+}, 
+
 
   // { path: 'circular-unread', component: Unreadcircular},
   { 
@@ -68,5 +83,40 @@ export const Employee_ROUTS: Routes = [
   {
     path:'unauthorized', component:Unauthorized
   },
-  // { path: '**', component: EmployeeLogin },
+  // { path: '**', component: EmployeeLogin }, 
+
+  //reading history route
+{
+  path: 'reading-history',
+  canActivate: [EmployeeAuthGuard],
+  component: ReadingHistory,
+},
+
+//Activity summary route
+{
+  path: 'report-activity-summary',
+  canActivate: [EmployeeAuthGuard],
+  component: ReportActivitySummary,
+},   
+
+// Settings Route
+{
+  path: 'settings',
+  canActivate: [EmployeeAuthGuard],
+  component: Settings,
+},
+
+// Event Log Route
+{
+  path: 'event-log',
+  canActivate: [EmployeeAuthGuard],
+  component: EventLog,
+},
+
+//Event_execution_History
+{
+  path: 'rule-execution-history',
+  canActivate: [EmployeeAuthGuard],
+  component: RuleExecutionHistoryComponent
+},
 ];

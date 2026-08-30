@@ -21,6 +21,78 @@
   <div *ngIf="showForm" class="bg-white p-6 rounded-lg shadow-md mb-6">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
       <div>
+
+
+         <!-- Adding branches -->
+
+<!-- <div *ngIf="head_office_id">
+
+  <label class="block text-sm font-medium mb-2 text-gray-700">
+
+      Select Branch
+
+  </label>
+
+  <select
+
+      [(ngModel)]="selectedBranchId"
+
+      class="w-full border border-gray-300 rounded-lg p-3"
+
+  >
+
+      <option [ngValue]="null">
+
+          Select Branch
+
+      </option>
+
+      <option
+
+          *ngFor="let branch of branches"
+
+          [ngValue]="branch.id"
+
+      >
+
+          {{ branch.name }}
+
+      </option>
+
+  </select>
+
+</div> -->
+
+<!-- Select Department Location -->
+<div *ngIf="head_office_id">
+
+  <label class="block text-sm font-medium mb-2 text-gray-700">
+    Select Head Office / Branch
+  </label>
+
+  <select
+  [(ngModel)]="selectedLocationType"
+  (ngModelChange)="onLocationChange($event)"
+  class="w-full border border-gray-300 rounded-lg p-3"
+>
+  <option [ngValue]="'head_office'">
+    Head Office
+  </option>
+
+  <option
+    *ngFor="let branch of branches"
+    [ngValue]="'branch:' + branch.id"
+  >
+    {{ branch.name }}
+  </option>
+</select>
+
+</div>
+
+
+
+
+
         <label class="block text-sm font-medium mb-2 text-gray-700">Department Name</label>
         <input
           [(ngModel)]="newDeptName"

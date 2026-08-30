@@ -280,7 +280,45 @@ const getMaxPosition = (headOfficeId, branchId, departmentId) => {
   }
   
   return db.execute(query, params);
+}; 
+
+// const getAllRoles = () => {
+//   return db.execute(`
+//     SELECT *
+//     FROM roles
+//     ORDER BY position ASC
+//   `);
+// }; 
+
+
+
+const getAllRoles = () => {
+  return db.execute(`
+    SELECT
+      r.id,
+      r.name,
+      r.position,
+      r.head_office_id,
+      r.branch_id,
+      r.department_id,
+
+      d.name AS department_name,
+      b.name AS branch_name
+
+    FROM roles r
+
+    LEFT JOIN departments d
+      ON r.department_id = d.id
+
+    LEFT JOIN branches b
+      ON r.branch_id = b.id
+
+    ORDER BY r.position ASC
+  `);
 };
+
+
+
 
 module.exports = {
   createRole,
@@ -297,5 +335,17 @@ module.exports = {
   updateRole,
   updateRolePosition,
   deleteRole,
-  getMaxPosition
+  getMaxPosition,
+  getAllRoles      // <-- ADD THIS
+
 };
+
+// Get employees for a specific role and branch 
+// const getAllRoles = () => {
+//   return db.execute(`
+//     SELECT *
+//     FROM roles
+//     ORDER BY position ASC
+//   `);
+// }; 
+

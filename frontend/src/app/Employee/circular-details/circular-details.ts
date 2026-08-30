@@ -21,6 +21,9 @@ export interface CircularDetails {
   published_at: string | null;
   reference_circular_id: number | null;
   priority?: 'low' | 'medium' | 'high' | 'urgent';
+
+creator_employee_id: number;
+
   creator_first_name: string;
   creator_last_name: string;
   department_name: string | null;
@@ -129,7 +132,16 @@ export class CircularDetails implements OnInit, OnDestroy {
 
   // complition
   showCompletionModal: boolean = false;
-isApprover: boolean = false;
+isApprover: boolean = false;  
+
+isCreator: boolean = false;
+allEmployeesCompleted: boolean = false;
+isCircularCompleted: boolean = false;   // <-- ADD THIS
+
+
+
+
+
 completionForm = {
   reference_number: '',
   submission_mode: 'BY_HAND',
@@ -156,6 +168,14 @@ submissionModes = [
     this.route.queryParams.subscribe((params) => {
       this.circularId = +params['circularId']; // '+' converts string → number
       console.log('Received Circular ID:', this.circularId);
+      // All entry points (including notification links) must record the read
+      // against the existing circular_tracking row. The update is idempotent.
+      if (this.circularId && this.employeeData?.id) {
+        this.circularService.markCircularAsSeenForEmp({
+          circularId: this.circularId,
+          employeeId: this.employeeData.id,
+        }).subscribe({ error: err => console.error('Error marking circular as seen:', err) });
+      }
       this.loadCircularData(this.circularId);
       this.circularService.joinCircularChatRoom(this.circularId);
       this.setupChatListeners();
@@ -183,36 +203,76 @@ submissionModes = [
   }
 
   loadCircularData(circular_id: number) {
-    this.isLoading = true;
-    this.circularService.fetchCircularDetailsById(circular_id).subscribe({
-      next: (res: any) => {
-        console.log(res, 'details');
-        if (res) {
-          if(res.status==='APPROVED'){
-          this.circular = res;
-          console.log(this.circular, 'sdajfkjasdfjksdh');
-          this.messages = res.chats || [];
-          console.log('Messages with attachments:', this.messages);
-          this.checkCompletionStatus();
-          this.scrollToBottom();
-          this.isLoading = false;
-          }else{
-            this.isNotApproved=true;
-            this.isLoading = false;
-          }
-        }
-      },
-      error: (error) => {
-        console.error('Error fetching circular details:', error);
-        this.isLoading = false;
-      },
-    });
+       this.isLoading = true;
+
+  this.circularService.fetchCircularDetailsById(circular_id).subscribe({
+    next: (res: any) => {
+      console.log(res, 'details');
+
+      if (res) {
+        this.circular = res;
+        this.isCircularCompleted = res.status === 'COMPLETED';
+
+console.log("Circular Status:", res.status);
+console.log("Is Circular Completed:", this.isCircularCompleted);
+        console.log("API Response:", res);
+console.log("creator_employee_id =", res.creator_employee_id);
+
+        // this.isNotApproved = res.status !== 'APPROVED';
+        this.isNotApproved =
+  res.status !== 'APPROVED'  &&
+  res.status !== 'COMPLETED';
+
+        console.log(this.circular, 'Circular Details');
+
+        this.messages = res.chats || [];
+
+        this.checkCompletionStatus();
+
+
+
+        //check completion status
+      
+
+
+
+        this.scrollToBottom();
+      }
+
+      this.isLoading = false;
+    },
+
+    error: (error) => {
+      console.error('Error fetching circular details:', error);
+      this.isLoading = false;
+    },
+  });
+
+
+
+
+
+
+
   }
   checkCompletionStatus() {
-    if (!this.circular || !this.employeeData) return;
+    if (!this.circular || !this.employeeData) return;  
+
+ console.log("========== CHECK ==========");
+  console.log("creator_employee_id =", this.circular.creator_employee_id);
+  console.log("employeeData.id     =", this.employeeData.id);
+
+
+
 this.isApprover = this.circular.approvers?.some(
     approver => approver.approver_id === this.employeeData?.id
-  ) || false;
+  ) || false; 
+
+  this.isCreator =
+  this.circular.creator_employee_id === this.employeeData?.id;
+
+
+
     this.circularService
       .getCircularCompletionStatus(this.circular.id, this.employeeData.id)
       .subscribe({
@@ -398,7 +458,27 @@ if (this.isApprover) {
             })
             .subscribe({
               next: (response) => {
-                console.log('Circular marked as complete:', response);
+                console.log('Circular marked as complete:', response); 
+
+
+  // this.circularService
+  //       .creatorMarkCompleted(this.circular!.id)
+  //       .subscribe({
+  //         next: (res: any) => {
+  //           if (!res.success) {
+  //             this.toast.show(res.message, 'error');
+  //           } else {
+  //             this.toast.show(res.message, 'success');
+  //           }
+  //         },
+  //         error: (err) => console.error(err)
+  //       });
+
+
+  
+
+
+
                 this.circularService
                   .sendSystemMessage({
                     circular_id: this.circular!.id,
@@ -635,18 +715,52 @@ submitCompletion() {
 
   this.circularService.completeCircularWithDetails(completionData).subscribe({
     next: (response) => {
-      console.log('Circular completed:', response);
+      console.log('Circular completed:', response); 
+if (!response.success) {
+  this.toast.show(response.message, 'error');
+  this.isMarkingComplete = false;
+  return;
+}
 
-      this.circularService
-            .markCircularAsCompleted({
-              circularId: this.circular!.id,
-              employeeId: this.employeeData!.id,
-            })
-            .subscribe({
-              next: (res)=>{
-                console.log('circular mark as complete')
-              }
-            })
+
+     
+
+this.circularService
+  .markCircularAsCompleted({
+    circularId: this.circular!.id,
+    employeeId: this.employeeData!.id,
+  })
+  .subscribe({
+    next: (res) => {
+
+      console.log('Circular marked complete');
+
+      // this.circularService
+      //   .creatorMarkCompleted(this.circular!.id)
+      //   .subscribe({
+      //     next: (response: any) => {
+
+      //       if (!response.success) {
+      //         this.toast.show(response.message, 'error');
+      //       } else {
+      //         this.toast.show(response.message, 'success');
+      //       }
+
+      //     },
+      //     error: (err) => {
+      //       console.error(err);
+      //     }
+      //   });
+
+    },
+    error: (err) => {
+      console.error(err);
+    }
+  });
+
+
+
+
       
       // Send system message
       this.circularService.sendSystemMessage({
@@ -680,7 +794,44 @@ submitCompletion() {
       this.isMarkingComplete = false;
     }
   });
+}   
+
+//Creator_mark_as_completed
+creatorMarkComplete() {
+ console.log("Creator button clicked");
+  if (!this.circular) return;
+
+  this.isMarkingComplete = true;
+
+  this.circularService
+    .creatorMarkCompleted(this.circular.id)
+    .subscribe({
+
+      next: (res: any) => {
+
+        this.isMarkingComplete = false;
+
+        this.toast.show(res.message, 'success');
+
+        this.loadCircularData(this.circularId);
+
+      },
+
+      error: (err) => {
+
+        this.isMarkingComplete = false;
+
+        this.toast.show(err.error.message, 'error');
+
+      }
+
+    });
+
 }
+
+
+
+
 
 // Add closeCompletionModal method
 closeCompletionModal() {
@@ -706,3 +857,7 @@ closeCompletionModal() {
     this.destroy$.complete();
   }
 }
+
+
+
+

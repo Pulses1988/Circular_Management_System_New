@@ -398,19 +398,54 @@
           <div class="glass-effect rounded-2xl p-6">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Quick Actions</h3>
             <div class="space-y-3">
-              <button 
-  (click)="markAsComplete()"
-  [disabled]="isMarkingComplete || isCompleted"
+             
+             
+  <button
+   (click)="isCreator ? creatorMarkComplete() : markAsComplete()"
+ [disabled]="isMarkingComplete || (isCreator ? isCircularCompleted : isCompleted)"
   [class.opacity-50]="isCompleted"
   [class.cursor-not-allowed]="isCompleted"
   class="w-full px-4 py-3 rounded-xl bg-slate-300 dark:bg-slate-700/50 hover:bg-slate-400 dark:hover:bg-slate-700 text-left flex items-center gap-3 transition-colors hover-lift disabled:opacity-50 disabled:cursor-not-allowed">
-  <svg class="w-5 h-5" [ngClass]="isCompleted ? 'text-green-600 dark:text-green-400' : 'text-green-600 dark:text-green-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+
+  <svg
+    class="w-5 h-5"
+    [ngClass]="isCompleted ? 'text-green-600 dark:text-green-400' : 'text-green-600 dark:text-green-400'"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24">
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M5 13l4 4L19 7"/>
   </svg>
+
   <span class="text-sm font-medium text-slate-800 dark:text-slate-200">
-    {{ isCompleted ? 'Completed ✓' : (isMarkingComplete ? 'Marking...' : (isApprover ? 'Final Complete Circular' : 'Mark as Complete')) }}
+
+    {{
+      isCompleted
+        ? 'Completed ✓'
+        : (
+            isMarkingComplete
+              ? 'Marking...'
+              : (
+                  isCreator
+                    ? 'Mark Circular Completed'
+                    : (
+                        isApprover
+                          ? 'Final Complete Circular'
+                          : 'Mark as Complete'
+                      )
+                )
+          )
+    }}
+
   </span>
+
 </button>
+
+
+
 
               <!-- <button
                 class="w-full px-4 py-3 rounded-xl bg-slate-300 dark:bg-slate-700/50 hover:bg-slate-400 dark:hover:bg-slate-700 text-left flex items-center gap-3 transition-colors hover-lift">
@@ -540,6 +575,18 @@
 
       </div>
     </div>
+<!--Modelfor Mark As Completed-->
+
+
+
+
+
+
+
+
+
+
+
 
     <!-- Completion Modal -->
 <div *ngIf="showCompletionModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" (click)="closeCompletionModal()">

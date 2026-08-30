@@ -1,0 +1,297 @@
+<div class="circle-container">
+
+  <!-- Header -->
+
+ <!-- Header -->
+<div class="page-header">
+
+  <div>
+    <h2>Circle Management</h2>
+    <p>Manage Circles under Zones</p>
+  </div>
+
+</div>
+
+<!-- Add / Close Circle Button -->
+<!-- <button
+  class="create-btn"
+  (click)="toggleForm()">
+
+  <mat-icon>
+    {{ showForm ? 'close' : 'add' }}
+  </mat-icon>
+
+  {{ showForm ? 'Close Form' : 'Add Circle' }}
+
+</button> -->
+<!-- Add Circle Button - visible only when form is closed -->
+<button
+  *ngIf="!showForm"
+  class="create-btn"
+  type="button"
+  (click)="toggleForm()">
+
+  Add Circle
+
+</button>
+
+
+
+  <!-- Form -->
+
+  <div
+    class="form-card"
+    *ngIf="showForm">
+
+    <form
+      [formGroup]="circleForm"
+      (ngSubmit)="submitForm()">
+
+      <div class="form-grid">
+
+        <!-- Zone -->
+
+        <div class="form-group">
+
+          <label>
+
+            Zone <span>*</span>
+
+          </label>
+
+          <select formControlName="zone_id">
+
+            <option value="">
+
+              Select Zone
+
+            </option>
+
+            <!-- <option
+              *ngFor="let zone of zones"
+              [value]="zone.zone_id">
+
+              {{ zone.zone_name }}
+
+            </option> -->
+<option
+  *ngFor="let zone of zones"
+  [value]="zone.id">
+
+  {{ zone.name }}
+
+</option>
+
+
+
+          </select>
+
+        </div>
+
+        <!-- Circle Name -->
+
+        <div class="form-group">
+
+          <label>
+
+            Circle Name <span>*</span>
+
+          </label>
+
+          <input
+            type="text"
+            formControlName="circle_name"
+            placeholder="Enter Circle Name">
+
+        </div>
+
+        <!-- Circle Code -->
+
+        <div class="form-group">
+
+          <label>
+
+            Circle Code <span>*</span>
+
+          </label>
+
+          <input
+            type="text"
+            formControlName="circle_code"
+            placeholder="Enter Circle Code">
+
+        </div>
+
+      </div>
+
+      <div class="button-group">
+
+        <button
+          type="submit"
+          class="save-btn"
+          [disabled]="isButtonLoading">
+
+          {{ isEditMode ? 'Update Circle' : 'Create Circle' }}
+
+        </button>
+
+        <button
+          type="button"
+          class="cancel-btn"
+          (click)="resetForm()">
+
+          Quite
+
+        </button>
+
+         <button
+    type="button"
+    class="close-form-btn"
+    (click)="clearForm()">
+
+    Clear
+
+  </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+  <!-- Table -->
+
+  <div class="table-card">
+
+    <table>
+
+      <thead>
+
+        <tr>
+
+          <th>#</th>
+
+          <th>Circle Name</th>
+
+          <th>Circle Code</th>
+
+          <th>Zone</th>
+
+          <th>Created At</th>
+
+          <th>Actions</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        <!-- <tr *ngFor="let circle of circles; let i = index"> -->
+<tr *ngFor="let circle of paginatedCircles(); let i = index">
+         <td>
+  {{ (currentPage - 1) * itemsPerPage + i + 1 }}
+</td>
+
+          <td>{{ circle.circle_name }}</td>
+
+          <td>{{ circle.circle_code }}</td>
+
+          <td>{{ circle.zone_name }}</td>
+
+          <td>
+
+            <!-- {{ circle.created_at | date:'dd/MM/yyyy' }} -->
+             <!-- {{ circle.created_at | slice:0:10 }} -->
+               {{ circle.created_at | date:'dd/MM/yyyy' }}
+          </td>
+
+        <td>
+
+  <div class="action-buttons">
+
+    <button
+      type="button"
+      class="action-btn edit-btn"
+      (click)="editCircle(circle)"
+    >
+      Edit
+    </button>
+
+    <button
+      type="button"
+      class="action-btn delete-btn"
+      (click)="deleteCircle(circle.circle_id)"
+    >
+      Delete
+    </button>
+
+  </div>
+
+</td>
+
+        </tr>
+
+        <tr *ngIf="circles.length === 0">
+
+          <td
+            colspan="6"
+            class="no-data">
+
+            No Circles Found
+
+          </td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div> 
+
+
+<!-- Pagination Controls -->
+
+<div
+  class="pagination"
+  *ngIf="totalPages > 1">
+
+  <button
+    type="button"
+    (click)="changePage(currentPage - 1)"
+    [disabled]="currentPage === 1">
+
+    Previous
+
+  </button>
+
+  <button
+    type="button"
+    *ngFor="
+      let page of [].constructor(totalPages);
+      let p = index
+    "
+    (click)="changePage(p + 1)"
+    [class.active]="currentPage === p + 1">
+
+    {{ p + 1 }}
+
+  </button>
+
+  <button
+    type="button"
+    (click)="changePage(currentPage + 1)"
+    [disabled]="currentPage === totalPages">
+
+    Next
+
+  </button>
+
+</div>
+
+
+
+
+
+</div>

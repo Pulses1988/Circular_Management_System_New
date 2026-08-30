@@ -40,6 +40,15 @@ export class User {
   private getHeaders(): HttpHeaders {
     if (typeof window !== 'undefined') {
       this.token = localStorage.getItem('authToken');
+
+      if (!this.token) {
+        const encryptedEmployeeToken = localStorage.getItem('emp_token');
+        try {
+          this.token = encryptedEmployeeToken ? decodeURIComponent(atob(encryptedEmployeeToken)) : null;
+        } catch {
+          this.token = null;
+        }
+      }
     }
     // Adjust based on your auth implementation
     return new HttpHeaders({
@@ -164,6 +173,21 @@ export class User {
     });
   }
 
+//MEthod for branch manager 
+getManagersByBranch(branchId: number) {
+  return this.http.get(
+    `${this.apiUrl}/api/employees/branch/${branchId}/managers`,
+    {
+      headers: this.getHeaders(),
+    }
+  );
+}
+
+
+
+
+
+
   updateEmployee(id: number, data: {}) {
     return this.http.put(`${this.apiUrl}/api/employees/${id}`, data, {
       headers: this.getHeaders(),
@@ -237,6 +261,16 @@ export class User {
     return this.http.post(`${this.apiUrl}/api/departments`, data, { headers: this.getHeaders() });
   }
 
+
+getAllDepartments(): Observable<any[]> {
+  return this.http.get<any[]>(
+    `${this.apiUrl}/api/departments`,
+    {
+      headers: this.getHeaders()
+    }
+  );
+}
+
   getDepartmentsByHeadOffice(headOfficeId: number) {
     return this.http.get<any[]>(`${this.apiUrl}/api/departments/head-office/${headOfficeId}`, {
       headers: this.getHeaders(),
@@ -254,12 +288,30 @@ export class User {
       headers: this.getHeaders(),
     });
   }
+
+
+  //For delet department 
+// Delete department
+deleteDepartment(id: number): Observable<any> {
+  return this.http.delete(
+    `${this.apiUrl}/api/departments/${id}`,
+    {
+      headers: this.getHeaders()
+    }
+  );
+}
+
+
+
   getDepartmentCountByHeadOffice(headOfficeId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/api/departments/head-office/${headOfficeId}/count`, {
       headers: this.getHeaders(),
     });
   }
 
+
+
+  
   getDepartmentCountByBranch(branchId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/api/departments/branch/${branchId}/count`, {
       headers: this.getHeaders(),
@@ -333,5 +385,350 @@ export class User {
       { roleUpdates },
       { headers: this.getHeaders() }
     );
-  }
+  } 
+
+  //API for region 
+// ================= Region API =================
+
+// Get All Regions
+fetchAllRegions() {
+  return this.http.get(
+    `${this.apiUrl}/api/regions`,
+    { headers: this.getHeaders() }
+  );
 }
+
+// Create Region
+createRegion(region: any) {
+  return this.http.post(
+    `${this.apiUrl}/api/regions`,
+    region,
+    { headers: this.getHeaders() }
+  );
+}
+
+// Delete Region
+deleteRegion(id: number) {
+  return this.http.delete(
+    `${this.apiUrl}/api/regions/${id}`,
+    { headers: this.getHeaders() }
+  );
+}
+
+
+// ================= ZONE =================
+
+// Get All Zones
+fetchAllZones() {
+  return this.http.get(
+    `${this.apiUrl}/api/zones`,
+    { headers: this.getHeaders() }
+  );
+}
+
+// Create Zone
+createZone(zone: any) {
+  return this.http.post(
+    `${this.apiUrl}/api/zones`,
+    zone,
+    { headers: this.getHeaders() }
+  );
+}
+
+// Delete Zone
+deleteZone(id: number) {
+  return this.http.delete(
+    `${this.apiUrl}/api/zones/${id}`,
+    { headers: this.getHeaders() }
+  );
+}
+
+// Get Zones By Region
+fetchZonesByRegion(regionId: number) {
+  return this.http.get(
+    `${this.apiUrl}/api/zones/region/${regionId}`,
+    { headers: this.getHeaders() }
+  );
+}
+
+
+// Adding circle Api 
+
+// createCircle(data: any) {
+//   return this.http.post(
+//     `${this.apiUrl}/circle/create`,
+//     data
+//   );
+// }
+
+// fetchAllCircles() {
+//   return this.http.get(
+//     `${this.apiUrl}/circle`
+//   );
+// }  
+
+createCircle(data: any) {
+  return this.http.post(
+    `${this.apiUrl}/api/circle/create`,
+    data
+  );
+}
+
+fetchAllCircles() {
+  return this.http.get(
+    `${this.apiUrl}/api/circle`
+  );
+}
+
+
+
+ 
+// fetchCirclesByZone(zoneId: number) {
+//   return this.http.get(
+//     `${this.apiUrl}/circle/zone/${zoneId}`
+//   );
+// } 
+fetchCirclesByZone(zoneId: number) {
+  return this.http.get(
+    `${this.apiUrl}/api/circle/zone/${zoneId}`
+  );
+}
+
+
+
+//configuration 
+
+getHeadOfficeConfiguration(headOfficeId: number) {
+
+    return this.http.get(
+        `${this.apiUrl}/api/head-office/configuration/${headOfficeId}`,
+        {
+            headers: this.getHeaders()
+        }
+    );
+
+} 
+
+//fetchbranchesbyheadoffice
+// getBranchesByHeadOffice(headOfficeId: number) {
+//   return this.http.get<any[]>(
+//     `${this.apiUrl}/api/branches/head-office/${headOfficeId}/branches`,
+//     {
+//       headers: this.getHeaders(),
+//     }
+//   );
+// }
+ 
+getBranchesByHeadOffice(headOfficeId: number): Observable<any> {
+  return this.http.get<any>(
+    `${this.apiUrl}/api/branches/head-office/${headOfficeId}/branches`,
+    {
+      headers: this.getHeaders(),
+    }
+  );
+}
+
+
+
+//Head-office update 
+updateHeadOffice(id: number, data: any) {
+  return this.http.put(
+    `${this.apiUrl}/api/head-office/${id}`,
+    data,
+    {
+      headers: this.getHeaders()
+    }
+  );
+}
+
+//delet api for head_office 
+deleteHeadOffice(id: number) {
+  return this.http.delete(
+    `${this.apiUrl}/api/head-office/${id}`,
+    {
+      headers: this.getHeaders()
+    }
+  );
+}
+
+//method to  update region 
+updateRegion(id: number, data: any) {
+
+  return this.http.put(
+
+    `${this.apiUrl}/api/regions/${id}`,
+
+    data,
+
+    {
+
+      headers: this.getHeaders()
+
+    }
+
+  );
+
+}
+
+//update zone 
+updateZone(id: number, data: any) {
+  return this.http.put(
+    `${this.apiUrl}/api/zones/${id}`,
+    data,
+    {
+      headers: this.getHeaders()
+    }
+  );
+}
+
+
+//method for getting empoyees by role 
+fetchAllRoles() {
+  return this.http.get(`${this.apiUrl}/api/roles`, {
+    headers: this.getHeaders(),
+  });
+}
+
+//method for getting the employee count by using head_office_id 
+getByHeadOfficeEmployeeCount(headOfficeId: number) {
+  return this.http.get(
+    `${this.apiUrl}/api/employees/getByHeadOfficeEmployeeCount/${headOfficeId}`,
+    {
+      headers: this.getHeaders(),
+    }
+  );
+}
+
+
+//Commitee Method 
+// ================= COMMITTEE API =================
+
+// Get All Committees
+fetchAllCommittees() {
+  return this.http.get(
+    `${this.apiUrl}/api/committee`,
+    { headers: this.getHeaders() }
+  );
+}
+
+// Create Committee
+createCommittee(data: any) {
+  return this.http.post(
+    `${this.apiUrl}/api/committee/create`,
+    data,
+    { headers: this.getHeaders() }
+  );
+}
+
+// Get Committee By Id
+getCommitteeById(id: number) {
+  return this.http.get(
+    `${this.apiUrl}/api/committee/${id}`,
+    { headers: this.getHeaders() }
+  );
+}
+
+// Update Committee
+updateCommittee(id: number, data: any) {
+  return this.http.put(
+    `${this.apiUrl}/api/committee/${id}`,
+    data,
+    { headers: this.getHeaders() }
+  );
+}
+
+// Delete Committee
+deleteCommittee(id: number) {
+  return this.http.delete(
+    `${this.apiUrl}/api/committee/${id}`,
+    { headers: this.getHeaders() }
+  );
+}
+
+//Assign_employee methods 
+// Add Employee to Committee
+addCommitteeMember(data: any) {
+  return this.http.post(
+    `${this.apiUrl}/api/committee/member`,
+    data,
+    {
+      headers: this.getHeaders()
+    }
+  );
+}
+
+// Get Committee Members
+getCommitteeMembers(id: number) {
+  return this.http.get(
+    `${this.apiUrl}/api/committee/${id}/members`,
+    {
+      headers: this.getHeaders()
+    }
+  );
+}
+
+// Get only employees whose designation is allowed for this committee.
+getEligibleCommitteeEmployees(id: number) {
+  return this.http.get(
+    `${this.apiUrl}/api/committee/${id}/eligible-employees`,
+    { headers: this.getHeaders() }
+  );
+}
+
+// Remove Committee Member
+removeCommitteeMember(id: number) {
+  return this.http.delete(
+    `${this.apiUrl}/api/committee/member/${id}`,
+    {
+      headers: this.getHeaders()
+    }
+  );
+}
+
+//method for getting commitee in dropdown 
+getAllCommittees(){
+
+return this.http.get<any[]>(
+`${this.apiUrl}/api/committee`
+);
+
+}
+
+getActiveMemberTypes() {
+  return this.http.get(
+    `${this.apiUrl}/api/member-types/active`,
+    { headers: this.getHeaders() }
+  );
+}
+
+
+// Upload Excel file and assign employees to committee
+uploadCommitteeMembersExcel(formData: FormData) {
+  return this.http.post(
+    `${this.apiUrl}/api/committee/upload-excel`,
+    formData,
+    {
+      headers: new HttpHeaders({
+        Authorization: this.token ? `Bearer ${this.token}` : ''
+      })
+    }
+  );
+}
+
+
+getDepartmentsForHeadOfficeAdmin(headOfficeId: number) {
+  return this.http.get<any[]>(
+    `${this.apiUrl}/api/departments/head-office/${headOfficeId}`,
+    {
+      headers: this.getHeaders(),
+    }
+  );
+}
+
+
+
+
+
+}  
+
+

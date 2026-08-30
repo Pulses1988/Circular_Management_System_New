@@ -35,7 +35,9 @@ interface Circular {
   reference_circular_id: number;
   approved_by:string;
   rejected_by:string;
-  approval_updated_at:string;
+  approval_updated_at:string; 
+  approved_count: number;
+  total_approvers: number;
   priority:'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 
 }
@@ -329,19 +331,41 @@ export class CircularApproval implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res: any) => {
-          console.log('Circular approved successfully');
-          const circular = this.circulars.find(
-            (c) => c.circular_id === this.selectedCircularForApproval!.circular_id
-          );
-          if (circular) {
-            circular.approval_status = 'APPROVED';
-            circular.status = 'APPROVED';
-          }
-          this.filteredCirculars = [...this.circulars];
-          this.calculateStats();
-          this.closeApproveModal();
-          this.toast.show('Circular approved successfully!', 'success');
-        },
+        //   console.log('Circular approved successfully');
+        //   const circular = this.circulars.find(
+        //     (c) => c.circular_id === this.selectedCircularForApproval!.circular_id
+        //   );
+        //   if (circular) {
+        //     circular.approval_status = 'APPROVED';
+        //     circular.status = 'APPROVED';
+        //   }
+        //   this.filteredCirculars = [...this.circulars];
+        //   this.calculateStats();
+        //   this.closeApproveModal();
+        //   this.toast.show('Circular approved successfully!', 'success');
+        // },
+console.log('Approval response:', res);
+
+  this.closeApproveModal();
+
+  // Reload fresh status from backend
+  this.refreshCirculars();
+
+  if (res.allApproved) {
+    this.toast.show(
+      'All approvers have approved. Circular is now published!',
+      'success'
+    );
+  } else {
+    this.toast.show(
+      `Your approval was recorded. Waiting for ${res.pendingCount} more approval(s).`,
+      'success'
+    );
+  }
+},
+
+
+
         error: (err) => {
           console.error('Error approving circular:', err);
           this.toast.show('Error approving circular. Please try again.', 'error');

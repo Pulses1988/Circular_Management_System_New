@@ -1,11 +1,13 @@
 <div class="create-circular-wrapper" [class.dark-mode]="isDarkMode">
-  <!-- Compact Header -->
+
+  <!-- Header -->
   <div class="header">
     <div class="header-content">
       <div class="header-left">
         <button class="back-btn" (click)="goBack()" title="Go back">
           <mat-icon>arrow_back</mat-icon>
         </button>
+
         <div class="title-info">
           <h1>Create Circular</h1>
           <div class="breadcrumb">
@@ -22,7 +24,9 @@
           (click)="toggleTheme()"
           [title]="isDarkMode ? 'Light mode' : 'Dark mode'"
         >
-          <mat-icon>{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
+          <mat-icon>
+            {{ isDarkMode ? 'light_mode' : 'dark_mode' }}
+          </mat-icon>
         </button>
       </div>
     </div>
@@ -30,92 +34,217 @@
 
   <!-- Main Form -->
   <div class="form-container">
+
     <form [formGroup]="circularForm" class="circular-form">
-      <!-- Basic Information Row -->
+
+      <!-- ================= BASIC INFORMATION ================= -->
+
       <div class="form-section">
+
         <div class="section-header">
           <mat-icon>info_outline</mat-icon>
           <h3>Basic Information</h3>
         </div>
 
         <div class="form-grid">
+
           <!-- Title -->
           <div class="form-field full-width">
-            <label>Title <span class="required">*</span></label>
+
+            <label>
+              Title <span class="required">*</span>
+            </label>
+
             <input
               type="text"
               formControlName="title"
               placeholder="Enter circular title..."
-              [class.error]="isFieldInvalid('title')"
               class="form-input"
+              [class.error]="isFieldInvalid('title')"
             />
-            <div class="field-error" *ngIf="isFieldInvalid('title')">Title is required</div>
-          </div>
 
-          <!-- Reference Code -->
-          <div class="form-field">
-            <label>Circular Code <span class="required">*</span></label>
-            <div>
-              <input
-                type="text"
-                formControlName="circular_code"
-                placeholder="Auto-generated"
-                class="form-input"
-              />
+            <div
+              class="field-error"
+              *ngIf="isFieldInvalid('title')"
+            >
+              <span
+                *ngIf="circularForm.get('title')?.errors?.['required']"
+              >
+                Title is required
+              </span>
+
+              <span
+                *ngIf="circularForm.get('title')?.errors?.['minlength']"
+              >
+                Title must contain at least 3 characters
+              </span>
             </div>
+
           </div>
 
+
+          <!-- Circular Code -->
           <div class="form-field">
+
+            <label>
+              Circular Code <span class="required">*</span>
+            </label>
+
+            <input
+              type="text"
+              formControlName="circular_code"
+              placeholder="Enter circular code"
+              class="form-input"
+              [class.error]="isFieldInvalid('circular_code')"
+            />
+
+            <div
+              class="field-error"
+              *ngIf="isFieldInvalid('circular_code')"
+            >
+              Circular Code is required
+            </div>
+
+          </div>
+
+
+          <!-- Special Keyword -->
+          <div class="form-field">
+
             <label>Special Keyword</label>
+
             <input
               type="text"
               formControlName="specialKeyword"
               placeholder="Enter special keyword"
               class="form-input"
             />
+
           </div>
 
-          <!-- Previous Circular Reference -->
-          <div class="form-field">
-            <label>Previous Circular Reference</label>
-            <div class="select-wrapper">
-              <select formControlName="previous_circular_id" class="form-select">
-                <option value="">Select previous circular</option>
-                <option *ngFor="let circular of previousCirculars" [value]="circular.id">
-                  {{ circular.circular_code }} - {{ circular.title }}
-                </option>
-              </select>
-              <mat-icon class="select-icon">expand_more</mat-icon>
-            </div>
-          </div>
-        </div>
+
+          <!-- Previous Circular -->
+         <!-- Previous Circular -->
+<div class="form-field">
+  <label>Previous Circular Reference</label>
+
+  <div class="previous-circular-dropdown">
+
+    <button
+      type="button"
+      class="previous-circular-trigger"
+      (click)="togglePreviousCircularDropdown()"
+    >
+      <span>{{ getSelectedPreviousCircularText() }}</span>
+
+      <mat-icon>
+        {{ isPreviousCircularDropdownOpen ? 'expand_less' : 'expand_more' }}
+      </mat-icon>
+    </button>
+
+    <div
+      class="previous-circular-menu"
+      *ngIf="isPreviousCircularDropdownOpen"
+    >
+      <div
+        class="previous-circular-option"
+        *ngFor="let circular of previousCirculars"
+        (click)="selectPreviousCircular(circular)" 
+        (mouseenter)="showCircularPopup($event, circular)"
+  (mouseleave)="hideCircularPopup()"
+      >
+        <span class="circular-code">
+          {{ circular.circular_code }}
+        </span>
+         <span class="circular-title">
+      - {{ circular.title }}
+    </span>
+       
       </div>
+    </div>
+     
+  
+  </div>
+</div>
+<!-- Popup OUTSIDE the dropdown -->
+<div
+  *ngIf="hoveredCircular"
+  class="circular-hover-popup-fixed"
+  [style.top.px]="hoverPopupPosition.top"
+  [style.left.px]="hoverPopupPosition.left"
+>
+  <strong>{{ hoveredCircular.circular_code }}</strong>
+  <span>{{ hoveredCircular.title }}</span>
+</div>
 
-      <!-- Source & Origin Row -->
+
+
+</div> <!-- closes Basic Information form-grid -->
+</div> <!-- closes Basic Information form-section -->
+
+
+      <!-- ================= SOURCE & ORIGIN ================= -->
+
       <div class="form-section">
+
         <div class="section-header">
           <mat-icon>source</mat-icon>
           <h3>Source & Origin</h3>
         </div>
 
         <div class="form-grid">
+
           <!-- Source Type -->
           <div class="form-field">
-            <label>Source Type <span class="required">*</span></label>
+
+            <label>
+              Source Type <span class="required">*</span>
+            </label>
+
             <div class="select-wrapper">
-              <select formControlName="source_type_id" class="form-select">
-                <option value="">Select source type</option>
-                <option *ngFor="let source of sourceTypes" [value]="source.id">
+
+              <select
+                formControlName="source_type_id"
+                class="form-select"
+                [class.error]="isFieldInvalid('source_type_id')"
+              >
+
+                <option value="">
+                  Select source type
+                </option>
+
+                <option
+                  *ngFor="let source of sourceTypes"
+                  [value]="source.id"
+                >
                   {{ source.name }}
                 </option>
+
               </select>
-              <mat-icon class="select-icon">expand_more</mat-icon>
+
+              <mat-icon class="select-icon">
+                expand_more
+              </mat-icon>
+
             </div>
+
+            <div
+              class="field-error"
+              *ngIf="isFieldInvalid('source_type_id')"
+            >
+              Source Type is required
+            </div>
+
           </div>
+
 
           <!-- Originator -->
           <div class="form-field">
-            <label>Originator <span class="required">*</span></label>
+
+            <label>
+              Originator <span class="required">*</span>
+            </label>
+
             <input
               type="text"
               formControlName="originator"
@@ -123,48 +252,138 @@
               class="form-input"
               readonly
             />
+
           </div>
+
         </div>
+
       </div>
 
-      <!-- Security & Timeline Row -->
+
+      <!-- ================= SECURITY & TIMELINE ================= -->
+
       <div class="form-section">
+
         <div class="section-header">
           <mat-icon>security</mat-icon>
           <h3>Security & Timeline</h3>
         </div>
 
         <div class="form-grid">
-          <!-- Confidentiality -->
+
+          <!-- Designation -->
           <div class="form-field">
-            <label>Confidentiality <span class="required">*</span></label>
+
+            <label>
+              Designation <span class="required">*</span>
+            </label>
+
             <div class="select-wrapper">
+
               <select
                 formControlName="confidentiality"
                 class="form-select"
+                [class.error]="isFieldInvalid('confidentiality')"
                 (click)="onConfidentialityDropdownClick()"
               >
-                <option value="" disabled selected>Select confidentiality level</option>
-                <option *ngFor="let level of filteredConfidentialityLevels" [value]="level.value">
+
+                <option value="" disabled>
+                  Select confidentiality level
+                </option>
+
+                <option
+                  *ngFor="let level of filteredConfidentialityLevels"
+                  [value]="level.value"
+                >
                   {{ level.label }} - {{ level.description }}
                 </option>
-              </select>
-              <mat-icon class="select-icon">expand_more</mat-icon>
 
-              <div
-                class="field-error"
-                *ngIf="circularForm.get('confidentiality')?.errors?.['employeesRequired']"
-              >
-                Please select at least one employee for this confidentiality level
-              </div>
+              </select>
+
+              <mat-icon class="select-icon">
+                expand_more
+              </mat-icon>
+
             </div>
 
-            <!-- Show selected employees for modal-required levels -->
-            <div *ngIf="selectedEmployees.length > 0" class="selected-employees-preview mt-3">
+
+            <div
+              class="field-error"
+              *ngIf="
+                circularForm.get('confidentiality')?.touched &&
+                circularForm.get('confidentiality')?.errors?.['required']
+              "
+            >
+              Confidentiality is required
+            </div>
+
+
+            <div
+              class="field-error"
+              *ngIf="
+                circularForm.get('confidentiality')?.touched &&
+                circularForm.get('confidentiality')?.errors?.['employeesRequired']
+              "
+            >
+              Please select at least one employee for this confidentiality level
+            </div>
+
+
+            <!-- Confidentiality Note -->
+            <div
+              class="confidentiality-note"
+              *ngIf="getConfidentialityNote()"
+            >
+
+              <mat-icon>info_outline</mat-icon>
+
+              <span>
+                <strong>Note:</strong>
+                {{ getConfidentialityNote() }}
+              </span>
+
+            </div>
+
+            <!-- Branch Selection -->
+<div *ngIf="circularForm.get('confidentiality')?.value === 'HEAD_OFFICE'">
+
+  <label>Select Branches</label>
+
+  <div class="branch-list">
+
+    <div *ngFor="let branch of branches">
+
+      <input
+        type="checkbox"
+        [value]="branch.id"
+        (change)="toggleBranch(branch, $event)"
+      />
+
+      {{ branch.name }}
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+
+            <!-- Selected Employees -->
+            <div
+              *ngIf="selectedEmployees.length > 0"
+              class="selected-employees-preview mt-3"
+            >
+
               <div class="flex items-center justify-between">
+
                 <span class="text-sm font-medium text-gray-700">
                   Selected Employees ({{ selectedEmployees.length }})
                 </span>
+
                 <button
                   type="button"
                   class="text-blue-600 hover:text-blue-800 text-sm font-medium"
@@ -172,28 +391,134 @@
                 >
                   Edit
                 </button>
+
               </div>
+
+
               <div class="mt-2 flex flex-wrap gap-1">
+
                 <span
                   *ngFor="let emp of selectedEmployees.slice(0, 3)"
                   class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
                 >
                   {{ emp.first_name }} {{ emp.last_name }}
                 </span>
+
+
                 <span
                   *ngIf="selectedEmployees.length > 3"
                   class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600"
+                    style="cursor: pointer;"
+                   (click)="showSelectedEmployeesPopup = true"
                 >
                   +{{ selectedEmployees.length - 3 }} more
                 </span>
+
               </div>
-            </div>
+
+            </div> 
+
+
+
+            <!-- //popup for 4+/3+ -->
+<!-- Selected Employees Popup -->
+<div
+  *ngIf="showSelectedEmployeesPopup"
+  class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40"
+>
+  <div
+    class="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[80vh] overflow-hidden"
+  >
+
+    <!-- Popup Header -->
+    <div
+      class="flex items-center justify-between px-5 py-4 border-b"
+    >
+      <div>
+        <h3 class="text-lg font-semibold text-gray-800">
+          Selected Employees
+        </h3>
+
+        <p class="text-sm text-gray-500">
+          {{ selectedEmployees.length }} employee(s) selected
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="text-gray-500 hover:text-gray-800 text-xl"
+        (click)="showSelectedEmployeesPopup = false"
+      >
+        ✕
+      </button>
+    </div>
+
+    <!-- Employee List -->
+    <div class="p-5 max-h-[60vh] overflow-y-auto">
+
+      <div
+        *ngFor="let emp of selectedEmployees; let i = index"
+        class="flex items-center gap-3 py-3 border-b last:border-b-0"
+      >
+
+        <div
+          class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-medium"
+        >
+          {{ i + 1 }}
+        </div>
+
+        <div>
+          <div class="font-medium text-gray-800">
+            {{ emp.first_name }} {{ emp.last_name }}
           </div>
 
+          <div
+            *ngIf="emp.employee_id"
+            class="text-xs text-gray-500"
+          >
+            {{ emp.employee_id }}
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Popup Footer -->
+    <div class="flex justify-end px-5 py-3 border-t">
+      <button
+        type="button"
+        class="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800"
+        (click)="showSelectedEmployeesPopup = false"
+      >
+        Close
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+          </div>
+
+
           <div>
+
             <!-- Effective From -->
             <div class="form-field">
-              <label>Effective From <span class="required">*</span></label>
+
+              <label>
+                Effective From <span class="required">*</span>
+              </label>
+
               <input
                 type="datetime-local"
                 formControlName="effective_from"
@@ -201,58 +526,151 @@
                 [min]="getTodayDate()"
                 [class.error]="isFieldInvalid('effective_from')"
               />
-              <div class="field-error" *ngIf="isFieldInvalid('effective_from')">
-                <span *ngIf="circularForm.get('effective_from')?.errors?.['required']">
+
+
+              <div
+                class="field-error"
+                *ngIf="isFieldInvalid('effective_from')"
+              >
+
+                <span
+                  *ngIf="
+                    circularForm
+                      .get('effective_from')
+                      ?.errors?.['required']
+                  "
+                >
                   Effective date is required
                 </span>
-                <span *ngIf="circularForm.get('effective_from')?.errors?.['pastDate']">
+
+
+                <span
+                  *ngIf="
+                    circularForm
+                      .get('effective_from')
+                      ?.errors?.['pastDate']
+                  "
+                >
                   Effective date cannot be a past date
                 </span>
+
               </div>
+
             </div>
+
 
             <!-- Repeat Cycle -->
             <div class="form-field mt-5">
-              <label>Repeat Cycle <span class="required">*</span></label>
+
+              <label>
+                Repeat Cycle <span class="required">*</span>
+              </label>
+
               <div class="select-wrapper">
-                <select formControlName="repeat_cycle" class="form-select">
-                  <option value="">Select repeat cycle</option>
-                  <option *ngFor="let cycle of repeatCycleData" [value]="cycle.id">
+
+                <select
+                  formControlName="repeat_cycle"
+                  class="form-select"
+                  [class.error]="isFieldInvalid('repeat_cycle')"
+                >
+
+                  <option value="">
+                    Select repeat cycle
+                  </option>
+
+                  <option
+                    *ngFor="let cycle of repeatCycleData"
+                    [value]="cycle.id"
+                  >
                     {{ cycle.name }}
                   </option>
+
                 </select>
-                <mat-icon class="select-icon">expand_more</mat-icon>
+
+                <mat-icon class="select-icon">
+                  expand_more
+                </mat-icon>
+
               </div>
+
+
+              <div
+                class="field-error"
+                *ngIf="isFieldInvalid('repeat_cycle')"
+              >
+                Repeat Cycle is required
+              </div>
+
             </div>
 
+
+            <!-- Priority -->
             <div class="form-field mt-5">
-              <label>Priority <span class="required">*</span></label>
+
+              <label>
+                Priority <span class="required">*</span>
+              </label>
+
               <div class="select-wrapper">
-                <select formControlName="priority" class="form-select">
+
+                <select
+                  formControlName="priority"
+                  class="form-select"
+                  [class.error]="isFieldInvalid('priority')"
+                >
+
                   <option value="LOW">Low</option>
                   <option value="MEDIUM">Medium</option>
                   <option value="HIGH">High</option>
                   <option value="URGENT">Urgent</option>
+
                 </select>
-                <mat-icon class="select-icon">expand_more</mat-icon>
+
+                <mat-icon class="select-icon">
+                  expand_more
+                </mat-icon>
+
               </div>
+
+
+              <div
+                class="field-error"
+                *ngIf="isFieldInvalid('priority')"
+              >
+                Priority is required
+              </div>
+
             </div>
+
           </div>
+
         </div>
+
       </div>
 
-      <!-- Content Section -->
+
+      <!-- ================= CONTENT ================= -->
+
       <div class="form-section">
+
         <div class="section-header">
           <mat-icon>description</mat-icon>
           <h3>Content</h3>
         </div>
 
+
         <div class="content-area">
-          <!-- File Attachment (Compact) -->
+
+          <!-- Attachment -->
           <div class="attachment-section">
-            <label>Attachments <span class="required">*</span></label>
+
+            <label>
+              Attachments <span class="required">*</span>
+            </label>
+
+
             <div class="file-upload-compact">
+
               <input
                 #fileInput
                 type="file"
@@ -260,30 +678,63 @@
                 style="display: none"
                 (change)="onFileSelect($event)"
               />
-              <button type="button" class="upload-btn" (click)="fileInput.click()">
+
+
+              <button
+                type="button"
+                class="upload-btn"
+                (click)="fileInput.click()"
+              >
                 <mat-icon>attach_file</mat-icon>
                 <span>Attach File</span>
               </button>
 
-              <!-- Attached File Display -->
-              <div class="attached-files-compact" *ngIf="attachedFile">
+
+              <div
+                class="attached-files-compact"
+                *ngIf="attachedFile"
+              >
+
                 <div class="file-chip">
-                  <mat-icon class="file-icon">description</mat-icon>
-                  <span class="file-name" [title]="attachedFile.name">{{
-                    truncateFileName(attachedFile.name)
-                  }}</span>
-                  <button type="button" class="remove-file" (click)="removeFile()">
+
+                  <mat-icon class="file-icon">
+                    description
+                  </mat-icon>
+
+                  <span
+                    class="file-name"
+                    [title]="attachedFile.name"
+                  >
+                    {{ truncateFileName(attachedFile.name) }}
+                  </span>
+
+                  <button
+                    type="button"
+                    class="remove-file"
+                    (click)="removeFile()"
+                  >
                     <mat-icon>close</mat-icon>
                   </button>
+
                 </div>
+
               </div>
+
             </div>
+
           </div>
 
-          <!-- Body/Text Content -->
+
+          <!-- Content Editor -->
           <div class="form-field full-width">
-            <label>Content <span class="required">*</span></label>
+
+            <label>
+              Content <span class="required">*</span>
+            </label>
+
+
             <div class="editor-toolbar">
+
               <button
                 type="button"
                 class="toolbar-btn"
@@ -293,6 +744,8 @@
               >
                 <mat-icon>format_bold</mat-icon>
               </button>
+
+
               <button
                 type="button"
                 class="toolbar-btn"
@@ -302,6 +755,8 @@
               >
                 <mat-icon>format_italic</mat-icon>
               </button>
+
+
               <button
                 type="button"
                 class="toolbar-btn"
@@ -311,7 +766,11 @@
               >
                 <mat-icon>format_underlined</mat-icon>
               </button>
+
+
               <div class="toolbar-divider"></div>
+
+
               <button
                 type="button"
                 class="toolbar-btn"
@@ -321,6 +780,8 @@
               >
                 <mat-icon>format_list_bulleted</mat-icon>
               </button>
+
+
               <button
                 type="button"
                 class="toolbar-btn"
@@ -330,78 +791,205 @@
               >
                 <mat-icon>format_list_numbered</mat-icon>
               </button>
+
             </div>
 
-            <!-- Update your content editor div -->
+
             <div
               class="rich-editor"
+              [class.error]="isFieldInvalid('content')"
               contenteditable="true"
               (input)="onContentChange($event)"
               (click)="onEditorClick()"
               (paste)="onPaste($event)"
               #contentEditor
             ></div>
+
+
+            <div
+              class="field-error"
+              *ngIf="isFieldInvalid('content')"
+            >
+
+              <span
+                *ngIf="
+                  circularForm
+                    .get('content')
+                    ?.errors?.['required']
+                "
+              >
+                Content is required
+              </span>
+
+
+              <span
+                *ngIf="
+                  circularForm
+                    .get('content')
+                    ?.errors?.['minlength']
+                "
+              >
+                Content must contain at least 10 characters
+              </span>
+
+            </div>
+
           </div>
+
         </div>
+
       </div>
 
-      <!-- Approvers Section -->
+
+      <!-- ================= APPROVERS ================= -->
+
       <div class="form-section">
+
         <div class="section-header">
           <mat-icon>group</mat-icon>
           <h3>Approve Process</h3>
         </div>
 
+
         <div class="reviewers-section">
-          <label>Select Approvers <span class="required">*</span></label>
+
+          <label>
+            Select Approvers <span class="required">*</span>
+          </label>
+
+
+          <div class="approver-note">
+
+            <mat-icon>info_outline</mat-icon>
+
+            <span>
+              <strong>Note:</strong>
+              You must select exactly {{ maxApprovers }}
+              approver(s) before submitting the circular.
+              Selected:
+              {{ selectedApprovers.length }} / {{ maxApprovers }}
+            </span>
+
+          </div>
+
+
           <div class="reviewers-grid">
-            <div class="reviewer-card" *ngFor="let approver of availableApprovers">
+
+            <div
+              class="reviewer-card"
+              *ngFor="let approver of availableApprovers"
+            >
+
               <label class="reviewer-checkbox">
+
                 <input
                   type="checkbox"
                   [value]="approver.id"
                   (change)="toggleApprover(approver.id, $event)"
                 />
+
                 <div class="checkbox-custom"></div>
+
+
                 <div class="reviewer-info">
+
                   <div class="reviewer-name">
-                    {{ approver.first_name }} {{ approver.middle_name }} {{ approver.last_name }}
+                    {{ approver.first_name }}
+                    {{ approver.middle_name }}
+                    {{ approver.last_name }}
                   </div>
+
+
                   <div class="reviewer-dept">
+
                     @if (approver.head_office_name) {
-                    <div>{{ approver.head_office_name }}</div>
-                    } @if (approver.branch_name) {
-                    <div>{{ approver.branch_name }}</div>
-                    } @if (approver.department_name) {
-                    <div><strong>Dept:</strong> {{ approver.department_name }}</div>
+                      <div>
+                        {{ approver.head_office_name }}
+                      </div>
                     }
-                    <div><strong>Role:</strong> {{ approver.role_name }}</div>
+
+                    @if (approver.branch_name) {
+                      <div>
+                        {{ approver.branch_name }}
+                      </div>
+                    }
+
+                    @if (approver.department_name) {
+                      <div>
+                        <strong>Dept:</strong>
+                        {{ approver.department_name }}
+                      </div>
+                    }
+
+                    <div>
+                      <strong>Role:</strong>
+                      {{ approver.role_name }}
+                    </div>
+
                   </div>
+
                 </div>
+
               </label>
+
             </div>
+
           </div>
 
-          <div class="selected-reviewers" *ngIf="selectedApprovers.length > 0">
-            <h4>Selected Reviewers ({{ selectedApprovers.length }})</h4>
+
+          <!-- Selected Approvers -->
+          <div
+            class="selected-reviewers"
+            *ngIf="selectedApprovers.length > 0"
+          >
+
+            <h4>
+              Selected Reviewers
+              ({{ selectedApprovers.length }})
+            </h4>
+
+
             <div class="reviewer-chips">
-              <div class="reviewer-chip" *ngFor="let approverId of selectedApprovers">
-                <span>{{ getApproverName(approverId) }}</span>
-                <button type="button" (click)="removeApprover(approverId)">
+
+              <div
+                class="reviewer-chip"
+                *ngFor="let approverId of selectedApprovers"
+              >
+
+                <span>
+                  {{ getApproverName(approverId) }}
+                </span>
+
+                <button
+                  type="button"
+                  (click)="removeApprover(approverId)"
+                >
                   <mat-icon>close</mat-icon>
                 </button>
+
               </div>
+
             </div>
+
           </div>
+
         </div>
+
       </div>
+
     </form>
+
   </div>
 
-  <!-- Action Bar -->
+
+  <!-- ================= ACTION BAR ================= -->
+
   <div class="action-bar">
+
     <div class="action-content">
+
       <div class="action-left">
+
         <button
           type="button"
           class="action-btn secondary"
@@ -411,24 +999,50 @@
           <mat-icon>save</mat-icon>
           Save Draft
         </button>
+
       </div>
 
+
       <div class="action-right">
-        <button type="button" class="action-btn danger" (click)="discardDraft()">
+
+        <button
+          type="button"
+          class="action-btn danger"
+          (click)="discardDraft()"
+        >
           <mat-icon>delete_outline</mat-icon>
           Discard
         </button>
+
+
         <button
           type="button"
           class="action-btn primary"
           (click)="submitCircular('PENDING_APPROVAL')"
-          [disabled]="isProcessing || circularForm.invalid || selectedApprovers.length === 0"
+          [disabled]="isProcessing"
         >
-          <mat-icon *ngIf="!isProcessing">send</mat-icon>
-          <div class="spinner" *ngIf="isProcessing"></div>
-          {{ isProcessing ? 'Submitting...' : 'Submit for Approve' }}
+
+          <mat-icon *ngIf="!isProcessing">
+            send
+          </mat-icon>
+
+          <div
+            class="spinner"
+            *ngIf="isProcessing"
+          ></div>
+
+          {{
+            isProcessing
+              ? 'Submitting...'
+              : 'Submit for Approve'
+          }}
+
         </button>
+
       </div>
+
     </div>
+
   </div>
+
 </div>

@@ -92,7 +92,8 @@ availableYears: number[] = [];
   showReadCirculars: boolean = true;
   
   totalCirculars: number = 0;
-  unreadCount: number = 0;
+  unreadCount: number = 0; 
+  pendingApprovalCount: number = 0;
    employeeData!: EmployeeData;
   
   allCirculars: Circular[] = [];
@@ -112,7 +113,8 @@ availableYears: number[] = [];
  async loadEmployeeData() {
     this.employeeData = await this.employeeService.getCurrentEmployee();
     if (this.employeeData?.id) {
-      this.loadCirculars();
+      this.loadCirculars(); 
+        this.loadPendingApprovalCount();
     }
   }
   loadCirculars() {
@@ -142,6 +144,37 @@ availableYears: number[] = [];
         }
       });
   }
+
+loadPendingApprovalCount() {
+
+  this.circularService
+    .getAssingedCircularForApproval(this.employeeData.id)
+    .subscribe({
+
+      next: (res: any) => {
+
+        const approvals = res.data || [];
+
+        this.pendingApprovalCount = approvals.filter(
+          (c: any) => c.circular_status === 'PENDING_APPROVAL'
+        ).length;
+
+      },
+
+      error: (err) => {
+        console.error('Pending Approval Count Error', err);
+        this.pendingApprovalCount = 0;
+      }
+
+    });
+
+}
+
+
+
+
+
+
 
   /**
    * Transform API data to component format

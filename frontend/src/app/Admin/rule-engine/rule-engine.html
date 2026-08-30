@@ -1,0 +1,35 @@
+<div class="rule-engine-container">
+  <div class="page-header">
+    <div><h2>Rule Engine</h2><p>Configure automatic circular read reminders.</p></div>
+    <button class="create-btn" (click)="createRule()">Create Rule</button>
+  </div>
+  <p *ngIf="error" class="error">{{ error }}</p>
+  <div class="content-area">
+    <div class="left-panel">
+      <div class="workflow-card"><h3>Read Reminder Workflow</h3><div class="workflow">
+        <div class="step when"><h4>WHEN</h4><p>Circular Published</p></div><div class="arrow">→</div>
+        <div class="step condition"><h4>IF</h4><p>Unread Assigned Employees</p></div><div class="arrow">→</div>
+        <div class="step action"><h4>THEN</h4><p>Send Read Reminder</p></div><div class="arrow">→</div>
+        <div class="step target"><h4>TO</h4><p>Unread Assigned Employees</p></div>
+      </div></div>
+      <div class="table-card"><h3>Existing Rules</h3><table><thead><tr><th>Rule Name</th><th>Event</th><th>Frequency</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody><tr *ngFor="let rule of rules"><td>{{ rule.rule_name }}</td><td>{{ eventLabel(rule.event_name) }}</td><td>{{ rule.reminder_frequency_unit === 'ONCE' ? 'Once' : rule.reminder_frequency_value + ' ' + (rule.reminder_frequency_unit | titlecase) }}</td><td><span [class.active]="rule.status === 'ACTIVE'">{{ rule.status }}</span></td><td><button (click)="edit(rule)">Edit</button><button (click)="toggle(rule)">{{ rule.status === 'ACTIVE' ? 'Deactivate' : 'Activate' }}</button><button (click)="remove(rule)">Delete</button></td></tr><tr *ngIf="!rules.length"><td colspan="5">No rules configured.</td></tr></tbody>
+      </table></div>
+    </div>
+    <form class="right-panel" (ngSubmit)="save()"><h2>{{ editingId ? 'Edit Rule' : 'Rule Builder' }}</h2>
+      <div class="rule-section"><h3>Rule Name</h3><input name="rule_name" [(ngModel)]="form.rule_name" required placeholder="Circular Read Reminder"></div>
+      <div class="rule-section"><h3>WHEN</h3><label>Event</label><select name="event" [(ngModel)]="form.event_name" (ngModelChange)="onEventChange()"><option value="CIRCULAR_PUBLISHED">Circular Published</option><option value="CIRCULAR_CREATED">Circular Created</option><option value="CIRCULAR_REJECTED">Circular Rejected</option><option value="EMPLOYEE_COMPLETED_CIRCULAR">Employee Completed Circular</option><option value="ALL_EMPLOYEES_COMPLETED">All Employees Completed</option></select></div>
+      <div class="rule-section"><h3>IF</h3><label>Condition</label><input [value]="conditionLabel(form.event_name)" disabled></div>
+      <div class="rule-section"><h3>THEN</h3><label>Action</label><input [value]="actionLabel(form.event_name)" disabled><label>TO</label><input [value]="targetLabel(form.event_name)" disabled></div>
+      <div class="rule-section">
+        <h3>Frequency</h3><ng-container *ngIf="form.event_name === 'CIRCULAR_PUBLISHED'; else once">
+        <label>Frequency Value</label><input class="days-input" name="frequency" type="number" min="1" [(ngModel)]="form.reminder_frequency_value" required>
+        <label>Frequency Unit</label><select name="unit" [(ngModel)]="form.reminder_frequency_unit">
+        <option value="MINUTE">Minute</option><option value="HOUR">Hour</option><option value="DAY">Day</option></select>
+        <label class="check"><input name="creator" type="checkbox" [(ngModel)]="form.notify_creator"> Notify Creator</label></ng-container>
+        <ng-template #once><input value="Once" disabled></ng-template>
+    </div>
+      <button class="save-btn" type="submit" [disabled]="saving">{{ saving ? 'Saving…' : 'Save Rule' }}</button>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,209 @@
+<div class="region-container">
+
+  <!-- Header -->
+ <!-- Header -->
+<div class="page-header">
+  <div>
+    <h2>Region Management</h2>
+    <p>Manage Regions under Head Offices</p>
+  </div>
+</div>
+
+<!-- Add Region Button -->
+<!-- <button class="create-btn" (click)="toggleForm()">
+  {{ showForm ? 'Close Form' : 'Add Region' }}
+</button> -->
+<!-- Add Region Button - visible only when form is closed -->
+<button 
+  *ngIf="!showForm"
+  class="create-btn" 
+  type="button"
+  (click)="toggleForm()">
+
+  Add Region
+
+</button>
+  <!-- Form -->
+
+  <div class="form-card" *ngIf="showForm">
+
+    <form [formGroup]="regionForm" (ngSubmit)="submitForm()">
+
+      <div class="form-grid">
+
+        <!-- Head Office -->
+
+        <div class="form-group">
+          <label>Head Office *</label>
+
+          <select formControlName="head_office_id">
+
+            <option value="">Select Head Office</option>
+
+            <option
+              *ngFor="let ho of headOffices"
+              [value]="ho.id">
+
+              {{ ho.name }}
+
+            </option>
+
+          </select>
+
+        </div>
+
+        <!-- Region Name -->
+
+        <div class="form-group">
+
+          <label>Region Name *</label>
+
+          <input
+            type="text"
+            formControlName="name"
+            placeholder="Enter Region Name">
+
+        </div>
+
+      </div>
+
+      <div class="button-group">
+
+        <button
+          type="submit"
+          class="save-btn"
+          [disabled]="isButtonLoading">
+
+          {{ isEditMode ? 'Update Region' : 'Create' }}
+
+        </button>
+
+        <button
+          type="button"
+          class="cancel-btn"
+          (click)="resetForm()">
+
+          Quite
+
+        </button> 
+
+  <!-- Close Form -->
+  <button
+    type="button"
+    class="close-form-btn"
+  (click)="clearForm()"> 
+
+  Clear 
+
+  </button>
+
+
+
+      </div>
+
+    </form>
+
+  </div>
+
+  <!-- Table -->
+
+  <div class="table-card">
+
+    <table>
+
+      <thead>
+
+        <tr>
+
+          <th>#</th>
+          <th>Region</th>
+          <th>Head Office</th>
+          <th>Created At</th>
+          <th>Actions</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        <!-- <tr *ngFor="let region of regions; let i=index"> -->
+<tr *ngFor="let region of paginatedRegions(); let i = index">
+          <td> {{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
+
+          <td>{{ region.name }}</td>
+
+          <td>{{ region.head_office_name }}</td>
+
+          <td>{{ region.created_at | date:'dd/MM/yyyy' }}</td>
+
+<td>
+
+  <div class="action-buttons">
+
+    <button
+      class="action-btn edit-btn"
+      (click)="editRegion(region)"
+    >
+      Edit
+    </button>
+
+    <button
+      class="action-btn delete-btn"
+      (click)="deleteRegion(region.id)"
+    >
+      Delete
+    </button>
+
+  </div>
+
+</td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div> 
+
+<!-- Pagination Controls -->
+
+<div
+  class="pagination-container"
+  *ngIf="totalPages > 1"
+>
+
+  <button
+    type="button"
+    class="pagination-btn"
+    (click)="changePage(currentPage - 1)"
+    [disabled]="currentPage === 1"
+  >
+    Previous
+  </button>
+
+  <button
+    type="button"
+    *ngFor="let page of [].constructor(totalPages); let p = index"
+    class="pagination-btn"
+    [class.active]="currentPage === p + 1"
+    (click)="changePage(p + 1)"
+  >
+    {{ p + 1 }}
+  </button>
+
+  <button
+    type="button"
+    class="pagination-btn"
+    (click)="changePage(currentPage + 1)"
+    [disabled]="currentPage === totalPages"
+  >
+    Next
+  </button>
+
+</div>
+
+
+
+</div>

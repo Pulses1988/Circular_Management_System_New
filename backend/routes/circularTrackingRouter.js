@@ -7,6 +7,7 @@ router.get('/unseen/:employeeId', circularTrackingController.getUnseenCirculars)
 
 
 router.get('/seen/:employeeId', circularTrackingController.getSeenCirculars);
+router.get( "/statistics/:employeeId",circularTrackingController.getStatistics);
 
 // Mark circular as seen
 router.post('/mark-seen', circularTrackingController.markSeen);

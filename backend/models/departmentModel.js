@@ -19,24 +19,75 @@ exports.getAllDepartments = () => {
   `);
 };
 
+// exports.getDepartmentsByHeadOffice = (headOfficeId) => {
+//   return db.query(
+//     `
+//     SELECT 
+//       d.id, 
+//       d.name,  
+//       d.head_office_id, 
+//       d.created_at,
+//       h.name AS head_office_name,
+//       h.address AS head_office_address
+//     FROM departments d
+//     LEFT JOIN head_office h ON d.head_office_id = h.id
+//     WHERE d.head_office_id = ?
+//     ORDER BY d.created_at DESC
+//   `,
+//     [headOfficeId]
+//   );
+// };
+
 exports.getDepartmentsByHeadOffice = (headOfficeId) => {
   return db.query(
     `
-    SELECT 
-      d.id, 
-      d.name,  
-      d.head_office_id, 
+    SELECT
+      d.id,
+      d.name,
+      d.head_office_id,
+      d.branch_id,
       d.created_at,
+
       h.name AS head_office_name,
-      h.address AS head_office_address
+      h.address AS head_office_address,
+
+      b.name AS branch_name,
+      b.address AS branch_address
+
     FROM departments d
-    LEFT JOIN head_office h ON d.head_office_id = h.id
-    WHERE d.head_office_id = ?
+
+    LEFT JOIN head_office h
+      ON d.head_office_id = h.id
+
+    LEFT JOIN branches b
+      ON d.branch_id = b.id
+
+    WHERE
+      d.head_office_id = ?
+      OR d.branch_id IN (
+        SELECT id
+        FROM branches
+        WHERE head_office_id = ?
+      )
+
     ORDER BY d.created_at DESC
-  `,
-    [headOfficeId]
+    `,
+    [headOfficeId, headOfficeId]
   );
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 exports.getDepartmentsByBranch = (branchId) => {
   return db.query(

@@ -10,13 +10,21 @@
   <!-- Top Actions -->
   <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
     <!-- Add Employee Button -->
-    <button
+    <!-- <button
       (click)="toggleForm()"
       class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors w-full md:w-auto"
     >
       {{ showForm ? 'Close Form' : 'Add New Employee' }}
-    </button>
-
+    </button> -->
+<!-- Add Employee Button - visible only when form is closed -->
+<button
+  *ngIf="!showForm"
+  type="button"
+  (click)="toggleForm()"
+  class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors w-full md:w-auto"
+>
+  Add New Employee
+</button>
     <!-- Right Section: Note + Buttons -->
     <div
       class="flex flex-col md:flex-row items-start md:items-center gap-4 bg-blue-50 border-l-4 border-blue-500 p-5 rounded-lg shadow-sm w-full md:w-auto"
@@ -70,7 +78,43 @@
     (ngSubmit)="submitForm()"
     class="bg-white p-6 rounded-lg shadow-md mb-6"
   >
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4"> 
+      
+<!-- Employee ID -->
+      <div>
+        <label class="block text-sm font-medium mb-2 text-gray-700">Employee ID</label>
+        <input
+          type="text"
+          formControlName="employee_id"
+          class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Enter employee ID"
+        />
+        <div
+          *ngIf="
+            employeeForm.get('employee_id')?.touched && employeeForm.get('employee_id')?.invalid
+          "
+          class="text-red-500 text-sm mt-1"
+        >
+          <div *ngIf="employeeForm.get('employee_id')?.errors?.['required']">
+            Employee ID is required.
+          </div>
+          <div *ngIf="employeeForm.get('employee_id')?.errors?.['employeeIdTaken']">
+            Employee ID is already exist.
+          </div>
+          <div
+            *ngIf="employeeForm.get('employee_id')?.errors?.['pattern']"
+            class="text-red-500 text-sm mt-1"
+          >
+            Employee ID cannot contain spaces.
+          </div>
+        </div>
+      </div>
+
+
+
+
+
+
       <div>
         <label class="block text-sm font-medium mb-2 text-gray-700">First Name</label>
         <input
@@ -143,35 +187,7 @@
         </div>
       </div>
 
-      <!-- Employee ID -->
-      <div>
-        <label class="block text-sm font-medium mb-2 text-gray-700">Employee ID</label>
-        <input
-          type="text"
-          formControlName="employee_id"
-          class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Enter employee ID"
-        />
-        <div
-          *ngIf="
-            employeeForm.get('employee_id')?.touched && employeeForm.get('employee_id')?.invalid
-          "
-          class="text-red-500 text-sm mt-1"
-        >
-          <div *ngIf="employeeForm.get('employee_id')?.errors?.['required']">
-            Employee ID is required.
-          </div>
-          <div *ngIf="employeeForm.get('employee_id')?.errors?.['employeeIdTaken']">
-            Employee ID is already exist.
-          </div>
-          <div
-            *ngIf="employeeForm.get('employee_id')?.errors?.['pattern']"
-            class="text-red-500 text-sm mt-1"
-          >
-            Employee ID cannot contain spaces.
-          </div>
-        </div>
-      </div>
+      
 
       <!-- Password -->
       <div *ngIf="!isEditMode">
@@ -258,16 +274,119 @@
         </div>
       </div>
 
-      <div *ngIf="role === 'HO_ADMIN' || (role === 'BRANCH_ADMIN' && hasDepartments)">
-        <label class="block text-sm font-medium mb-2 text-gray-700">Department</label>
-        <select
-          formControlName="department_id"
-          class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="" disabled>Select Department</option>
-          <option *ngFor="let dept of departments" [value]="dept.id">{{ dept.name }}</option>
-        </select>
-      </div>
+
+
+
+     <!-- ================= HO ADMIN BRANCH ================= -->
+<div *ngIf="role === 'HO_ADMIN'">
+  <label class="block text-sm font-medium mb-2 text-gray-700">
+    Branch
+  </label>
+
+  <select
+    formControlName="branch_id"
+    class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+  >
+    <option value="" disabled>Select Branch</option>
+
+    <option *ngFor="let branch of branches" [value]="branch.id">
+      {{ branch.name }}
+    </option>
+  </select>
+</div>
+
+
+<!-- ================= DEPARTMENT ================= -->
+<div *ngIf="role === 'HO_ADMIN' || (role === 'BRANCH_ADMIN' && hasDepartments)">
+  <label class="block text-sm font-medium mb-2 text-gray-700">
+    Department
+  </label>
+
+  <select
+    formControlName="department_id"
+    class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+  >
+    <option value="" disabled>Select Department</option>
+
+    <option *ngFor="let dept of departments" [value]="dept.id">
+      {{ dept.name }}
+    </option>
+  </select>
+</div>
+   
+      
+      <!-- Head office admin -->  
+
+<!-- <div *ngIf="role === 'HO_ADMIN'">
+  <label class="block text-sm font-medium mb-2 text-gray-700">
+    Branch
+  </label>
+
+  <select
+    formControlName="branch_id"
+    class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+     (change)="loadManagersByBranch(+$any($event.target).value)"
+  >
+    <option value="">Select Branch</option>
+
+    <option *ngFor="let branch of branches" [value]="branch.id">
+      {{ branch.name }}
+    </option>
+  </select>
+</div> -->
+
+
+
+
+
+
+
+
+
+
+<!-- Manager -->
+<!-- Managers -->
+<div
+  *ngIf="
+    role === 'HO_ADMIN' &&
+    managers.length > 0 &&
+    isReportingOfficerRequired()
+  "
+>
+  <label class="block text-sm font-medium mb-2 text-gray-700">
+    Reporting Officer
+  </label>
+
+  <select
+    formControlName="reporting_officer_id"
+    class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+  >
+    <option value="">Select Reporting Officer</option>
+
+    <option
+      *ngFor="let manager of managers"
+      [value]="manager.id"
+    >
+      {{ manager.first_name }}
+      {{ manager.middle_name }}
+      {{ manager.last_name }}
+      ({{ manager.employee_id }})
+    </option>
+  </select>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Branch admin -->
 
       <div *ngIf="role === 'BRANCH_ADMIN'">
         <label class="block text-sm font-medium mb-2 text-gray-700">Branch</label>
@@ -289,10 +408,68 @@
           <option *ngFor="let role of roles" [value]="role.id">{{ role.name }}</option>
         </select>
       </div>
+
+
+
+
+<!-- ROle level -->
+<!-- ================= ROLE LEVEL ================= -->
+
+
+<div>
+  <label class="block text-sm font-medium mb-2 text-gray-700">
+    Role Level <span class="text-red-500">*</span>
+  </label>
+
+  <select
+    formControlName="role_level"
+    class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+  >
+    <option value="" disabled>Select Role Level</option>
+
+    <option
+      *ngFor="let level of roleLevels"
+      [value]="level.value"
+    >
+      {{ level.label }}
+    </option>
+  </select>
+
+  <div
+    *ngIf="
+      employeeForm.get('role_level')?.touched &&
+      employeeForm.get('role_level')?.invalid
+    "
+    class="text-red-500 text-sm mt-1"
+  >
+    <div *ngIf="employeeForm.get('role_level')?.errors?.['required']">
+      Role Level is required.
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
     </div>
 
+
+
+
+
+
+
+
+
+
+
+
     <!-- Permissions Section -->
-    <div class="mt-6 pt-6 border-t border-gray-200">
+    <div   *ngIf="!isClerkSelected()"
+    class="mt-6 pt-6 border-t border-gray-200">
       <div class="flex items-center gap-2 mb-4">
         <mat-icon class="text-blue-600">security</mat-icon>
         <h3 class="text-lg font-semibold text-gray-800">Permissions</h3>
@@ -334,23 +511,37 @@
     </div>
 
     <div class="mt-6 flex gap-3">
-      <button
-        type="submit"
-        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        [disabled]="employeeForm.invalid || employeeForm.pending"
-        [class.opacity-50]="employeeForm.invalid || employeeForm.pending"
-        [class.cursor-not-allowed]="employeeForm.invalid || employeeForm.pending"
-      >
-        {{ isEditMode ? 'Update Employee' : 'Add Employee' }}
-      </button>
-      <button
-        type="button"
-        (click)="resetForm()"
-        class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors"
-      >
-        Cancel
-      </button>
-    </div>
+
+  <!-- Add / Update -->
+  <button
+    type="submit"
+    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+    [disabled]="employeeForm.invalid || employeeForm.pending"
+    [class.opacity-50]="employeeForm.invalid || employeeForm.pending"
+    [class.cursor-not-allowed]="employeeForm.invalid || employeeForm.pending"
+  >
+    {{ isEditMode ? 'Update Employee' : 'Add Employee' }}
+  </button>
+
+  <!-- Cancel - closes the form -->
+  <button
+    type="button"
+    (click)="resetForm()"
+    class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
+  >
+    Cancel
+  </button>
+
+  <!-- Clear - clears fields but keeps form open -->
+  <button
+    type="button"
+    (click)="clearForm()"
+    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+  >
+    Clear
+  </button>
+
+</div>
   </form>
 
   <div *ngIf="isLoading" class="text-center py-6">
@@ -363,37 +554,94 @@
   </div>
 
   <div *ngIf="!isLoading">
+  
     <!-- Search and Filter Section -->
-    <div class="bg-white p-4 rounded-lg shadow-md mb-6">
-      <div class="flex flex-col md:flex-row gap-4">
-        <!-- Search Input -->
-        <div class="flex-1">
-          <label class="block text-sm font-medium mb-2 text-gray-700"
-            >Search by Name or Employee ID</label
-          >
-          <input
-            type="text"
-            [(ngModel)]="searchTerm"
-            (input)="applyFilters()"
-            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Enter name or employee ID..."
-          />
-        </div>
+ 
 
-        <!-- Department Filter -->
-        <div class="flex-1">
-          <label class="block text-sm font-medium mb-2 text-gray-700">Filter by Department</label>
-          <select
-            [(ngModel)]="selectedDepartment"
-            (change)="applyFilters()"
-            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="all">All Departments</option>
-            <option *ngFor="let dept of departments" [value]="dept.id">{{ dept.name }}</option>
-          </select>
-        </div>
-      </div>
+<!-- Search and Filter Section -->
+<div class="bg-white p-4 rounded-lg shadow-md mb-6">
+
+  <div class="flex flex-col md:flex-row gap-4">
+
+    <!-- ================= SEARCH ================= -->
+    <div class="flex-1">
+
+      <label class="block text-sm font-medium mb-2 text-gray-700">
+        Search by Name or Employee ID
+      </label>
+
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="applyFilters()"
+        class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        placeholder="Enter name or employee ID..."
+      />
+
     </div>
+
+
+    <!-- ================= BRANCH FILTER ================= -->
+    <div class="flex-1">
+
+      <label class="block text-sm font-medium mb-2 text-gray-700">
+        Filter by Branch
+      </label>
+
+      <select
+        [(ngModel)]="selectedBranch"
+        (change)="loadFilterDepartments(selectedBranch)"
+        class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      >
+
+        <option value="all">
+          All Branches
+        </option>
+
+        <option
+          *ngFor="let branch of branches"
+          [value]="branch.id"
+        >
+          {{ branch.name }}
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <!-- ================= DEPARTMENT FILTER ================= -->
+    <div class="flex-1">
+
+      <label class="block text-sm font-medium mb-2 text-gray-700">
+        Filter by Department
+      </label>
+
+      <select
+        [(ngModel)]="selectedDepartment"
+        (change)="applyFilters()"
+        class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      >
+
+        <option value="all">
+          All Departments
+        </option>
+
+        <option
+          *ngFor="let dept of filterDepartments"
+          [value]="dept.id"
+        >
+          {{ dept.name }}
+        </option>
+
+      </select>
+
+    </div>
+
+  </div>
+
+</div>
+
 
     <!-- Employee Table -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
@@ -408,6 +656,11 @@
               <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Phone</th>
 
               <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Role</th>
+              
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+  Role Level
+</th>
+
 
               <!-- Show Department column only if user is HO_ADMIN or BRANCH_ADMIN with departments -->
               <th
@@ -441,6 +694,10 @@
               <td class="px-6 py-4 text-sm text-gray-600">{{ emp.phone_no }}</td>
 
               <td class="px-6 py-4 text-sm text-gray-900">{{ emp.role_name }}</td>
+            
+              <td class="px-6 py-4 text-sm text-gray-900">
+  {{ emp.role_level }}
+</td>
 
               <!-- Conditional Department -->
               <td
