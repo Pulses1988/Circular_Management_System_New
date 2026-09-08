@@ -1412,4 +1412,299 @@
 
 .selected-employees-more {
   cursor: pointer;
+} 
+
+
+// Confedentiablity css
+
+/* =========================================================
+   SELECTED CONFIDENTIALITY LEVELS
+   ========================================================= */
+
+.selected-confidentiality-levels {
+  margin-top: 14px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
+  background: #f8fafc;
+  box-sizing: border-box;
+}
+
+/* Title */
+.selected-level-title {
+  display: block;
+  margin-bottom: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+/* Container for chips */
+.confidentiality-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Individual confidentiality chip */
+.confidentiality-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  min-height: 30px;
+  padding: 5px 9px 5px 12px;
+
+  background: #e8f0ff;
+  border: 1px solid #c9dcff;
+  border-radius: 18px;
+
+  color: #174ea6;
+  font-size: 13px;
+  font-weight: 500;
+
+  line-height: 1.2;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+/* Chip text */
+.confidentiality-chip span {
+  display: inline-block;
+}
+
+/* X / remove button */
+.confidentiality-chip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 19px;
+  height: 19px;
+  padding: 0;
+  margin: 0;
+
+  border: none;
+  border-radius: 50%;
+
+  background: transparent;
+  color: #3568ad;
+
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+/* Hover on X */
+.confidentiality-chip button:hover {
+  background: #cbdcfb;
+  color: #b42318;
+}
+
+/* Hover on complete chip */
+.confidentiality-chip:hover {
+  background: #dfeaff;
+  border-color: #b7d0ff;
+}
+
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+.dark-mode .selected-confidentiality-levels {
+  background: #182230;
+  border-color: #334155;
+}
+
+.dark-mode .selected-level-title {
+  color: #e2e8f0;
+}
+
+.dark-mode .confidentiality-chip {
+  background: #1e3a5f;
+  border-color: #315b8c;
+  color: #dbeafe;
+}
+
+.dark-mode .confidentiality-chip button {
+  color: #bfdbfe;
+}
+
+.dark-mode .confidentiality-chip button:hover {
+  background: #315b8c;
+  color: #fecaca;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+  .selected-confidentiality-levels {
+    margin-top: 12px;
+    padding: 10px 12px;
+  }
+
+  .selected-level-title {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+
+  .confidentiality-chips {
+    gap: 6px;
+  }
+
+  .confidentiality-chip {
+    font-size: 12px;
+    padding: 5px 8px 5px 10px;
+  }
+} 
+
+
+/* =========================================
+   CUSTOM CONFIDENTIALITY DROPDOWN
+========================================= */
+
+.custom-confidentiality-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+
+/* Dropdown trigger */
+
+.custom-confidentiality-trigger {
+  width: 100%;
+  min-height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 16px;
+
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+
+  font-size: 15px;
+  color: #111827;
+
+  cursor: pointer;
+
+  text-align: left;
+}
+
+
+/* Hover */
+
+.custom-confidentiality-trigger:hover {
+  border-color: #2563eb;
+}
+
+
+/* Dropdown menu */
+
+.custom-confidentiality-menu {
+  position: absolute;
+
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+
+  z-index: 9999;
+
+  max-height: 320px;
+  overflow-y: auto;
+
+  background: white;
+
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+
+/* Each option */
+
+.custom-confidentiality-option {
+  padding: 11px 16px;
+
+  cursor: pointer;
+
+  font-size: 15px;
+
+  color: #111827;
+
+  transition: background 0.15s ease;
+}
+
+
+/* Normal hover */
+
+.custom-confidentiality-option:hover {
+  background: #f3f4f6;
+}
+
+
+/* =========================================
+   PREVIOUSLY SELECTED
+========================================= */
+
+.custom-confidentiality-option.previously-selected {
+  background: #e0f2fe;
+  color: #0369a1;
+  font-weight: 600;
+}
+
+
+/* Previously selected + hover */
+
+.custom-confidentiality-option.previously-selected:hover {
+  background: #bae6fd;
+}
+
+
+/* Current selection */
+
+.custom-confidentiality-option.current-selection {
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+
+/* Option text */
+
+.confidentiality-option-name {
+  font-weight: inherit;
+}
+
+.confidentiality-option-description {
+  font-weight: inherit;
+} 
+
+
+.special-keyword-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.special-keyword-info {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  cursor: help;
+  color: #6b7280;
 }

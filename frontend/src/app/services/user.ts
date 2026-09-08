@@ -181,7 +181,18 @@ getManagersByBranch(branchId: number) {
       headers: this.getHeaders(),
     }
   );
+}   
+
+// Method for Head Office managers
+getManagersByHeadOffice(headOfficeId: number) {
+  return this.http.get(
+    `${this.apiUrl}/api/employees/head-office/${headOfficeId}/managers`,
+    {
+      headers: this.getHeaders(),
+    }
+  );
 }
+
 
 
 
@@ -234,10 +245,12 @@ getManagersByBranch(branchId: number) {
       // Backend error response
       errorMessage = `Server returned code ${error.status}: ${
         error.error?.message || error.message
-      }`;
-      errorMessage = `Server returned code ${error.status}: ${
-        error.error?.message || error.message
-      }`;
+      }`; 
+
+      // errorMessage = `Server returned code ${error.status}: ${
+      //   error.error?.message || error.message
+      // }`; 
+
     }
     console.error('Error occurred:', errorMessage);
     return throwError(() => new Error(errorMessage));

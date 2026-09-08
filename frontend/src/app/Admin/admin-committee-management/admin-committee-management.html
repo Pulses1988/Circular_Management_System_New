@@ -218,7 +218,7 @@
       Created At
     </th>
 
-    <th class="px-6 py-4 text-left font-semibold">
+    <th class="px-6 py-4 text-left font-semibold whitespace-nowrap">
       Actions
     </th>
 
@@ -271,40 +271,39 @@
         <!-- Actions -->
 
         <td class="px-6 py-4">
+  
+  <div class="flex flex-wrap items-center gap-2">
 
-          <!-- Edit -->
+    <!-- Edit -->
+    <button 
+      type="button" 
+      (click)="editCommittee(committee)" 
+      class="bg-yellow-500 text-white px-3 py-1 rounded whitespace-nowrap"
+    >
+      Edit 
+    </button>
 
-          <button
-            type="button"
-            (click)="editCommittee(committee)"
-            class="bg-yellow-500 text-white px-3 py-1 rounded mr-2"
-          >
-            Edit
-          </button>
+    <!-- Delete -->
+    <button 
+      type="button" 
+      (click)="deleteCommittee(committee.id)" 
+      class="bg-red-500 text-white px-3 py-1 rounded whitespace-nowrap"
+    >
+      Delete 
+    </button>
 
+    <!-- Assign Employees -->
+    <button 
+      type="button" 
+      (click)="assignEmployees(committee)" 
+      class="bg-blue-600 text-white px-3 py-1 rounded whitespace-nowrap"
+    >
+      Assign Director/officers 
+    </button>
 
-          <!-- Delete -->
+  </div>
 
-          <button
-            type="button"
-            (click)="deleteCommittee(committee.id)"
-            class="bg-red-500 text-white px-3 py-1 rounded"
-          >
-            Delete
-          </button>
-
-
-          <!-- Assign Employees -->
-
-          <button
-            type="button"
-            (click)="assignEmployees(committee)"
-            class="bg-blue-600 text-white px-3 py-1 rounded ml-2"
-          >
-            Assign Director/officers
-          </button>
-
-        </td>
+</td>
 
       </tr>
 

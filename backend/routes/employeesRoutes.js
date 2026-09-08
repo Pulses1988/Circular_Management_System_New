@@ -140,8 +140,14 @@ router.get(
 router.get(
   "/branch/:branchId/managers",
   employeeController.getBranchManagers
-);
+); 
 
+//Route to get managers by head office 
+router.get(
+  "/head-office/:headOfficeId/managers",
+  authenticateToken,
+  employeeController.getHeadOfficeManagers
+);
 
 
 

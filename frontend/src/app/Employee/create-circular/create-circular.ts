@@ -20,6 +20,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { SelectEmployeeModal } from '../select-employee-modal/select-employee-modal';
 
 export interface Circular {
+
   id: number;
   title: string;
   content: string | null;
@@ -32,6 +33,7 @@ export interface Circular {
   source_type: string;
   effective_from: string;
   created_at: string;
+  
   published_at: string | null;
   send_type: 'INTERNAL' | 'CONFIDENTIAL' | 'RESTRICTED' | 'PUBLIC';
   status: 'DRAFT' | 'PENDING_APPROVAL' | 'REJECTED' | 'APPROVED' | 'PUBLISHED';
@@ -95,6 +97,7 @@ export class CreateCircular {
   isProcessing = false;
   isPreviousCircularDropdownOpen = false;
   hoveredCircular: Circular | null = null;
+isConfidentialityDropdownOpen = false;
 
   hoverPopupPosition = {
     top: 0,
@@ -110,6 +113,14 @@ export class CreateCircular {
   selectedApprovers: number[] = [];
   maxApprovers: number = 1;
   selectedEmployees: any[] = [];   
+
+//Variable for showing multiple select option 
+// All confidentiality levels selected by the user
+selectedConfidentialityLevels: string[] = [];
+
+// Employees selected for each confidentiality level
+employeesByConfidentiality: { [key: string]: any[] } = {};
+
 
   showSelectedEmployeesPopup = false;
   
@@ -171,7 +182,9 @@ selectedBranches: any[] = [];
 
   { value: 'USER_WISE', label: 'User Wise', description: 'Specific users' },
 
-  { value: 'COMMITTEE_WISE', label: 'Committee Wise', description: 'Committee members' },
+  { value: 'COMMITTEE_WISE', label: 'Committee Wise', description: 'Committee members' }, 
+
+  { value: 'CONFIDENTIAL_USER', label: 'Confidential', description: 'Restricted to user' },
 
   // { value: 'PRODUCT_WISE', label: 'Product Wise', description: 'Product teams' },
 
@@ -180,19 +193,6 @@ selectedBranches: any[] = [];
   // { value: 'CONFIDENTIAL_GROUP', label: 'Confidential Group', description: 'Restricted users only' },
 
   // { value: 'EXTERNAL', label: 'External', description: 'Auditors, Consultants, Regulators' }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   ];
 
@@ -231,12 +231,7 @@ selectedBranches: any[] = [];
     this.loadEmployeeData();
     this.loadData();
     this.loadMaxApprovers();
-    // Auto-generate Circular Code
-    // this.circularForm.patchValue({
-    //   circular_code: this.generateCircularCode()
-    // });
-
-    // this.restoreDraft();
+   
 
     const draft = localStorage.getItem(this.DRAFT_KEY);
 
@@ -269,6 +264,53 @@ selectedBranches: any[] = [];
       },
     });
   }
+
+  // metod for selection color
+
+  isConfidentialityPreviouslySelected(level: string): boolean {
+  return this.selectedConfidentialityLevels.includes(level);
+} 
+
+toggleConfidentialityDropdown(): void {
+  this.isConfidentialityDropdownOpen =
+    !this.isConfidentialityDropdownOpen;
+} 
+
+
+selectConfidentialityLevel(level: string): void {
+
+  // Set the current form value
+  this.circularForm
+    .get('confidentiality')
+    ?.setValue(level);
+
+  // Add to previously selected levels
+  if (!this.selectedConfidentialityLevels.includes(level)) {
+
+    this.selectedConfidentialityLevels.push(level);
+
+  }
+
+  // Close dropdown
+  this.isConfidentialityDropdownOpen = false;
+
+  // Run your existing logic
+  this.onConfidentialityDropdownClick();
+} 
+
+getConfidentialityDropdownLabel(levelValue: string): string {
+
+  const level = this.filteredConfidentialityLevels.find(
+    l => l.value === levelValue
+  );
+
+  return level
+    ? `${level.label} - ${level.description}`
+    : 'Select confidentiality level';
+}
+
+
+
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -309,86 +351,113 @@ selectedBranches: any[] = [];
     }
   }
 
-  private handleConfidentialityChange(value: string): void 
-  {
-    // Skip if modal is already opening
-    if (this.isModalOpening) {
-      this.isModalOpening = false;
-      return;
-    }
+
+//   private handleConfidentialityChange(value: string): void 
+//   {
+    
+//     if (this.isModalOpening) {
+//       this.isModalOpening = false;
+//       return;
+//     }
      
-//        if (value === 'HEAD_OFFICE' || value === 'BRANCH_WISE')  {
-
-//     this.loadBranches();
-
-//     return;
-// }
-
-if (
-  // value === 'HEAD_OFFICE' ||
-  // value === 'REGION_WISE' ||
-  // value === 'ZONE_WISE' ||
-  // value === 'CIRCLE_WISE' ||
-  // value === 'BRANCH_WISE' ||
-  // value === 'DEPARTMENT_WISE' ||
-  // value === 'ROLE_WISE' ||
-  // value === 'USER_WISE'  
+// if (
   
- value === 'HEAD_OFFICE' ||
-  value === 'CORPORATE_OFFICE' ||
-  value === 'BOARD_OF_DIRECTORS' ||
-  value === 'MD_CEO' ||
-  value === 'EXECUTIVE_COMMITTEE' ||
-  value === 'REGION_WISE' ||
-  value === 'ZONE_WISE' ||
-  value === 'CIRCLE_WISE' ||
-  value === 'BRANCH_WISE' ||
-  value === 'DEPARTMENT_WISE' ||
-  value === 'DESIGNATION_WISE' ||
-  value === 'ROLE_WISE' ||
-  value === 'USER_WISE' ||
-  value === 'COMMITTEE_WISE' ||
-  value === 'PRODUCT_WISE' ||
-  value === 'CUSTOMER_FACING' ||
-  value === 'CONFIDENTIAL_GROUP' ||
-  value === 'EXTERNAL'
+//  value === 'HEAD_OFFICE' ||
+//   value === 'CORPORATE_OFFICE' ||
+//   value === 'BOARD_OF_DIRECTORS' ||
+//   value === 'MD_CEO' ||
+//   value === 'EXECUTIVE_COMMITTEE' ||
+//   value === 'REGION_WISE' ||
+//   value === 'ZONE_WISE' ||
+//   value === 'CIRCLE_WISE' ||
+//   value === 'BRANCH_WISE' ||
+//   value === 'DEPARTMENT_WISE' ||
+//   value === 'DESIGNATION_WISE' ||
+//   value === 'ROLE_WISE' ||
+//   value === 'USER_WISE' ||
+//   value === 'COMMITTEE_WISE' ||
+//   value === 'PRODUCT_WISE' ||
+//   value === 'CUSTOMER_FACING' ||
+//   value === 'CONFIDENTIAL_GROUP' ||
+//   value === 'EXTERNAL'
 
 
-) {
+// ) {
+//   this.pendingConfidentialityChange = value;
+
+//   setTimeout(() => {
+//     this.openEmployeeModal();
+//   });
+
+//   return;
+// }
+ 
+//     else {
+//       // For non-modal levels, clear selected employees
+//       this.selectedEmployees = [];
+//       this.pendingConfidentialityChange = null;
+//     }
+//   } 
+
+
+private handleConfidentialityChange(value: string): void {
+
+  // Ignore empty value
+  if (!value) {
+    return;
+  }
+
+  // =====================================================
+  // PUBLIC
+  // =====================================================
+
+  if (value === 'PUBLIC') {
+
+    this.addConfidentialityLevel('PUBLIC');
+
+    // Load ALL employees
+    this.loadAllEmployeesForPublic();
+
+    return;
+  }
+
+
+  // =====================================================
+  // INTERNAL
+  // =====================================================
+
+  if (value === 'INTERNAL') {
+
+    this.addConfidentialityLevel('INTERNAL');
+
+    // Keep existing employees from other levels
+    this.updateCombinedSelectedEmployees();
+
+    return;
+  }
+
+
+  // =====================================================
+  // OTHER CONFIDENTIALITY LEVELS
+  // =====================================================
+
+  this.addConfidentialityLevel(value);
+
   this.pendingConfidentialityChange = value;
+  // console.log('pending confidentiablity:',value);
 
   setTimeout(() => {
     this.openEmployeeModal();
   });
 
-  return;
 }
 
 
-    // Check if this is a modal-required confidentiality level
-// if (    
-      // value === 'CONFIDENTIAL' 
-      // || value === 'RESTRICTED' 
-      // || value === 'CUSTOM'
 
-    //    value === 'DEPARTMENT_WISE' ||
-    //   value === 'ROLE_WISE' ||
-    //   value === 'USER_WISE'
-     
-    // ) {
-    //   this.pendingConfidentialityChange = value;
 
-    //   setTimeout(() => {
-    //     this.openEmployeeModal();
-    //   });
-    // } 
-    
-    else {
-      // For non-modal levels, clear selected employees
-      this.selectedEmployees = [];
-      this.pendingConfidentialityChange = null;
-    }
-  }
+
+
+
 
 
 toggleBranch(branch: any, event: Event): void {
@@ -453,72 +522,306 @@ toggleBranch(branch: any, event: Event): void {
     }
   }
 
+//helper function for multiple option selction 
+private isEmployeeSelectionLevel(level: string): boolean {
+  return [
+    'HEAD_OFFICE',
+    'CORPORATE_OFFICE',
+    'BOARD_OF_DIRECTORS',
+    'MD_CEO',
+    'EXECUTIVE_COMMITTEE',
+    'REGION_WISE',
+    'ZONE_WISE',
+    'CIRCLE_WISE',
+    'BRANCH_WISE',
+    'DEPARTMENT_WISE',
+    'DESIGNATION_WISE',
+    'ROLE_WISE',
+    'USER_WISE', 
+    'CONFIDENTIAL_USER',
+    'COMMITTEE_WISE',
+    'PRODUCT_WISE',
+    'CUSTOMER_FACING',
+    'CONFIDENTIAL_GROUP',
+    'EXTERNAL'
+  ].includes(level);
+} 
+
+//For adding confendentiablity 
+private addConfidentialityLevel(level: string): void {
+  if (!this.selectedConfidentialityLevels.includes(level)) {
+    this.selectedConfidentialityLevels.push(level);
+  }
+}
+
+//For removing confendentiablity 
+removeConfidentialityLevel(level: string): void {
+  this.selectedConfidentialityLevels =
+    this.selectedConfidentialityLevels.filter(
+      item => item !== level
+    );
+
+  delete this.employeesByConfidentiality[level];
+
+  // Rebuild combined employee list
+  this.updateCombinedSelectedEmployees();
+
+  // If removing current level, select another one
+  if (this.circularForm.get('confidentiality')?.value === level) {
+
+    const nextLevel = this.selectedConfidentialityLevels[0] || 'INTERNAL';
+
+    this.circularForm.patchValue(
+      {
+        confidentiality: nextLevel
+      },
+      { emitEvent: false }
+    );
+  }
+}
+
+//Update Confendentiablity level 
+
+private updateCombinedSelectedEmployees(): void {
+  const employeeMap = new Map<number, any>();
+
+  Object.values(this.employeesByConfidentiality)
+    .flat()
+    .forEach(emp => {
+      if (emp?.id != null) {
+        employeeMap.set(emp.id, emp);
+      }
+    });
+
+  this.selectedEmployees = Array.from(employeeMap.values());
+}
+
+
+
+
   // Open employee modal with proper state management
-  openEmployeeModal(): void {
-    // Prevent multiple modals from opening
-    if (this.isModalOpening) {
+  // openEmployeeModal(): void {
+  //   // Prevent multiple modals from opening
+  //   if (this.isModalOpening) {
+  //     return;
+  //   }
+
+  //   this.isModalOpening = true;
+
+  //   const dialogRef = this.dialog.open(SelectEmployeeModal, {
+  //     width: '800px',
+  //     panelClass: 'custom-dialog-container',
+  //     data: {
+  //       preSelectedEmployees: [...this.selectedEmployees],
+  //       confidentiality: this.pendingConfidentialityChange || this.circularForm.get('confidentiality')?.value,
+  //     },
+  //   });
+
+  //   dialogRef.afterClosed().subscribe((result) => {
+  //     this.isModalOpening = false;
+  //     if (result === null) {
+  //       return;
+  //     } else if (result && Array.isArray(result)) {
+  //       if (result.length > 0) {
+  //         // User confirmed selection
+  //         this.selectedEmployees = result;
+  //         console.log('Selected employees:', this.selectedEmployees);
+
+  //         // Ensure the confidentiality level stays as selected
+  //         if (this.pendingConfidentialityChange) {
+  //           this.circularForm.patchValue(
+  //             {
+  //               confidentiality: this.pendingConfidentialityChange,
+  //             },
+  //             { emitEvent: false },
+  //           );
+  //           this.pendingConfidentialityChange = null;
+  //         }
+  //       } else {
+  //         // User cancelled with empty array - remove employees and reset confidentiality
+  //         this.handleModalCancellation();
+  //       }
+  //     } else {
+  //       // User cancelled (undefined result) - remove employees and reset confidentiality
+  //       this.handleModalCancellation();
+  //     }
+  //   });
+  // }
+openEmployeeModal(): void {
+
+  if (this.isModalOpening) {
+    return;
+  }
+
+  this.isModalOpening = true;
+
+  const confidentiality =
+    this.pendingConfidentialityChange ||
+    this.circularForm.get('confidentiality')?.value;
+
+  const previousEmployees =
+    this.employeesByConfidentiality[confidentiality] || [];
+
+  const dialogRef = this.dialog.open(SelectEmployeeModal, {
+
+    width: '800px',
+
+    panelClass: 'custom-dialog-container',
+
+    data: {
+
+      // IMPORTANT:
+      // Only employees belonging to THIS confidentiality level
+      preSelectedEmployees: [...previousEmployees],
+
+      // Existing modal logic continues to use this
+      confidentiality: confidentiality,
+
+    },
+
+  });
+
+  dialogRef.afterClosed().subscribe((result) => {
+
+    this.isModalOpening = false;
+
+    // User clicked Cancel / closed modal
+    if (result === null || result === undefined) {
       return;
     }
 
-    this.isModalOpening = true;
+    // User confirmed employees
+    if (Array.isArray(result)) {
 
-    const dialogRef = this.dialog.open(SelectEmployeeModal, {
-      width: '800px',
-      panelClass: 'custom-dialog-container',
-      data: {
-        preSelectedEmployees: [...this.selectedEmployees],
-        confidentiality: this.pendingConfidentialityChange || this.circularForm.get('confidentiality')?.value,
-      },
-    });
+      if (result.length > 0) {
 
-    dialogRef.afterClosed().subscribe((result) => {
-      this.isModalOpening = false;
-      if (result === null) {
-        return;
-      } else if (result && Array.isArray(result)) {
-        if (result.length > 0) {
-          // User confirmed selection
-          this.selectedEmployees = result;
-          console.log('Selected employees:', this.selectedEmployees);
+        // Store employees under THIS confidentiality level
+        this.employeesByConfidentiality[confidentiality] = [...result];
 
-          // Ensure the confidentiality level stays as selected
-          if (this.pendingConfidentialityChange) {
-            this.circularForm.patchValue(
-              {
-                confidentiality: this.pendingConfidentialityChange,
-              },
-              { emitEvent: false },
-            );
-            this.pendingConfidentialityChange = null;
+        console.log(
+          'Employees for',
+          confidentiality,
+          ':',
+          this.employeesByConfidentiality[confidentiality]
+        );
+
+        // Rebuild combined employee list
+        this.updateCombinedSelectedEmployees();
+
+        // Keep current confidentiality in form
+        this.circularForm.patchValue(
+          {
+            confidentiality: confidentiality
+          },
+          {
+            emitEvent: false
           }
-        } else {
-          // User cancelled with empty array - remove employees and reset confidentiality
-          this.handleModalCancellation();
-        }
+        );
+
+        this.pendingConfidentialityChange = null;
+
       } else {
-        // User cancelled (undefined result) - remove employees and reset confidentiality
-        this.handleModalCancellation();
+
+        // Empty result = remove this newly selected level
+        this.removeConfidentialityLevel(confidentiality);
+
+        this.pendingConfidentialityChange = null;
       }
-    });
-  }
+
+    }
+
+  });
+}
+
+
+//LoadEMployee for public and internal Confedentiability Level
+private loadAllEmployeesForPublic(): void {
+
+  console.log('PUBLIC selected - loading ALL employees');
+
+  this.employeeService.getAllEmployees().subscribe({
+
+    next: (response: any) => {
+
+      const employees = Array.isArray(response)
+        ? response
+        : response?.data || [];
+
+      console.log(
+        'PUBLIC - Total employees:',
+        employees.length
+      );
+
+      // Store ALL employees under PUBLIC
+      this.employeesByConfidentiality['PUBLIC'] = [
+        ...employees
+      ];
+
+      // Combine PUBLIC + other selected levels
+      this.updateCombinedSelectedEmployees();
+
+      console.log(
+        'Final selected employees:',
+        this.selectedEmployees.length
+      );
+
+    },
+
+    error: (error) => {
+
+      console.error(
+        'Error loading all employees for PUBLIC:',
+        error
+      );
+
+      this.employeesByConfidentiality['PUBLIC'] = [];
+
+      this.updateCombinedSelectedEmployees();
+
+    }
+
+  });
+
+}
+
+
+
+
+
+
+
+
+
 
   // Handle modal cancellation
-  private handleModalCancellation(): void {
-    // Clear selected employees
-    this.selectedEmployees = [];
+  // private handleModalCancellation(): void {
+  //   // Clear selected employees
+  //   this.selectedEmployees = [];
 
-    // Revert to default confidentiality level
-    const defaultLevel = 'INTERNAL';
-    this.circularForm.patchValue(
-      {
-        confidentiality: defaultLevel,
-      },
-      { emitEvent: false },
-    );
+  //   // Revert to default confidentiality level
+  //   const defaultLevel = 'INTERNAL';
+  //   this.circularForm.patchValue(
+  //     {
+  //       confidentiality: defaultLevel,
+  //     },
+  //     { emitEvent: false },
+  //   );
 
-    this.pendingConfidentialityChange = null;
-    console.log('Modal cancelled - reverted to default confidentiality');
-  }
+  //   this.pendingConfidentialityChange = null;
+  //   console.log('Modal cancelled - reverted to default confidentiality');
+  // }
+
+
+
+//Get confedentiablity level 
+getConfidentialityLabel(value: string): string {
+
+  const level = this.confidentialityLevels.find(
+    item => item.value === value
+  );
+
+  return level ? level.label : value;
+}
 
   // Method to manually open modal for existing selection
   editSelectedEmployees(): void {
@@ -562,23 +865,49 @@ toggleBranch(branch: any, event: Event): void {
   }
 
   // validator for select employee when the confidentiality is CONFIDENTIAL ,RESTRICTED ,CUSTOM
-  private confidentialityValidator(control: AbstractControl): ValidationErrors | null {
-    const value = control.value;
-    // const requiresEmployees = ['CONFIDENTIAL', 'RESTRICTED', 'CUSTOM'];
-    const requiresEmployees = [
-  'DEPARTMENT_WISE',
-  'ROLE_WISE',
-  'USER_WISE'
-];
+//   private confidentialityValidator(control: AbstractControl): ValidationErrors | null {
+//     const value = control.value;
+//     // const requiresEmployees = ['CONFIDENTIAL', 'RESTRICTED', 'CUSTOM'];
+//     const requiresEmployees = [
+//   'DEPARTMENT_WISE',
+//   'ROLE_WISE',
+//   'USER_WISE'
+// ];
 
 
 
-    if (requiresEmployees.includes(value) && this.selectedEmployees.length === 0) {
-      return { employeesRequired: true };
-    }
+//     if (requiresEmployees.includes(value) && this.selectedEmployees.length === 0) {
+//       return { employeesRequired: true };
+//     }
 
-    return null;
+//     return null;
+//   }
+private confidentialityValidator(
+  control: AbstractControl
+): ValidationErrors | null {
+
+  const value = control.value;
+
+  const requiresEmployees = [
+    'DEPARTMENT_WISE',
+    'ROLE_WISE',
+    'USER_WISE',
+    'CONFIDENTIAL_USER'
+  ];
+
+  if (
+    requiresEmployees.includes(value) &&
+    (!this.employeesByConfidentiality[value] ||
+      this.employeesByConfidentiality[value].length === 0)
+  ) {
+    return { employeesRequired: true };
   }
+
+  return null;
+}
+
+
+
 
   // Custom validator for today or future dates
   private todayOrFutureDateValidator(control: AbstractControl): ValidationErrors | null {
@@ -994,6 +1323,9 @@ loadBranches(): void {
     this.attachedFile = null;
     this.selectedApprovers = [];
     this.selectedEmployees = [];
+    this.selectedConfidentialityLevels = [];
+
+this.employeesByConfidentiality = {};
     this.circularForm.patchValue({
       confidentiality: 'INTERNAL',
     });
@@ -1041,6 +1373,11 @@ loadBranches(): void {
       form: this.circularForm.value,
       selectedApprovers: this.selectedApprovers,
       selectedEmployees: this.selectedEmployees,
+        selectedConfidentialityLevels:
+    this.selectedConfidentialityLevels,
+
+  employeesByConfidentiality:
+    this.employeesByConfidentiality
     };
 
     localStorage.setItem(this.DRAFT_KEY, JSON.stringify(draft));
@@ -1067,6 +1404,14 @@ loadBranches(): void {
 
     this.selectedApprovers = data.selectedApprovers || [];
     this.selectedEmployees = data.selectedEmployees || [];
+
+this.selectedConfidentialityLevels =
+  data.selectedConfidentialityLevels || [];
+
+this.employeesByConfidentiality =
+  data.employeesByConfidentiality || {};
+
+
   }
 
   previewCircular(): void {

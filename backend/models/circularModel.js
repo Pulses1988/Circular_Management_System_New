@@ -11,26 +11,24 @@ exports.createCircular = (data) => {
     source_type_id,
     effective_from,
     send_type,
+    visibility_type,
     repeat_cycle_id,
-is_recurring,
-       current_cycle_number,
-  last_recurrence_date,
-  next_recurrence_date,
-
-
+    is_recurring,
+    current_cycle_number,
+    last_recurrence_date,
+    next_recurrence_date,
     status,
     published_at,
     priority,
     special_keyword,
   } = data;
 
-  return db.query(
+  return db.query( 
     // `INSERT INTO circulars
     //   (title, content, creator_employee_id, circular_pdf, reference_circular_id, circular_code, source_type_id, effective_from, send_type,repeat_cycle_id, status, published_at, priority, special_keyword)
     //  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    `INSERT INTO circulars(title,content,creator_employee_id,circular_pdf,reference_circular_id,circular_code,source_type_id,effective_from,send_type,repeat_cycle_id,is_recurring,current_cycle_number,last_recurrence_date,next_recurrence_date,status,published_at,priority,special_keyword)
-VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?,?, ?, ?, ?)`,
-
+    `INSERT INTO circulars(title,content,creator_employee_id,circular_pdf,reference_circular_id,circular_code,source_type_id,effective_from,send_type,visibility_type,repeat_cycle_id,is_recurring,current_cycle_number,last_recurrence_date,next_recurrence_date,status,published_at,priority,special_keyword)
+VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       title,
       content,
@@ -40,19 +38,17 @@ VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?,?, ?, ?, ?)`,
       circular_code,
       source_type_id,
       effective_from,
-      send_type,
+      send_type, 
+      visibility_type,
       repeat_cycle_id, 
-
        is_recurring,
        current_cycle_number,
-  last_recurrence_date,
-  next_recurrence_date,
-
-
-      status,
-      published_at,
-      priority,
-      special_keyword,
+       last_recurrence_date,
+       next_recurrence_date,
+       status,
+       published_at,
+       priority,
+       special_keyword,
     ] 
 
 
@@ -182,15 +178,10 @@ exports.updateCircular = (id, data) => {
     effective_from,
     send_type,
     repeat_cycle_id, 
-
- is_recurring,
-  current_cycle_number,
-  last_recurrence_date,
-  next_recurrence_date,
-
-
-
-
+   is_recurring,
+   current_cycle_number,
+   last_recurrence_date,
+   next_recurrence_date,
     status,
     published_at,
     priority,
@@ -288,6 +279,7 @@ exports.getCircularDetailsById = async (circularId) => {
       c.circular_code,
       c.effective_from,
       c.send_type,
+      c.visibility_type,
       c.status,
       c.published_at,
       c.priority,
@@ -534,9 +526,7 @@ exports.updateRecurringCircular = (
 
 
 
-
 exports.createRecurringCircular = (data) => {
-
   const {
     title,
     content,

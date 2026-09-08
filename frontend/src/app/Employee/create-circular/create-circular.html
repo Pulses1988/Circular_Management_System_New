@@ -109,18 +109,28 @@
 
 
           <!-- Special Keyword -->
-          <div class="form-field">
+       <!-- Special Keyword -->
+<div class="form-field">
 
-            <label>Special Keyword</label>
+  <label class="special-keyword-label">
+    <span>Special Keyword--(important word or phrase)</span>
 
-            <input
-              type="text"
-              formControlName="specialKeyword"
-              placeholder="Enter special keyword"
-              class="form-input"
-            />
+   <span
+  class="special-keyword-info"
+  title="Enter an important word or phrase from the circular title. This helps you find the circular easily later."
+>
+  ⓘ
+</span>
+  </label>
 
-          </div>
+  <input
+    type="text"
+    formControlName="specialKeyword"
+    placeholder="Enter important word or phrase"
+    class="form-input"
+  />
+
+</div>
 
 
           <!-- Previous Circular -->
@@ -278,33 +288,121 @@
               Designation <span class="required">*</span>
             </label>
 
-            <div class="select-wrapper">
+          <!-- ================= CONFIDENTIALITY CUSTOM DROPDOWN ================= -->
 
-              <select
-                formControlName="confidentiality"
-                class="form-select"
-                [class.error]="isFieldInvalid('confidentiality')"
-                (click)="onConfidentialityDropdownClick()"
-              >
+<div class="custom-confidentiality-dropdown">
 
-                <option value="" disabled>
-                  Select confidentiality level
-                </option>
+  <!-- Dropdown button -->
+  <button
+    type="button"
+    class="custom-confidentiality-trigger"
+    (click)="toggleConfidentialityDropdown()"
+  >
 
-                <option
-                  *ngFor="let level of filteredConfidentialityLevels"
-                  [value]="level.value"
-                >
-                  {{ level.label }} - {{ level.description }}
-                </option>
+    <span>
+      {{
+        circularForm.get('confidentiality')?.value
+          ? getConfidentialityDropdownLabel(
+              circularForm.get('confidentiality')?.value
+            )
+          : 'Select confidentiality level'
+      }}
+    </span>
 
-              </select>
+    <mat-icon>
+      {{
+        isConfidentialityDropdownOpen
+          ? 'expand_less'
+          : 'expand_more'
+      }}
+    </mat-icon>
 
-              <mat-icon class="select-icon">
-                expand_more
-              </mat-icon>
+  </button>
 
-            </div>
+
+  <!-- Dropdown options -->
+  <div
+    class="custom-confidentiality-menu"
+    *ngIf="isConfidentialityDropdownOpen"
+  >
+
+    <div
+      class="custom-confidentiality-option"
+      *ngFor="let level of filteredConfidentialityLevels"
+
+      [class.previously-selected]="
+        isConfidentialityPreviouslySelected(level.value)
+      "
+
+      [class.current-selection]="
+        circularForm.get('confidentiality')?.value === level.value
+      "
+
+      (click)="selectConfidentialityLevel(level.value)"
+    >
+
+      <span class="confidentiality-option-text">
+
+        <span class="confidentiality-option-name">
+          {{ level.label }}
+        </span>
+
+        <span class="confidentiality-option-description">
+          - {{ level.description }}
+        </span>
+
+      </span>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- Selected Confidentiality Levels -->
+<!-- Selected Confidentiality Levels -->
+<div
+  class="selected-confidentiality-levels"
+  *ngIf="selectedConfidentialityLevels.length > 0"
+>
+
+  <label class="selected-level-title">
+    Selected Confidentiality Levels
+  </label>
+
+  <div class="confidentiality-chips">
+
+    <div
+      class="confidentiality-chip"
+      *ngFor="let level of selectedConfidentialityLevels"
+    >
+
+      <span>
+        {{ getConfidentialityLabel(level) }}
+      </span>
+
+      <button
+        type="button"
+        (click)="removeConfidentialityLevel(level)"
+        title="Remove"
+      >
+        ×
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+
+
+            
 
 
             <div

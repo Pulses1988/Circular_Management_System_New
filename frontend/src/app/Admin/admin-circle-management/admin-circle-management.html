@@ -217,14 +217,14 @@
     >
       Edit
     </button>
-
-    <button
-      type="button"
-      class="action-btn delete-btn"
-      (click)="deleteCircle(circle.circle_id)"
-    >
-      Delete
-    </button>
+<button
+  type="button"
+  class="action-btn delete-btn"
+  [disabled]="circle.has_branch_or_department"
+  (click)="deleteCircle(circle.circle_id)"
+>
+  Delete
+</button>
 
   </div>
 

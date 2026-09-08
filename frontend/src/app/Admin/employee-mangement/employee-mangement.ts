@@ -260,45 +260,92 @@ this.employeeForm
     });
 
   // Head Office should not have branch reporting officers
-  this.managers = [];
+  // this.managers = []; 
+// ================= HEAD OFFICE MANAGERS =================
+this.loadManagersByHeadOffice(this.userAssignment.id);
+
 }
 
     // ================= ACTUAL BRANCH =================
+    // else if (branchId) {
+
+    //   console.log('Loading Branch departments for:', branchId);
+
+    //   // Load managers for selected branch
+    //   this.loadManagersByBranch(Number(branchId));
+
+    //   // Load departments for selected branch
+    //   this.userService
+    //     .getDepartmentsByBranch(Number(branchId))
+    //     .subscribe({
+    //       next: (data: any[]) => {
+
+    //         console.log('Branch Departments:', data);
+
+    //         this.departments = data || [];
+    //         this.hasDepartments = this.departments.length > 0;
+
+    //         this.checkDepartmentValidation();
+    //       },
+
+    //       error: (error) => {
+
+    //         console.error(
+    //           'Error loading Branch departments:',
+    //           error
+    //         );
+
+    //         this.departments = [];
+    //         this.hasDepartments = false;
+    //         this.roles = [];
+    //       }
+    //     });
+
+    // }
+ 
     else if (branchId) {
 
-      console.log('Loading Branch departments for:', branchId);
+  console.log('======================================');
+  console.log('BRANCH SELECTED');
+  console.log('Selected Branch ID:', branchId);
+  console.log('======================================');
 
-      // Load managers for selected branch
-      this.loadManagersByBranch(Number(branchId));
+  // ================= MANAGERS =================
+  this.loadManagersByBranch(Number(branchId));
 
-      // Load departments for selected branch
-      this.userService
-        .getDepartmentsByBranch(Number(branchId))
-        .subscribe({
-          next: (data: any[]) => {
+  // ================= DEPARTMENTS =================
+  this.userService
+    .getDepartmentsByBranch(Number(branchId))
+    .subscribe({
+      next: (data: any[]) => {
 
-            console.log('Branch Departments:', data);
+        console.log('Branch Departments:', data);
 
-            this.departments = data || [];
-            this.hasDepartments = this.departments.length > 0;
+        this.departments = data || [];
+        this.hasDepartments = this.departments.length > 0;
 
-            this.checkDepartmentValidation();
-          },
+        this.checkDepartmentValidation();
+      },
 
-          error: (error) => {
+      error: (error) => {
 
-            console.error(
-              'Error loading Branch departments:',
-              error
-            );
+        console.error(
+          'Error loading Branch departments:',
+          error
+        );
 
-            this.departments = [];
-            this.hasDepartments = false;
-            this.roles = [];
-          }
-        });
+        this.departments = [];
+        this.hasDepartments = false;
+        this.roles = [];
+      }
+    });
 
-    }
+}
+
+
+
+
+
 
     // ================= NOTHING SELECTED =================
     else {
@@ -861,6 +908,53 @@ this.userService.getRolesByBranch(this.userAssignment.id).subscribe((data) => {
       },
     });
   }
+
+
+// ================= MANAGERS BY HEAD OFFICE =================
+loadManagersByHeadOffice(headOfficeId: number) {
+
+  if (!headOfficeId) {
+    this.managers = [];
+    return;
+  }
+
+  console.log('======================================');
+  console.log('LOADING HEAD OFFICE MANAGERS');
+  console.log('Head Office ID:', headOfficeId);
+  console.log('======================================');
+
+  this.userService.getManagersByHeadOffice(headOfficeId).subscribe({
+
+    next: (response: any) => {
+
+      console.log('Head Office Managers API Response:', response);
+
+      this.managers = response.data || [];
+
+      console.log(
+        'Head Office Managers:',
+        this.managers
+      );
+
+      console.log(
+        'Head Office Manager Count:',
+        this.managers.length
+      );
+    },
+
+    error: (error) => {
+
+      console.error(
+        'Error loading Head Office managers:',
+        error
+      );
+
+      this.managers = [];
+    }
+
+  });
+}
+
 
 //Whether the Reporting officer is required or not 
 isReportingOfficerRequired(): boolean {

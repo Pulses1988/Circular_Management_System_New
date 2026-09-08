@@ -171,14 +171,22 @@
       Edit
     </button>
 
-    <button
+    <!-- <button
       type="button"
       class="action-btn delete-btn"
       (click)="deleteZone(zone.id)"
     >
       Delete
-    </button>
+    </button> -->
 
+    <button 
+  type="button"
+  class="action-btn delete-btn"
+  [disabled]="zone.has_circle_or_branch"
+  (click)="deleteZone(zone.id)"
+>
+  Delete
+</button>
   </div>
 
 </td>

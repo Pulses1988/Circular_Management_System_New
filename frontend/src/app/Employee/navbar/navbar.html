@@ -1,208 +1,157 @@
-<header class="bg-gradient-to-r from-blue-800 via-blue-700 to-blue-900 text-white shadow-xl h-20">
+<header class="bg-gradient-to-r from-blue-800 via-blue-700 to-blue-900 text-white shadow-xl h-20 w-full relative z-40">
   @if (employeeData) {
-  <div class="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
-    <div class="flex justify-between items-center py-4 h-full">
-      <!-- Logo & Brand -->
-      <div class="flex items-center space-x-4">
-        <div class="flex justify-center items-center">
-          <mat-icon class="text-2xl mb-1.5 text-blue-200">account_balance</mat-icon>
-          <h1 class="ml-1 text-2xl font-bold">{{employeeData!.bank_name}}</h1>
+  <!-- Removed max-w limit on desktop (lg:max-w-none lg:px-10) to push content to extreme left and right -->
+  <div class="w-full max-w-7xl lg:max-w-none mx-auto px-4 sm:px-6 lg:px-10 h-full">
+    <div class="flex justify-between items-center py-4 h-full gap-2">
+      
+      <!-- Logo & Brand (Extreme Left on Desktop) -->
+      <div class="flex items-center space-x-2 lg:space-x-4 min-w-0 shrink">
+        <div class="flex items-center min-w-0">
+          <mat-icon class="text-2xl lg:text-3xl mb-1.5 text-blue-200 shrink-0">account_balance</mat-icon>
+          <!-- Increased desktop font size to text-3xl -->
+          <h1 class="ml-1 text-base sm:text-lg lg:text-3xl font-bold truncate tracking-wide">
+            {{ employeeData!.bank_name }}
+          </h1>
         </div>
       </div>
       
-      <!-- User Info & Notifications -->
-      <div class="flex items-center space-x-6">
+      <!-- User Info & Notifications (Extreme Right on Desktop) -->
+      <div class="flex items-center gap-2 sm:gap-4 lg:gap-8 shrink-0">
+        
         <!-- Notification Bell -->
         <div class="relative notification-container">
-          <!-- <mat-icon 
-            class="text-2xl cursor-pointer hover:text-blue-200 transition-colors notification-bell"
-            [class.shake]="hasNewNotification"
+          <button
+            mat-icon-button
+            class="notification-bell"
             [matBadge]="unreadCount"
             [matBadgeHidden]="unreadCount === 0"
             matBadgeColor="warn"
-            matBadgeSize="small"
+            matBadgeSize="large"
             (click)="toggleNotifications($event)">
-            notifications
-          </mat-icon> -->
-
-          <button
-    mat-icon-button
-    class="notification-bell"
-    [matBadge]="unreadCount"
-    [matBadgeHidden]="unreadCount === 0"
-    matBadgeColor="warn"
-    matBadgeSize="large"
-    (click)="toggleNotifications($event)">
-
-    <mat-icon  class="text-white">
-        notifications
-    </mat-icon>
-
-</button>
+            <mat-icon class="text-white lg:text-2xl">notifications</mat-icon>
+          </button>
           
-          <!-- Notification Dropdown -->
+          <!-- Notification Popup Overlay -->
+          <div
+            *ngIf="showNotifications"
+            class="notification-overlay"
+            (click)="showNotifications = false">
 
-<!-- Notification Popup Overlay -->
-<div
-  *ngIf="showNotifications"
-  class="notification-overlay"
-  (click)="showNotifications = false">
+            <div
+              class="notification-popup"
+              (click)="$event.stopPropagation()">
 
-  <!-- Center Notification Popup -->
-  <div
-    class="notification-popup"
-    (click)="$event.stopPropagation()">
+              <!-- Header -->
+              <div class="notification-popup-header">
+                <h3>Notifications</h3>
 
-    <!-- Header -->
-    <div class="notification-popup-header">
-      <h3>Notifications</h3>
+                <div class="header-actions">
+                  <button
+                    *ngIf="unreadCount > 0"
+                    (click)="markAllAsRead()"
+                    class="mark-all-btn">
+                    Mark all as read
+                  </button>
 
-      <div class="header-actions">
-        <button
-          *ngIf="unreadCount > 0"
-          (click)="markAllAsRead()"
-          class="mark-all-btn">
-          Mark all as read
-        </button>
+                  <button
+                    class="close-btn"
+                    (click)="showNotifications = false">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+              </div>
 
-        <button
-          class="close-btn"
-          (click)="showNotifications = false">
-          <mat-icon>close</mat-icon>
-        </button>
-      </div>
-    </div>
+              <!-- Notification List -->
+              <div class="notification-list">
 
-    <!-- Notification List -->
-    <div class="notification-list">
+                <div
+                  *ngIf="notifications.length === 0"
+                  class="no-notifications">
+                  <mat-icon>notifications_none</mat-icon>
+                  <p>No new notifications</p>
+                </div>
 
-      <div
-        *ngIf="notifications.length === 0"
-        class="no-notifications">
+                <div
+                  *ngFor="let notification of notifications"
+                  (click)="openCircular(notification)"
+                  class="notification-item">
 
-        <mat-icon>notifications_none</mat-icon>
-        <p>No new notifications</p>
+                  <div class="notification-item-icon">
+                    <mat-icon>
+                      {{ getNotificationIcon(notification.notification_type) }}
+                    </mat-icon>
+                  </div>
 
-      </div>
+                  <div class="notification-content">
+                    <p class="sender-name">
+                      {{ notification.sender_first_name }}
+                      {{ notification.sender_last_name }}
+                    </p>
 
-      <div
-        *ngFor="let notification of notifications"
-        (click)="openCircular(notification)"
-        class="notification-item">
+                    <p class="circular-title">
+                      {{ notification.circular_title }}
+                    </p>
 
-        <div class="notification-item-icon">
-          <mat-icon>
-            {{ getNotificationIcon(notification.notification_type) }}
-          </mat-icon>
-        </div>
+                    <p class="notification-message">
+                      {{
+                        notification.notification_type === 'message'
+                          ? formatNotificationMessage(notification.message_preview)
+                          : '📎 Sent an attachment'
+                      }}
+                    </p>
 
-        <div class="notification-content">
+                    <p class="notification-time">
+                      {{ formatTime(notification.created_at) }}
+                    </p>
+                  </div>
 
-          <p class="sender-name">
-            {{ notification.sender_first_name }}
-            {{ notification.sender_last_name }}
-          </p>
+                </div>
 
-          <p class="circular-title">
-            {{ notification.circular_title }}
-          </p>
-<!-- 
-          <p class="notification-message">
-            {{
-              notification.notification_type === 'message'
-                ? notification.message_preview
-                : '📎 Sent an attachment'
-            }}
-          </p> -->
-
-
-<p class="notification-message">
-  {{
-    notification.notification_type === 'message'
-      ? formatNotificationMessage(notification.message_preview)
-      : '📎 Sent an attachment'
-  }}
-</p>
-
-
-
-          <p class="notification-time">
-            {{ formatTime(notification.created_at) }}
-          </p>
-
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
-          
-
-
-
-
-
-
+              </div>
+            </div>
+          </div>
         </div>
         
-        <!-- <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center ring-2 ring-blue-300">
-            <mat-icon class="text-white">person</mat-icon>
-          </div>
-          <div class="text-sm">
-            <p class="font-semibold">{{ employeeData!.first_name}} {{employeeData!.last_name}}</p>
-            <p class="text-blue-200 text-xs">{{ employeeData!.role_name }}</p>
-          </div>
-        </div> -->
-         
+        <!-- Profile Menu -->
         <div class="relative">
-  <div
-    class="flex items-center space-x-3 cursor-pointer hover:bg-blue-700 rounded-lg px-3 py-2 transition-all duration-200"
-    (click)="toggleProfileMenu($event)">
+          <div
+            class="flex items-center space-x-2 lg:space-x-3 cursor-pointer hover:bg-blue-700/80 rounded-lg px-2 sm:px-3 lg:px-4 py-2 transition-all duration-200"
+            (click)="toggleProfileMenu($event)">
 
-    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center ring-2 ring-blue-300">
-      <mat-icon class="text-white">person</mat-icon>
-    </div>
+            <div class="w-8 h-8 lg:w-11 lg:h-11 bg-blue-600 rounded-full flex items-center justify-center ring-2 ring-blue-300 shrink-0">
+              <mat-icon class="text-white lg:text-2xl">person</mat-icon>
+            </div>
 
-    <div class="text-sm">
-      <p class="font-semibold">
-        {{ employeeData!.first_name }} {{ employeeData!.last_name }}
-      </p>
-      <p class="text-blue-200 text-xs">
-        {{ employeeData!.role_name }}
-      </p>
-    </div>
+            <!-- Increased Desktop Font Sizes -->
+            <div class="hidden lg:block">
+              <p class="font-bold lg:text-base leading-tight">
+                {{ employeeData!.first_name }} {{ employeeData!.last_name }}
+              </p>
+              <p class="text-blue-200 lg:text-sm">
+                {{ employeeData!.role_name }}
+              </p>
+            </div>
 
-    <mat-icon>
-      {{ showProfileMenu ? 'expand_less' : 'expand_more' }}
-    </mat-icon>
-  </div>
+            <mat-icon class="shrink-0 lg:text-2xl">
+              {{ showProfileMenu ? 'expand_less' : 'expand_more' }}
+            </mat-icon>
+          </div>
 
-  <!-- Dropdown -->
-  <div
-    *ngIf="showProfileMenu"
-    class="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-xl z-50">
-
-    <button
-      class="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-red-600"
-      (click)="logout()">
-
-      <mat-icon>logout</mat-icon>
-      Logout
-
-    </button>
-
-  </div>
-</div>
-
-
-
-
-
-
-
+          <!-- Dropdown -->
+          <div
+            *ngIf="showProfileMenu"
+            class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-slate-100 z-50 overflow-hidden">
+            <button
+              class="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-red-600 font-medium transition-colors text-sm"
+              (click)="logout()">
+              <mat-icon class="text-red-600">logout</mat-icon>
+              <span>Logout</span>
+            </button>
+          </div>
+        </div>
 
       </div>
+
     </div>
   </div>
   }

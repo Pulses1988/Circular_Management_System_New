@@ -27,7 +27,12 @@ async function createCircularTrackingEntries(circularId, employeeIds) {
 // -------------------------------
 
 exports.createCircular = async (req, res) => {
-  try {
+  try { 
+    console.log("========== UPLOADED PDF ==========");
+console.log("File name:", req.file?.originalname);
+console.log("MIME type:", req.file?.mimetype);
+console.log("File size:", req.file?.size);
+console.log("==================================");
     if (req.body.status !== "DRAFT" && !req.file)
       return res.status(400).json({ error: "PDF file is required" });
 
@@ -70,6 +75,10 @@ exports.createCircular = async (req, res) => {
       effective_from: req.body.effective_from || null,
       send_type: req.body.send_type,
       repeat_cycle_id: req.body.repeat_cycle,
+
+      //Visiblity type
+visibility_type: req.body.visibility_type || null,
+
 
       is_recurring: isRecurring,
       current_cycle_number: currentCycleNumber,

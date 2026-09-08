@@ -126,7 +126,7 @@ private isTokenExpired(): boolean {
 
   logout(): void {
     console.log('LOGOUT CALLED - Stack trace:');
-  console.trace();
+  // console.trace();
     if (!this.isBrowser()) return;
 
     localStorage.removeItem(this.TOKEN_KEY);

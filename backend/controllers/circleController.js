@@ -181,4 +181,100 @@ exports.getCirclesByZone=(req,res)=>{
     );
 
 
+}; 
+
+
+// DELETE CIRCLE
+
+exports.deleteCircle = (req, res) => {
+
+  console.log("========== DELETE CIRCLE CONTROLLER HIT ==========");
+
+  const circleId = req.params.id;
+
+  console.log("CIRCLE ID:", circleId);
+
+  // ============================================
+  // 1. Check Circle dependencies
+  // ============================================
+
+  circleModel.checkCircleDependencies(
+    circleId,
+
+    (err, dependencyRows) => {
+
+      if (err) {
+
+        console.log(
+          "CHECK CIRCLE DEPENDENCIES ERROR:",
+          err
+        );
+
+        return res.status(500).json({
+          message: "Failed to check Circle dependencies"
+        });
+
+      }
+
+      const branchCount =
+        dependencyRows[0].branch_count;
+
+      const departmentCount =
+        dependencyRows[0].department_count;
+
+      console.log("Branch Count:", branchCount);
+      console.log("Department Count:", departmentCount);
+
+      // ============================================
+      // 2. Do not allow deletion
+      // ============================================
+
+      if (
+        branchCount > 0 ||
+        departmentCount > 0
+      ) {
+
+        return res.status(409).json({
+          error:
+            "This Circle cannot be deleted because it has Branch or Department records."
+        });
+
+      }
+
+      // ============================================
+      // 3. Delete Circle
+      // ============================================
+
+      circleModel.deleteCircle(
+        circleId,
+
+        (err, result) => {
+
+          if (err) {
+
+            console.log(
+              "DELETE CIRCLE DATABASE ERROR:",
+              err
+            );
+
+            return res.status(500).json({
+              message: "Failed to delete Circle"
+            });
+
+          }
+
+          console.log(
+            "CIRCLE DELETED SUCCESSFULLY:",
+            result
+          );
+
+          res.json({
+            message: "Circle deleted successfully"
+          });
+
+        }
+      );
+
+    }
+  );
 };

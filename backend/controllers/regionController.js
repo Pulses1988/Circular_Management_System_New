@@ -107,11 +107,85 @@ exports.createRegion = async (req, res) => {
 };
 
 // Delete Region
+// exports.deleteRegion = async (req, res) => {
+
+//   const { id } = req.params;
+
+//   try {
+
+//     await regionModel.deleteRegion(id);
+
+//     res.json({
+//       message: "Region deleted successfully",
+//     });
+
+//   } catch (err) {
+
+//     console.error("Delete Region Error:", err);
+
+//     res.status(500).json({
+//       error: "Failed to delete Region",
+//     });
+
+//   }
+
+// };    
+// Delete Region
 exports.deleteRegion = async (req, res) => {
 
   const { id } = req.params;
 
   try {
+
+    // ============================================
+    // 1. Check Zone and Circle dependencies
+    // ============================================
+
+    const [dependencyRows] =
+      await regionModel.getRegionDependencyCount(id);
+
+    const zoneCount = Number(dependencyRows[0].zone_count);
+    const circleCount = Number(dependencyRows[0].circle_count);
+
+    console.log("=================================");
+    console.log("DELETE REGION CHECK");
+    console.log("Region ID:", id);
+    console.log("Zone Count:", zoneCount);
+    console.log("Circle Count:", circleCount);
+    console.log("=================================");
+
+
+    // ============================================
+    // 2. Don't allow deletion if Zone exists
+    // ============================================
+
+    if (zoneCount > 0) {
+
+      return res.status(409).json({
+        error:
+          "Cannot delete Region because Zone(s) exist under this Region."
+      });
+
+    }
+
+
+    // ============================================
+    // 3. Don't allow deletion if Circle exists
+    // ============================================
+
+    if (circleCount > 0) {
+
+      return res.status(409).json({
+        error:
+          "Cannot delete Region because Circle(s) exist under this Region."
+      });
+
+    }
+
+
+    // ============================================
+    // 4. No dependencies → Safe to delete
+    // ============================================
 
     await regionModel.deleteRegion(id);
 
@@ -129,8 +203,7 @@ exports.deleteRegion = async (req, res) => {
 
   }
 
-};    
-
+};
 
 //update region 
 

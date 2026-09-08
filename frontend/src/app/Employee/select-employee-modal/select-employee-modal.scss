@@ -19,4 +19,22 @@
 
 ::ng-deep .mat-mdc-form-field .mdc-notched-outline__notch {
   border-right: none !important;
+}   
+
+
+
+.hierarchy-section {
+  transition: all 0.2s ease;
+}
+
+/* Previously selected section */
+.hierarchy-section.selection-completed {
+  background: #eff6ff;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.12);
+}
+
+/* Make the section heading slightly stronger */
+.hierarchy-section.selection-completed h3 {
+  font-weight: 700;
 }

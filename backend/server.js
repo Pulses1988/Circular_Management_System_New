@@ -9,9 +9,25 @@ const app = express();
 const server = http.createServer(app);
 const subscribedCircularRooms = new Set();
 
+// const io = new Server(server, {
+//   cors: {
+//     origin: ["http://localhost:4200", "http://192.168.1.11:4200", "http://192.168.1.10:4200"],
+//     methods: ["GET", "POST"],
+//     credentials: true
+//   },
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:4200", "http://192.168.1.11:4200", "http://192.168.1.10:4200"],
+    origin: [
+      "http://localhost:4200",
+      "http://192.168.1.11:4200",
+      "http://192.168.1.10:4200",
+      "http://localhost:8080",
+      "http://127.0.0.1:8080",
+      "http://192.168.1.3:8080",
+      "http://192.168.1.8:4200",
+
+      "http://192.168.1.8:4200"
+    ],
     methods: ["GET", "POST"],
     credentials: true
   },
@@ -72,14 +88,57 @@ const memberTypeRoutes = require("./routes/memberTypeRoutes");
 
 
 // Allow cross-origin requests from your Angular app
+// app.use(
+//   cors({
+//     origin: ["http://localhost:4200", "http://192.168.1.11:4200"],
+//     credentials: true,
+//     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization"]
+//   })
+// ); 
+
+// app.use(
+//   cors({
+//     origin: [
+//       "http://localhost:4200",
+//       "http://192.168.1.11:4200",
+//       "http://192.168.1.10:4200",
+
+//       // Built Angular frontend
+//       "http://localhost:8080",
+//       "http://127.0.0.1:8080",
+//       "http://192.168.1.3:8080"
+//     ],
+//     credentials: true,
+//     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization"]
+//   })
+// );
 app.use(
   cors({
-    origin: ["http://localhost:4200", "http://192.168.1.11:4200"],
+    origin: [
+      "http://localhost:4200",
+      "http://192.168.1.11:4200",
+      "http://192.168.1.10:4200",
+
+      // Built Angular frontend
+      "http://localhost:8080",
+      "http://127.0.0.1:8080",
+      "http://192.168.1.3:8080",
+      "http://192.168.1.8:8080"
+    ],
+    origin: (origin, callback) => callback(null, true),
+    allowedHeaders: [
+      "Content-Type", 
+      "Authorization", 
+      "X-Requested-With", 
+      "X-Tunnel-Authorization"
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
   })
-); 
+);
 
 // Add this
 app.use(express.json());
@@ -238,12 +297,18 @@ cron.schedule('1 0 * * *', async () => {
   }
 });
 
-const PORT = 3000;
-server.listen(PORT, () => {
+app.get("/", (req, res) => {
+  res.send("Backend API Server is running successfully!");
+});
+
+ const PORT = 3000;
+//const PORT = process.env.PORT || 3000;
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Server is running on port ${PORT}`);
   console.log(`Local: http://localhost:${PORT}`);
-  console.log(`Network: http://192.168.1.11:${PORT}`);
+  // console.log(`Network: http://192.168.1.11:${PORT}`);
+  console.log(`Network: http://192.168.1.8:${PORT}`);
 });
 // setInterval(async () => {
 //   await recurrenceService.processRecurringCirculars();

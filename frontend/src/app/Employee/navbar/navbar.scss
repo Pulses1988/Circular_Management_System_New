@@ -267,4 +267,13 @@ line-height: 1.6;
   .notification-item {
     padding: 16px;
   }
+} 
+
+/* Ensure Profile Dropdown items remain dark regardless of header color */
+.absolute button {
+  color: #dc2626 !important; /* Tailwind Red 600 */
+
+  mat-icon {
+    color: #dc2626 !important;
+  }
 }

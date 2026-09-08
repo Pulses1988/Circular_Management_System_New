@@ -75,10 +75,55 @@ exports.createZone = async (req, res) => {
 };
 
 // Delete Zone
+// exports.deleteZone = async (req, res) => {
+//   try {
+
+//     const { id } = req.params;
+
+//     await zoneModel.deleteZone(id);
+
+//     res.json({
+//       message: "Zone deleted successfully",
+//     });
+
+//   } catch (err) {
+//     console.error("Delete Zone Error:", err);
+
+//     res.status(500).json({
+//       error: "Failed to delete Zone",
+//     });
+//   }
+// };
+// Delete Zone
 exports.deleteZone = async (req, res) => {
   try {
 
     const { id } = req.params;
+
+    // ============================================
+    // 1. Check whether Zone has Circle or Branch
+    // ============================================
+
+    const [dependencyRows] =
+      await zoneModel.checkZoneDependencies(id);
+
+    const circleCount = dependencyRows[0].circle_count;
+    const branchCount = dependencyRows[0].branch_count;
+
+    // ============================================
+    // 2. Do not allow deletion if children exist
+    // ============================================
+
+    if (circleCount > 0 || branchCount > 0) {
+      return res.status(409).json({
+        error:
+          "This Zone cannot be deleted because it has Circle or Branch records."
+      });
+    }
+
+    // ============================================
+    // 3. Delete Zone
+    // ============================================
 
     await zoneModel.deleteZone(id);
 
@@ -87,13 +132,20 @@ exports.deleteZone = async (req, res) => {
     });
 
   } catch (err) {
+
     console.error("Delete Zone Error:", err);
 
     res.status(500).json({
       error: "Failed to delete Zone",
     });
+
   }
 };
+
+
+
+
+
 
 // Get Zones By Region
 exports.getZonesByRegionId = async (req, res) => {

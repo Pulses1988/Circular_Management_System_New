@@ -148,12 +148,27 @@
       Edit
     </button>
 
-    <button
+    <!-- <button
       class="action-btn delete-btn"
       (click)="deleteRegion(region.id)"
     >
       Delete
-    </button>
+    </button> -->
+
+<button
+  class="action-btn delete-btn"
+  (click)="deleteRegion(region.id)"
+  [disabled]="region.zone_count > 0 || region.circle_count > 0"
+  [title]="
+    region.zone_count > 0 || region.circle_count > 0
+      ? 'Cannot delete Region because Zone or Circle exists'
+      : 'Delete Region'
+  "
+>
+  Delete
+</button>
+
+
 
   </div>
 

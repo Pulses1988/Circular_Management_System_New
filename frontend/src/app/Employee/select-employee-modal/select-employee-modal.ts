@@ -19,9 +19,21 @@ import { CommonModule } from '@angular/common';
 interface Employee {
   id: number;
   employee_id: string;
+
   first_name: string;
+  middle_name?: string | null;
   last_name: string;
-  department_id: number;
+
+  role_id?: number | null;
+  role_name?: string | null;
+
+  branch_id?: number | null;
+  department_id?: number | null;
+
+  branch_name?: string | null;
+  department_name?: string | null;
+
+  head_office_id?: number | null;
 }
 
 interface Department {
@@ -60,6 +72,8 @@ interface Role {
 interface Designation {
   id: number;
   name: string;
+    branch_name?: string | null;
+  department_name?: string | null;
 }
 
 interface Committee {
@@ -144,7 +158,18 @@ export class SelectEmployeeModal implements OnInit {
 
   allEmployees: Employee[] = [];
 
-  selectedEmployees: Employee[] = []; 
+  selectedEmployees: Employee[] = [];  
+
+// =========================================================
+// CUMULATIVE EMPLOYEES BY HIERARCHY LEVEL
+// =========================================================
+
+private employeesByLevel: {
+  [key: string]: Employee[];
+} = {};
+
+
+
 
 employeeSearchText = '';
 
@@ -311,15 +336,39 @@ departmentsForSelectedBranches: any[] = [];
     }); 
 
   // =======================================================
-  // USER WISE
+  // USER WISE//Confedential Use Selection 
   // =======================================================
 
-  if (this.isUserWiseSelection()) {
+  // if (this.isUserWiseSelection()) {
 
-    this.loadAllEmployees();
+  //   this.loadAllEmployees();
 
-    return;
+  //   return;
+  // }
+if (
+  this.isUserWiseSelection() ||
+  this.isConfidentialUserSelection()
+) {
+
+  this.loadAllEmployees();
+
+  // Restore previously selected employees
+  if (this.data?.preSelectedEmployees) {
+    this.selectedEmployees = [
+      ...this.data.preSelectedEmployees
+    ];
+
+    this.initialSelection = [
+      ...this.data.preSelectedEmployees
+    ];
   }
+
+  return;
+}
+
+
+
+
 
 
     // =======================================================
@@ -446,7 +495,10 @@ this.form
       this.showDepartmentQuestion = false;
       this.showDepartmentSelection = false;
       this.departmentsForSelectedBranches = [];
-      this.selectedEmployees = [];
+      // this.selectedEmployees = []; 
+      delete this.employeesByLevel['ZONE_WISE'];
+
+this.rebuildSelectedEmployees();
       return;
     }
 
@@ -516,7 +568,10 @@ this.form
       this.showDepartmentQuestion = false;
       this.showDepartmentSelection = false;
       this.departmentsForSelectedBranches = [];
-      this.selectedEmployees = [];
+      // this.selectedEmployees = []; 
+      delete this.employeesByLevel['CIRCLE_WISE'];
+
+this.rebuildSelectedEmployees();
       return;
     }
 
@@ -607,7 +662,10 @@ this.form
       this.showDepartmentQuestion = false;
       this.showDepartmentSelection = false;
       this.departmentsForSelectedBranches = [];
-      this.selectedEmployees = [];
+      // this.selectedEmployees = []; 
+      delete this.employeesByLevel['BRANCH_WISE'];
+
+this.rebuildSelectedEmployees();
       return;
     }
 
@@ -683,7 +741,10 @@ this.form
     );
 
     // Clear previous employees
-    this.selectedEmployees = [];
+    // this.selectedEmployees = [];
+    delete this.employeesByLevel['DEPARTMENT_WISE'];
+
+this.rebuildSelectedEmployees();
 
     if (this.selectedDepartmentIds.length === 0) {
       return;
@@ -1565,6 +1626,16 @@ isUserWiseSelection(): boolean {
   return (
     this.data?.confidentiality ===
     'USER_WISE'
+  );
+}
+
+// =========================================================
+// SELECTION CHECKS for Confidential User
+// =========================================================
+isConfidentialUserSelection(): boolean {
+  return (
+    this.data?.confidentiality ===
+    'CONFIDENTIAL_USER'
   );
 }
 
@@ -2596,7 +2667,7 @@ selectZoneWise(answer: boolean): void {
     // Load zones belonging to selected regions
     this.loadZonesForSelectedRegions();
 
-    this.selectedEmployees = [];
+    // this.selectedEmployees = [];
 
   } else {
 
@@ -2685,7 +2756,7 @@ selectCircleWise(answer: boolean): void {
 
     }
 
-    this.selectedEmployees = [];
+    // this.selectedEmployees = [];
 
   } else {
 
@@ -2771,7 +2842,7 @@ else {
 }
 
     // Do not keep circle employees
-    this.selectedEmployees = [];
+    // this.selectedEmployees = [];
 
   } else {
 
@@ -3027,6 +3098,61 @@ private loadAllDepartments(): void {
 }
 
 
+// =========================================================
+// REMOVE DUPLICATE EMPLOYEES
+// =========================================================
+
+private uniqueEmployees(employees: Employee[]): Employee[] {
+
+  const employeeMap = new Map<number, Employee>();
+
+  employees.forEach((employee) => {
+
+    if (employee?.id != null) {
+      employeeMap.set(employee.id, employee);
+    }
+
+  });
+
+  return Array.from(employeeMap.values());
+}
+
+
+// =========================================================
+// REBUILD CUMULATIVE EMPLOYEE LIST
+// =========================================================
+
+private rebuildSelectedEmployees(): void {
+
+  const allEmployees: Employee[] = [];
+
+  Object.values(this.employeesByLevel).forEach((employees) => {
+
+    allEmployees.push(...employees);
+
+  });
+
+  this.selectedEmployees =
+    this.uniqueEmployees(allEmployees);
+
+  console.log('====================================');
+  console.log('CUMULATIVE EMPLOYEE LIST');
+  console.log('Employees by level:', this.employeesByLevel);
+  console.log('Final selected employees:', this.selectedEmployees);
+  console.log(
+    'Final employee count:',
+    this.selectedEmployees.length
+  );
+  console.log('====================================');
+
+}
+
+
+
+
+
+
+
 
   // =========================================================
   // REGION EMPLOYEES
@@ -3037,7 +3163,7 @@ private loadAllDepartments(): void {
     const selectionRequest =
       ++this.regionSelectionRequest;
 
-    this.selectedEmployees = [];
+    // this.selectedEmployees = [];
 
     if (
       this.selectedRegionIds.length === 0
@@ -3067,14 +3193,19 @@ private loadAllDepartments(): void {
           this.regionSelectionRequest
       ) {
 
-        this.selectedEmployees =
-          employees.filter(
-            (employee, index, list) =>
-              list.findIndex(
-                (item) =>
-                  item.id === employee.id
-              ) === index
-          );
+        // this.selectedEmployees =
+        //   employees.filter(
+        //     (employee, index, list) =>
+        //       list.findIndex(
+        //         (item) =>
+        //           item.id === employee.id
+        //       ) === index
+        //   );
+this.employeesByLevel['REGION_WISE'] =
+  this.uniqueEmployees(employees);
+
+this.rebuildSelectedEmployees();
+
 
         this.isLoadingRegionEmployees =
           false;
@@ -3134,7 +3265,7 @@ private loadAllDepartments(): void {
     const selectionRequest =
       ++this.zoneSelectionRequest;
 
-    this.selectedEmployees = [];
+    // this.selectedEmployees = [];
 
     if (
       this.selectedZoneIds.length === 0
@@ -3164,14 +3295,22 @@ private loadAllDepartments(): void {
           this.zoneSelectionRequest
       ) {
 
-        this.selectedEmployees =
-          employees.filter(
-            (employee, index, list) =>
-              list.findIndex(
-                (item) =>
-                  item.id === employee.id
-              ) === index
-          );
+        // this.selectedEmployees =
+        //   employees.filter(
+        //     (employee, index, list) =>
+        //       list.findIndex(
+        //         (item) =>
+        //           item.id === employee.id
+        //       ) === index
+        //   );
+this.employeesByLevel['ZONE_WISE'] =
+  this.uniqueEmployees(employees);
+
+this.rebuildSelectedEmployees();
+
+
+
+
 
         this.isLoadingZoneEmployees =
           false;
@@ -3276,7 +3415,7 @@ private loadTopLevelEmployees(): void {
     const selectionRequest =
       ++this.circleSelectionRequest;
 
-    this.selectedEmployees = [];
+    // this.selectedEmployees = [];
 
     if (
       this.selectedCircleIds.length === 0
@@ -3306,14 +3445,21 @@ private loadTopLevelEmployees(): void {
           this.circleSelectionRequest
       ) {
 
-        this.selectedEmployees =
-          employees.filter(
-            (employee, index, list) =>
-              list.findIndex(
-                (item) =>
-                  item.id === employee.id
-              ) === index
-          );
+        // this.selectedEmployees =
+        //   employees.filter(
+        //     (employee, index, list) =>
+        //       list.findIndex(
+        //         (item) =>
+        //           item.id === employee.id
+        //       ) === index
+        //   ); 
+this.employeesByLevel['CIRCLE_WISE'] =
+  this.uniqueEmployees(employees);
+
+this.rebuildSelectedEmployees();
+
+
+
 
         this.isLoadingCircleEmployees =
           false;
@@ -3373,7 +3519,7 @@ private loadTopLevelEmployees(): void {
     const selectionRequest =
       ++this.branchSelectionRequest;
 
-    this.selectedEmployees = [];
+    // this.selectedEmployees = [];
 
     if (
       this.selectedBranchIds.length === 0
@@ -3403,14 +3549,21 @@ private loadTopLevelEmployees(): void {
           this.branchSelectionRequest
       ) {
 
-        this.selectedEmployees =
-          employees.filter(
-            (employee, index, list) =>
-              list.findIndex(
-                (item) =>
-                  item.id === employee.id
-              ) === index
-          );
+        // this.selectedEmployees =
+        //   employees.filter(
+        //     (employee, index, list) =>
+        //       list.findIndex(
+        //         (item) =>
+        //           item.id === employee.id
+        //       ) === index
+        //   );
+
+this.employeesByLevel['BRANCH_WISE'] =
+  this.uniqueEmployees(employees);
+
+this.rebuildSelectedEmployees();
+
+
 
         this.isLoadingBranchEmployees =
           false;
@@ -3873,6 +4026,49 @@ private loadDepartmentWiseEmployees(): void {
 // USER WISE - LOAD ALL EMPLOYEES
 // =========================================================
 
+// private loadAllEmployees(): void {
+
+//   this.employeeService
+//     .getAllEmployees()
+//     .subscribe({
+//       next: (data: any) => {
+
+//         console.log(
+//           'USER_WISE - All Employees:',
+//           data
+//         );
+
+//         const employeeList =
+//           Array.isArray(data)
+//             ? data
+//             : data?.data || [];
+
+//         this.allEmployees =
+//           employeeList as Employee[];
+
+//         this.employees =
+//           [...this.allEmployees];
+
+//         this.selectedEmployees = [];
+
+//       },
+
+//       error: (error:any) => {
+
+//         console.error(
+//           'USER_WISE - Error loading employees:',
+//           error
+//         );
+
+//         this.allEmployees = [];
+
+//         this.employees = [];
+
+//       }
+//     });
+
+// } 
+
 private loadAllEmployees(): void {
 
   this.employeeService
@@ -3881,7 +4077,7 @@ private loadAllEmployees(): void {
       next: (data: any) => {
 
         console.log(
-          'USER_WISE - All Employees:',
+          'ALL EMPLOYEES:',
           data
         );
 
@@ -3896,25 +4092,23 @@ private loadAllEmployees(): void {
         this.employees =
           [...this.allEmployees];
 
-        this.selectedEmployees = [];
-
       },
 
-      error: (error:any) => {
+      error: (error: any) => {
 
         console.error(
-          'USER_WISE - Error loading employees:',
+          'Error loading all employees:',
           error
         );
 
         this.allEmployees = [];
-
         this.employees = [];
-
       }
     });
-
 }
+
+
+
 
   // =========================================================
   // LOGGED IN EMPLOYEE

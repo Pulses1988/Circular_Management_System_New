@@ -668,24 +668,6 @@ if (!this.selectedCommittee) {
 
   });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
 
 
@@ -746,15 +728,6 @@ removeMember(memberId: number) {
   });
 
 }
-
-
-
-
-
-
-
-
-
 
 // Reset Form
 resetForm() {

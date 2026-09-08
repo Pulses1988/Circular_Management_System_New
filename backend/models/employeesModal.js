@@ -549,28 +549,67 @@ exports.getCircularById = async (circularId) => {
 
 
 //role_wise 
+// exports.getEmployeesByRole = (roleId) => {
+//   return db.query(
+//     `
+//     SELECT
+//         e.id,
+//         e.employee_id,
+//         e.first_name,
+//         e.last_name,
+//         e.role_id, 
+      
+//         r.name AS role_name,
+//         e.department_id,
+//         e.branch_id
+//     FROM employees e
+//     LEFT JOIN roles r
+//         ON e.role_id = r.id
+//     WHERE e.role_id = ?
+//     `,
+//     [roleId]
+//   );
+// };  
+// Get employees by designation / role
 exports.getEmployeesByRole = (roleId) => {
   return db.query(
     `
-    SELECT
+    SELECT 
         e.id,
         e.employee_id,
         e.first_name,
+        e.middle_name,
         e.last_name,
-        e.role_id, 
-      
+
+        e.role_id,
         r.name AS role_name,
+
         e.department_id,
-        e.branch_id
+        d.name AS department_name,
+
+        e.branch_id,
+        b.name AS branch_name,
+
+        e.head_office_id
+
     FROM employees e
+
     LEFT JOIN roles r
         ON e.role_id = r.id
+
+    LEFT JOIN departments d
+        ON e.department_id = d.id
+
+    LEFT JOIN branches b
+        ON e.branch_id = b.id
+
     WHERE e.role_id = ?
+
+    ORDER BY e.first_name, e.last_name
     `,
     [roleId]
   );
-};  
-
+};
 
 //getEMployeeCountByheadOffice 
 exports.getEmployeesCountByHeadOffice = (headOfficeId) => {
@@ -642,5 +681,34 @@ exports.getEmployeesByRoleLevel = (roleLevel) => {
     ORDER BY e.first_name, e.last_name
     `,
     [roleLevel]
+  );
+}; 
+
+
+//Method to get managers by head office ID
+// Get managers of a specific Head Office
+exports.getHeadOfficeManagers = (headOfficeId) => {
+  return db.query(
+    `
+    SELECT 
+        e.id,
+        e.employee_id,
+        e.first_name,
+        e.middle_name,
+        e.last_name,
+        e.role_id,
+        r.name AS role_name,
+        e.head_office_id,
+        e.branch_id,
+        e.department_id
+    FROM employees e
+    INNER JOIN roles r
+        ON e.role_id = r.id
+    WHERE e.head_office_id = ?
+      AND e.branch_id IS NULL
+      AND LOWER(TRIM(r.name)) = 'manager'
+    ORDER BY e.first_name, e.last_name
+    `,
+    [headOfficeId]
   );
 };

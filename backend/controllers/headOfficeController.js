@@ -171,17 +171,79 @@ exports.createHeadOffice = async (req, res) => {
 
 
 
+// exports.deleteHeadOffice = async (req, res) => {
+//   const { id } = req.params;
+//   try {
+//     await headOfficeModel.deleteOffice(id);
+//     res.json({ message: "Head office deleted successfully" });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Failed to delete head office" });
+//   }
+// };
 exports.deleteHeadOffice = async (req, res) => {
   const { id } = req.params;
+
   try {
+
+    // 1. Check whether Head Office has any dependent data
+    const [usageRows] = await headOfficeModel.getHeadOfficeUsage(id);
+
+    const usage = usageRows[0];
+
+    const branchCount = Number(usage.branch_count);
+    const directDepartmentCount = Number(
+      usage.direct_department_count
+    );
+    const branchDepartmentCount = Number(
+      usage.branch_department_count
+    );
+    const employeeCount = Number(
+      usage.employee_count
+    );
+
+    console.log("========== HEAD OFFICE DELETE CHECK ==========");
+    console.log("Head Office ID:", id);
+    console.log("Branches:", branchCount);
+    console.log(
+      "Direct HO Departments:",
+      directDepartmentCount
+    );
+    console.log(
+      "Branch Departments:",
+      branchDepartmentCount
+    );
+    console.log("Employees:", employeeCount);
+
+    // 2. Prevent deletion if anything exists
+    if (
+      branchCount > 0 ||
+      directDepartmentCount > 0 ||
+      branchDepartmentCount > 0 ||
+      employeeCount > 0
+    ) {
+      return res.status(409).json({
+        error:
+          "Head Office cannot be deleted because Branch, Department or Employee exists."
+      });
+    }
+
+    // 3. Safe to delete
     await headOfficeModel.deleteOffice(id);
-    res.json({ message: "Head office deleted successfully" });
+
+    res.json({
+      message: "Head office deleted successfully"
+    });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to delete head office" });
+
+    console.error("DELETE HEAD OFFICE ERROR:", err);
+
+    res.status(500).json({
+      error: "Failed to delete head office"
+    });
   }
 };
-
 
 //Headoffice configuration 
 

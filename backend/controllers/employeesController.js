@@ -663,4 +663,36 @@ exports.getEmployeesByRoleLevel = async (req, res) => {
       message: "Failed to fetch employees by role level"
     });
   }
+}; 
+
+
+//Method to get managers of head office for reporting officer selction 
+// Get Head Office Managers - used as Reporting Officers
+exports.getHeadOfficeManagers = async (req, res) => {
+  try {
+    const { headOfficeId } = req.params;
+
+    if (!headOfficeId) {
+      return res.status(400).json({
+        success: false,
+        message: "headOfficeId is required"
+      });
+    }
+
+    const [rows] =
+      await employeeModel.getHeadOfficeManagers(headOfficeId);
+
+    res.json({
+      success: true,
+      data: rows
+    });
+
+  } catch (err) {
+    console.error("Get Head Office Managers Error:", err);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch Head Office managers"
+    });
+  }
 };

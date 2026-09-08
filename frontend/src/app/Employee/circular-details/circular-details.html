@@ -1,6 +1,6 @@
 <div
   class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-6 transition-colors duration-300">
-  <div class="max-w-7xl mx-auto">
+  <div #circularDetailsPage class="max-w-7xl mx-auto">
     <div *ngIf="isLoading" class="flex items-center justify-center min-h-[400px]">
       <div class="text-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
@@ -18,39 +18,68 @@
     <div *ngIf="!isLoading && circular && !isNotApproved">
 
       <!-- Header with Back Button -->
-      <div class="mb-6 flex items-center gap-4">
-        <button (click)="goBackToPreviousCircular()"
-          class="glass-effect hover-lift px-4 py-2 rounded-lg flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back to Circulars
-        </button>
-        <span *ngIf="circularHistory.length > 0" class="text-sm underline text-slate-600 dark:text-slate-400">
-          Viewing referenced circular ({{ circularHistory.length }} level deep)
-        </span>
+     <!-- Header with Back Button and Action Buttons -->
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 
-        <div class="flex-1"></div>
+  <!-- Left Side: Back Button & Depth Indicator -->
+  <div class="flex items-center gap-3 flex-wrap">
+    <button (click)="goBackToPreviousCircular()"
+      class="glass-effect hover-lift px-3.5 py-2 rounded-lg flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+      <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      <span>Back to Circulars</span>
+    </button>
 
-        <!-- Action Buttons -->
-        <button
-          class="glass-effect hover-lift px-4 py-2 rounded-lg flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-          </svg>
-          Share
-        </button>
+    <span *ngIf="circularHistory.length > 0" class="text-xs sm:text-sm underline text-slate-600 dark:text-slate-400">
+      Viewing referenced circular ({{ circularHistory.length }} level deep)
+    </span>
+  </div>
 
-        <button
-          class="glass-effect hover-lift px-4 py-2 rounded-lg flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-          </svg>
-          Bookmark
-        </button>
-      </div>
+  <!-- Right Side: Responsive Action Buttons Container -->
+  <div class="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
+
+    <!-- Share Button -->
+    <button
+      class="glass-effect hover-lift flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+      <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+      </svg>
+      <span>Share</span>
+    </button>
+
+    <!-- Bookmark Button -->
+    <button
+      class="glass-effect hover-lift flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+      <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+      </svg>
+      <span>Bookmark</span>
+    </button> 
+
+    <!-- Download PDF Button -->
+  <button
+  (click)="downloadCircularDetailsPDF()"
+  data-html2canvas-ignore="true"
+  [disabled]="isLoading || !circular"
+  class="glass-effect hover-lift flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg flex items-center justify-center gap-1.5 sm:gap-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs sm:text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+  <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+  </svg>
+  <span class="whitespace-nowrap">Download PDF</span>
+</button>
+
+  </div>
+
+</div>
+
+
+
+
+
 
       <!-- Main Content Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -172,40 +201,146 @@
             <!-- Details Tab Content -->
             <div *ngIf="activeTab === 'details'" class="p-6">
               <!-- Circular Content -->
-              <div class="prose prose-slate dark:prose-invert max-w-none mb-8">
-                <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-4">Circular Content</h3>
-                <div class="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap"
-                  [innerHTML]="circular!.content"></div>
-              </div>
+            <!-- Circular Content -->
+
+<div class="prose prose-slate dark:prose-invert max-w-none mb-8">
+
+  <!-- NORMAL CIRCULAR -->
+  <ng-container *ngIf="!isConfidentialCircular()">
+
+    <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-4">
+      Circular Content
+    </h3>
+
+    <div
+      class="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap"
+      [innerHTML]="circular!.content">
+    </div>
+
+  </ng-container>
+
+
+  <!-- CONFIDENTIAL USER ONLY CIRCULAR -->
+ <!-- CONFIDENTIAL USER ONLY CIRCULAR -->
+<ng-container *ngIf="isConfidentialCircular()">
+
+  <!-- Responsive Header Block matching overall page spacing -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <h3 class="text-xl font-semibold text-slate-900 dark:text-white">
+      Confidential Circular
+    </h3>
+
+    <span
+      class="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-semibold
+             bg-red-500/20 text-red-600 dark:text-red-400
+             border border-red-500/30 shrink-0 self-start sm:self-auto">
+      CONFIDENTIAL — USER ONLY
+    </span>
+  </div>
+
+  <!-- PDF LOADING -->
+  <div
+    *ngIf="!generatedCircularPdfUrl"
+    class="flex items-center justify-center h-[400px] sm:h-[600px]
+           bg-slate-100 dark:bg-slate-900 rounded-xl">
+    <div class="text-center">
+      <div
+        class="animate-spin rounded-full h-10 w-10
+               border-b-2 border-indigo-600 mx-auto">
+      </div>
+      <p class="mt-4 text-sm text-slate-600 dark:text-slate-400">
+        Preparing confidential circular...
+      </p>
+    </div>
+  </div>
+
+  <!-- VIEW CONFIDENTIAL CIRCULAR BUTTON -->
+  <div class="flex justify-center mt-6">
+    <button
+      type="button"
+      (click)="openGeneratedCircularPDF()"
+      class="w-full sm:w-auto px-6 py-3 rounded-xl bg-indigo-600 text-white 
+             font-semibold hover:bg-indigo-700 transition-colors shadow-sm">
+      View Circular Content 
+    </button>
+  </div> 
+
+  <!-- PDF VIEWER MODAL -->
+  <div
+    *ngIf="showGeneratedCircularPdf"
+    class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+
+    <div
+       class="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-6xl h-[90vh]
+             flex flex-col shadow-2xl overflow-hidden">
+
+      <!-- HEADER -->
+      <div
+        class="flex items-center justify-between px-4 sm:px-6 py-4
+               border-b border-slate-200 dark:border-slate-700">
+        <h3 class="text-base sm:text-lg font-semibold text-slate-900 dark:text-white truncate">
+          Confidential Circular
+        </h3>
+
+        <button
+          type="button"
+          (click)="closeGeneratedCircularPDF()"
+          class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-red-500 text-white text-xs sm:text-sm
+                 hover:bg-red-600 transition-colors font-medium">
+          Close
+        </button>
+      </div>
+
+      <!-- PDF VIEWER CONTAINER -->
+      <div class="pdf-viewer-container">
+        <iframe
+          *ngIf="generatedCircularPdfUrl"
+          [src]="generatedCircularPdfUrl | safe: 'resourceUrl'"
+          class="pdf-viewer">
+        </iframe>
+      </div>
+
+    </div>
+  </div>
+
+</ng-container>
+
+</div>
 
               <!-- PDF Download Section -->
-              <div *ngIf="circular?.circular_pdf" (click)="openPDFPreview()"
-                class="mt-6 p-4 rounded-xl bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50  cursor-pointer hover:border-indigo-500 transition-colors">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-lg bg-red-500/20 flex items-center justify-center">
-                      <svg class="w-6 h-6 text-red-500 dark:text-red-400" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ circular.title
-                        }}_circular.pdf</p>
-                      <p class="text-xs text-slate-600 dark:text-slate-400">Official Circular Document</p>
-                    </div>
-                  </div>
-                  <button (click)="downloadPDF()"
-                    class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition-colors flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Download
-                  </button>
-                </div>
-              </div>
+            <!-- AFTER (Responsive flex layout with min-w-0 for truncating long file titles) -->
+<div *ngIf="circular?.circular_pdf" (click)="openPDFPreview()"
+  class="mt-6 p-4 rounded-xl bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 cursor-pointer hover:border-indigo-500 transition-colors">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    
+    <!-- File Info Section -->
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-red-500/20 flex items-center justify-center shrink-0">
+        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <div class="min-w-0 flex-1">
+        <p class="text-sm font-medium text-slate-800 dark:text-slate-200 truncate" [title]="circular.title + '_circular.pdf'">
+          {{ circular.title }}_circular.pdf
+        </p>
+        <p class="text-xs text-slate-600 dark:text-slate-400">Official Circular Document</p>
+      </div>
+    </div>
+
+    <!-- Download Button -->
+    <button (click)="$event.stopPropagation(); downloadPDF()"
+      class="w-full sm:w-auto px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition-colors flex items-center justify-center gap-2 shrink-0">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+      </svg>
+      <span>Download</span>
+    </button>
+
+  </div>
+</div>
 
               <!-- Reference Circulars -->
               <div *ngIf="circular?.reference_circular" class="mt-8">
@@ -567,6 +702,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
+            
           </div>
         </div>
 
@@ -705,3 +841,6 @@
     </div>
   </div>
 </div>
+
+
+

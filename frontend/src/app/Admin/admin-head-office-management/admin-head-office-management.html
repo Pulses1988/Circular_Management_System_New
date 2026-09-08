@@ -311,13 +311,25 @@
     Edit
   </button>
 
-  <button
+  <!-- <button
     class="action-btn delete-btn"
     (click)="deleteHeadOffice(office.id)"
   >
     Delete
-  </button>
+  </button> -->
 
+  <button 
+  class="action-btn delete-btn"
+  [disabled]="office.can_delete !== 1"
+  [title]="
+    office.can_delete === 1
+      ? 'Delete Head Office'
+      : 'Cannot delete because Branch, Department or Employee exists'
+  "
+  (click)="deleteHeadOffice(office.id)"
+>
+  Delete
+</button>
 </div>
 
           </td>

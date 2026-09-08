@@ -1,4 +1,5 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common'; 
+import { jsPDF } from 'jspdf';
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -8,6 +9,7 @@ import { SafePipePipe } from '../../safe-pipe-pipe';
 import { error } from 'console';
 import { Subject, takeUntil } from 'rxjs';
 import { Toast } from '../../toast/toast';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 export interface CircularDetails {
   id: number;
@@ -17,6 +19,8 @@ export interface CircularDetails {
   circular_code: string;
   effective_from: string | null;
   send_type: string | null;
+visibility_type?: string;
+
   status: string;
   published_at: string | null;
   reference_circular_id: number | null;
@@ -32,7 +36,8 @@ creator_employee_id: number;
   approvers: CircularApprover[];
   reference_circular: ReferenceCircular | null;
   tracking: CircularTrackingStats;
-  chats: CircularChat[];
+  chats: CircularChat[]; 
+  // visibility_type: string | null;
 }
 
 export interface CircularApprover {
@@ -97,7 +102,18 @@ interface EmployeeData {
 })
 export class CircularDetails implements OnInit, OnDestroy {
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
+  @ViewChild('circularDetailsPage') circularDetailsPage!: ElementRef; 
+
+
   private destroy$ = new Subject<void>();
+
+ // Generated confidential circular PDF
+// generatedCircularPdfUrl: string = '';
+generatedCircularPdfSafeUrl: SafeResourceUrl | null = null;
+
+// PDF viewer state
+// showGeneratedCircularPdf: boolean = false;
+  
 
   circularId: number = 0;
   circular: CircularDetails | null = null;
@@ -124,6 +140,11 @@ export class CircularDetails implements OnInit, OnDestroy {
   showPDFPreview: boolean = false;
   pdfUrl: string = '';
 
+// Generated PDF for confidential circular
+generatedCircularPdfUrl: string = ''; 
+
+//For button of view circular page (pdf)
+showGeneratedCircularPdf: boolean = false;
   // attachment viewer
   showAttachmentPreview: boolean = false;
   previewUrl: string = '';
@@ -159,7 +180,8 @@ submissionModes = [
     private circularService: CircularService,
     private employeeService: EmployeeService,
     private toast: Toast,
-     private router: Router
+     private router: Router,
+      private sanitizer: DomSanitizer
   ) {}
 
   async ngOnInit() {
@@ -213,6 +235,14 @@ submissionModes = [
         this.circular = res;
         this.isCircularCompleted = res.status === 'COMPLETED';
 
+
+        //For generating pdf for confedential circular only for circular content 
+        if (this.isConfidentialCircular()) {
+  this.generateConfidentialCircularPDF();
+}
+
+
+
 console.log("Circular Status:", res.status);
 console.log("Is Circular Completed:", this.isCircularCompleted);
         console.log("API Response:", res);
@@ -249,13 +279,10 @@ console.log("creator_employee_id =", res.creator_employee_id);
   });
 
 
+  } 
 
 
-
-
-
-  }
-  checkCompletionStatus() {
+ checkCompletionStatus() {
     if (!this.circular || !this.employeeData) return;  
 
  console.log("========== CHECK ==========");
@@ -333,7 +360,9 @@ this.isApprover = this.circular.approvers?.some(
           }
         }
       });
-  }
+  } 
+
+
   goBackToPreviousCircular() {
     if (this.circularHistory.length > 0) {
       const previousId = this.circularHistory.pop()!;
@@ -368,6 +397,7 @@ this.isApprover = this.circular.approvers?.some(
   //          (typeof this.circular.circular_pdf === 'string' ||
   //           (typeof this.circular.circular_pdf === 'object' && this.circular.circular_pdf));
   // }
+
   sendMessage() {
     if (!this.newMessage.trim() && this.selectedFile == null) return;
 
@@ -578,6 +608,201 @@ if (this.isApprover) {
     this.pdfUrl = '';
   }
 
+//Method to generate PDF for confedential circular content only for circular content 
+private generateConfidentialCircularPDF(): void {
+  if (!this.circular) {
+    return;
+  }
+
+  try {
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    const margin = 20;
+    const contentWidth = pageWidth - (margin * 2);
+
+    let y = margin;
+
+    // ==========================================
+    // WATERMARK
+    // ==========================================
+
+    this.addConfidentialWatermark(pdf);
+
+    // ==========================================
+    // TITLE
+    // ==========================================
+
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(18);
+
+    const titleLines = pdf.splitTextToSize(
+      this.circular.title || 'Circular',
+      contentWidth
+    );
+
+    pdf.text(
+      titleLines,
+      pageWidth / 2,
+      y,
+      {
+        align: 'center'
+      }
+    );
+
+    y += titleLines.length * 8 + 10;
+
+    // ==========================================
+    // CIRCULAR CODE
+    // ==========================================
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(10);
+
+    pdf.text(
+      `Circular Code: ${this.circular.circular_code || 'N/A'}`,
+      margin,
+      y
+    );
+
+    y += 7;
+
+    // ==========================================
+    // EFFECTIVE DATE
+    // ==========================================
+
+    pdf.text(
+      `Effective From: ${this.formatDate(this.circular.effective_from)}`,
+      margin,
+      y
+    );
+
+    y += 10;
+
+    // ==========================================
+    // HORIZONTAL LINE
+    // ==========================================
+
+    pdf.setLineWidth(0.5);
+
+    pdf.line(
+      margin,
+      y,
+      pageWidth - margin,
+      y
+    );
+
+    y += 10;
+
+    // ==========================================
+    // CIRCULAR CONTENT
+    // ==========================================
+
+    const tempDiv = document.createElement('div');
+
+    tempDiv.innerHTML = this.circular.content || '';
+
+    const contentText =
+      tempDiv.innerText ||
+      tempDiv.textContent ||
+      '';
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(11);
+
+    const contentLines = pdf.splitTextToSize(
+      contentText.trim() || 'N/A',
+      contentWidth
+    );
+
+    for (const line of contentLines) {
+
+      if (y > pageHeight - 25) {
+
+        pdf.addPage();
+
+        y = margin;
+
+        // Add watermark to every page
+        this.addConfidentialWatermark(pdf);
+
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(11);
+      }
+
+      pdf.text(
+        line,
+        margin,
+        y
+      );
+
+      y += 6;
+    }
+
+    // ==========================================
+    // FOOTER
+    // ==========================================
+
+    const totalPages = pdf.getNumberOfPages();
+
+    for (let page = 1; page <= totalPages; page++) {
+
+      pdf.setPage(page);
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8);
+
+      pdf.text(
+        `Circular Management System | Page ${page} of ${totalPages}`,
+        pageWidth / 2,
+        pageHeight - 8,
+        {
+          align: 'center'
+        }
+      );
+    }
+
+    // ==========================================
+    // CREATE BLOB URL
+    // ==========================================
+
+    const pdfBlob = pdf.output('blob');
+
+    // Release previous URL if one exists
+    if (this.generatedCircularPdfUrl) {
+      window.URL.revokeObjectURL(
+        this.generatedCircularPdfUrl
+      );
+    }
+
+    this.generatedCircularPdfUrl =
+      window.URL.createObjectURL(pdfBlob);
+
+    console.log(
+      'Confidential circular PDF generated:',
+      this.generatedCircularPdfUrl
+    );
+
+  } catch (error) {
+
+    console.error(
+      'Error generating confidential circular PDF:',
+      error
+    );
+
+    this.generatedCircularPdfUrl = '';
+  }
+}
+
+
+
+
   downloadPDF() {
     if (!this.circular?.circular_pdf) return;
 
@@ -599,6 +824,731 @@ if (this.isApprover) {
     // Cleanup
     window.URL.revokeObjectURL(url);
   }
+
+//New method to download whole circular pdf with whole details 
+downloadCircularDetailsPDF(): void {
+
+  if (!this.circular) {
+    alert('Circular details are not available.');
+    return;
+  }
+
+  try {
+
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    if (this.isConfidentialCircular()) {
+  this.addConfidentialWatermark(pdf);
+}
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    const margin = 20;
+    const contentWidth = pageWidth - (margin * 2);
+
+    let y = margin;
+
+
+    // =====================================================
+    // HELPER: CHECK PAGE SPACE
+    // =====================================================
+
+    const checkPageBreak = (requiredHeight: number = 10) => {
+
+      if (y + requiredHeight > pageHeight - 20) {
+        pdf.addPage();
+        y = margin; 
+
+ if (this.isConfidentialCircular()) {
+    this.addConfidentialWatermark(pdf);
+  }
+
+
+      }
+
+    };
+
+
+    // =====================================================
+    // HEADER
+    // =====================================================
+
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(18);
+
+    pdf.text(
+      'CIRCULAR DETAILS',
+      pageWidth / 2,
+      y,
+      { align: 'center' }
+    );
+
+    y += 12;
+
+
+    // Horizontal line
+
+    pdf.setLineWidth(0.5);
+
+    pdf.line(
+      margin,
+      y,
+      pageWidth - margin,
+      y
+    );
+
+    y += 10;
+
+
+    // =====================================================
+    // CIRCULAR TITLE
+    // =====================================================
+
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(14);
+
+    const titleLines = pdf.splitTextToSize(
+      this.circular.title || 'N/A',
+      contentWidth
+    );
+
+    checkPageBreak(titleLines.length * 7);
+
+    pdf.text(
+      titleLines,
+      margin,
+      y
+    );
+
+    y += titleLines.length * 7 + 8;
+
+
+    // =====================================================
+    // CIRCULAR INFORMATION
+    // =====================================================
+
+    const addField = (
+      label: string,
+      value: string
+    ) => {
+
+      checkPageBreak(10);
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(10);
+
+      pdf.text(
+        label,
+        margin,
+        y
+      );
+
+      pdf.setFont('helvetica', 'normal');
+
+      const valueLines = pdf.splitTextToSize(
+        value || 'N/A',
+        contentWidth - 42
+      );
+
+      pdf.text(
+        valueLines,
+        margin + 42,
+        y
+      );
+
+      y += Math.max(7, valueLines.length * 5);
+
+    };
+
+
+    addField(
+      'Circular Code:',
+      this.circular.circular_code || 'N/A'
+    );
+
+    addField(
+      'Status:',
+      this.circular.status || 'N/A'
+    );
+
+    addField(
+      'Priority:',
+      this.circular.priority
+        ? this.circular.priority.toUpperCase()
+        : 'N/A'
+    );
+
+    addField(
+      'Effective From:',
+      this.formatDate(this.circular.effective_from)
+    );
+
+    addField(
+      'Published At:',
+      this.formatDate(this.circular.published_at)
+    );
+
+    addField(
+      'Send Type:',
+      this.circular.send_type || 'N/A'
+    );
+
+
+    // =====================================================
+    // CREATOR INFORMATION
+    // =====================================================
+
+    y += 5;
+
+    checkPageBreak(15);
+
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(13);
+
+    pdf.text(
+      'Created By',
+      margin,
+      y
+    );
+
+    y += 8;
+
+    const creatorName =
+      `${this.circular.creator_first_name || ''} ${this.circular.creator_last_name || ''}`.trim();
+
+    addField(
+      'Employee:',
+      creatorName || 'N/A'
+    );
+
+    addField(
+      'Department:',
+      this.circular.department_name || 'N/A'
+    );
+
+    addField(
+      'Branch:',
+      this.circular.branch_name || 'N/A'
+    );
+
+
+    // =====================================================
+    // CIRCULAR CONTENT
+    // =====================================================
+
+    y += 5;
+
+    checkPageBreak(15);
+
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(13);
+
+    pdf.text(
+      'Circular Content',
+      margin,
+      y
+    );
+
+    y += 8;
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(10);
+
+    /*
+     * Your circular.content may contain HTML.
+     * Convert HTML into normal readable text.
+     */
+
+    const tempDiv = document.createElement('div');
+
+    tempDiv.innerHTML = this.circular.content || '';
+
+    const contentText =
+      tempDiv.innerText ||
+      tempDiv.textContent ||
+      '';
+
+    const contentLines = pdf.splitTextToSize(
+      contentText.trim() || 'N/A',
+      contentWidth
+    );
+
+    for (const line of contentLines) {
+
+      checkPageBreak(6);
+
+      pdf.text(
+        line,
+        margin,
+        y
+      );
+
+      y += 5;
+
+    }
+
+
+    // =====================================================
+    // APPROVERS
+    // =====================================================
+
+    if (
+      this.circular.approvers &&
+      this.circular.approvers.length > 0
+    ) {
+
+      y += 8;
+
+      checkPageBreak(15);
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(13);
+
+      pdf.text(
+        'Approvers',
+        margin,
+        y
+      );
+
+      y += 8;
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+
+      this.circular.approvers.forEach(
+        (approver, index) => {
+
+          checkPageBreak(8);
+
+          const approverName =
+            `${approver.first_name || ''} ${approver.last_name || ''}`.trim();
+
+          pdf.text(
+            `${index + 1}. ${approverName || 'N/A'}`,
+            margin,
+            y
+          );
+
+          y += 6;
+
+        }
+      );
+
+    }
+
+
+    // =====================================================
+    // TRACKING INFORMATION
+    // =====================================================
+
+    if (this.circular.tracking) {
+
+      y += 8;
+
+      checkPageBreak(15);
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(13);
+
+      pdf.text(
+        'Tracking Summary',
+        margin,
+        y
+      );
+
+      y += 8;
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+
+      addField(
+        'Total:',
+        String(
+          this.circular.tracking.total_count ?? 0
+        )
+      );
+
+      addField(
+        'Seen:',
+        String(
+          this.circular.tracking.seen_count ?? 0
+        )
+      );
+
+      addField(
+        'Completed:',
+        String(
+          this.circular.tracking.completed_count ?? 0
+        )
+      );
+
+    }
+
+
+    // =====================================================
+    // REFERENCE CIRCULAR
+    // =====================================================
+
+    if (this.circular.reference_circular) {
+
+      y += 5;
+
+      checkPageBreak(15);
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(13);
+
+      pdf.text(
+        'Reference Circular',
+        margin,
+        y
+      );
+
+      y += 8;
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+
+      addField(
+        'Code:',
+        this.circular.reference_circular.circular_code || 'N/A'
+      );
+
+      addField(
+        'Title:',
+        this.circular.reference_circular.title || 'N/A'
+      );
+
+    }
+
+
+    // =====================================================
+    // FOOTER ON EVERY PAGE
+    // =====================================================
+
+    const totalPages =
+      pdf.getNumberOfPages();
+
+    for (
+      let page = 1;
+      page <= totalPages;
+      page++
+    ) {
+
+      pdf.setPage(page);
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8);
+
+      pdf.text(
+        `Circular Management System | Page ${page} of ${totalPages}`,
+        pageWidth / 2,
+        pageHeight - 8,
+        { align: 'center' }
+      );
+
+    }
+
+
+    // =====================================================
+    // DOWNLOAD
+    // =====================================================
+
+    const safeTitle =
+      (this.circular.title || 'Circular')
+        .replace(/[<>:"/\\|?*]+/g, '_')
+        .trim();
+
+    const fileName =
+      `${safeTitle}_circular_details.pdf`;
+
+
+//Code before dowload for watermark 
+if (this.circular?.visibility_type === 'CONFIDENTIAL_USER') {
+  const employeeName =
+    `${this.employeeData?.first_name || ''} ${this.employeeData?.last_name || ''}`
+      .trim()
+      .toUpperCase();
+
+  if (employeeName) {
+    const pageCount = pdf.getNumberOfPages();
+
+    for (let page = 1; page <= pageCount; page++) {
+      pdf.setPage(page);
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(32);
+      pdf.setTextColor(220, 220, 220);
+
+      pdf.text(
+        employeeName,
+        pageWidth / 2,
+        pageHeight / 2,
+        {
+          align: 'center',
+          angle: 45
+        }
+      );
+    }
+
+    pdf.setTextColor(0, 0, 0);
+  }
+}
+
+
+
+
+
+
+
+    pdf.save(fileName);
+
+
+  } catch (error) {
+
+    console.error(
+      'Error generating Circular Details PDF:',
+      error
+    );
+
+    alert(
+      'Failed to generate Circular Details PDF'
+    );
+
+  }
+}
+
+
+
+//MEthods for pdf generation of content 
+
+//Method for open pdf 
+// openGeneratedCircularPDF(): void {
+//   if (!this.generatedCircularPdfUrl) {
+//     return;
+//   }
+
+//   this.showGeneratedCircularPdf = true;
+// }  
+// Look for your function (e.g., openGeneratedCircularPDF or generatePdf)
+openGeneratedCircularPDF(): void {
+  if (!this.generatedCircularPdfUrl) {
+    console.error('Generated PDF URL is not available');
+    return;
+  }
+
+  const pdfUrlWithParams =
+    `${this.generatedCircularPdfUrl}#toolbar=1&navpanes=1&view=FitH`;
+
+  this.generatedCircularPdfSafeUrl =
+    this.sanitizer.bypassSecurityTrustResourceUrl(
+      pdfUrlWithParams
+    );
+
+  this.showGeneratedCircularPdf = true;
+}
+
+
+
+
+
+//Method for close pdf 
+closeGeneratedCircularPDF(): void {
+  this.showGeneratedCircularPdf = false;
+}
+
+//For download generated pdf for confendential circular content only for circular content 
+// downloadGeneratedCircularPDF(): void {
+//   if (!this.generatedCircularPdfUrl || !this.circular) {
+//     return;
+//   }
+
+//   const link = document.createElement('a');
+//   link.href = this.generatedCircularPdfUrl;
+
+//   const safeTitle = (this.circular.title || 'Circular')
+//     .replace(/[<>:"/\\|?*]+/g, '_')
+//     .trim();
+
+//   link.download = `${safeTitle}_confidential_circular.pdf`;
+
+//   document.body.appendChild(link);
+//   link.click();
+//   document.body.removeChild(link);
+// }
+downloadGeneratedCircularPDF(): void {
+  if (!this.generatedCircularPdfUrl || !this.circular) {
+    return;
+  }
+
+  const link = document.createElement('a');
+
+  link.href = this.generatedCircularPdfUrl;
+
+  const safeTitle = (this.circular.title || 'Circular')
+    .replace(/[<>:"/\\|?*]+/g, '_')
+    .trim();
+
+  link.download =
+    `${safeTitle}_confidential_circular.pdf`;
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+
+
+//Pdf generation for confendential circular content 
+printGeneratedCircularPDF(): void {
+  if (!this.generatedCircularPdfUrl) {
+    return;
+  }
+
+  const printWindow = window.open(
+    this.generatedCircularPdfUrl,
+    '_blank'
+  );
+
+  if (!printWindow) {
+    alert('Please allow pop-ups to print the PDF.');
+    return;
+  }
+
+  printWindow.onload = () => {
+    printWindow.focus();
+    printWindow.print();
+  };
+}
+
+
+
+
+//Circular watermark pdf download 
+// private addConfidentialWatermark(pdf: jsPDF): void {
+
+//   if (!this.circular || !this.employeeData) {
+//     return;
+//   }
+
+//   const employeeName =
+//     `${this.employeeData.first_name || ''} ${this.employeeData.last_name || ''}`
+//       .trim()
+//       .toUpperCase();
+
+//   if (!employeeName) {
+//     return;
+//   }
+
+//   const pageWidth = pdf.internal.pageSize.getWidth();
+//   const pageHeight = pdf.internal.pageSize.getHeight();
+
+//   pdf.setFont('helvetica', 'bold');
+//   pdf.setFontSize(32);
+
+//   // Light gray watermark
+//   pdf.setTextColor(220, 220, 220);
+
+//   pdf.text(
+//     employeeName,
+//     pageWidth / 2,
+//     pageHeight / 2,
+//     {
+//       align: 'center',
+//       angle: 45
+//     }
+//   );
+
+//   // Restore normal text color
+//   pdf.setTextColor(0, 0, 0);
+// }
+private addConfidentialWatermark(pdf: jsPDF): void {
+
+  if (!this.circular || !this.employeeData) {
+    return;
+  }
+
+  const employeeName =
+    `${this.employeeData.first_name || ''} ${this.employeeData.last_name || ''}`
+      .trim()
+      .toUpperCase();
+
+  if (!employeeName) {
+    return;
+  }
+
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+
+  // ==========================================
+  // WATERMARK SETTINGS
+  // ==========================================
+
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(20);
+
+  // Light gray
+  pdf.setTextColor(220, 220, 220);
+
+  // ==========================================
+  // MULTIPLE WATERMARK POSITIONS
+  // ==========================================
+
+  const xPositions = [
+    35,
+    pageWidth / 2,
+    pageWidth - 35
+  ];
+
+  const yPositions = [
+    45,
+    120,
+    195,
+    270
+  ];
+
+  // ==========================================
+  // DRAW WATERMARKS
+  // ==========================================
+
+  for (const y of yPositions) {
+
+    for (const x of xPositions) {
+
+      pdf.text(
+        employeeName,
+        x,
+        y,
+        {
+          align: 'center',
+          angle: 45
+        }
+      );
+
+    }
+
+  }
+
+  // Restore normal text color
+  pdf.setTextColor(0, 0, 0);
+}
+
+isConfidentialCircular(): boolean {
+
+  if (!this.circular) {
+    return false;
+  }
+
+  return this.circular.visibility_type === 'CONFIDENTIAL_USER';
+}
+
 
   downloadAttachment(attachment: any) {
     console.log('Download attachment:', attachment);

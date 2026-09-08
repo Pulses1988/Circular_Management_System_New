@@ -58,7 +58,6 @@ exports.getSeenByEmployee=async(employeeId)=>{
       ct.employee_id,
       ct.is_seen,
       ct.seen_at,
-
       c.circular_code,
       c.title,
       c.priority,

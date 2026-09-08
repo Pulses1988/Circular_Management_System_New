@@ -89,4 +89,69 @@
   50% {
     opacity: .7;
   }
+} 
+
+/* Confidential PDF Viewer Container */
+.pdf-viewer-container {
+  position: relative;
+  flex: 1;
+  padding: 0;
+  overflow: hidden;
+  background: #353535;
+  border-radius: 0 0 1rem 1rem;
+}
+
+.pdf-viewer {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: block;
+  border: none;
+  outline: none;
+  background: white;
+}
+
+@media (prefers-color-scheme: dark) {
+  .pdf-viewer-container {
+    background: #0f172a;
+  }
+
+  .pdf-viewer {
+    border: none;
+    outline: none;
+    background: #0f172a;
+  }
+}
+// css for close button
+/* Confidential PDF Close Button */
+.pdf-close-button {
+  position: absolute;
+ 
+  top: 15px;
+  right: 20px;
+  z-index: 100;
+
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 50%;
+
+  background: #ef4444;
+  color: white;
+
+  font-size: 20px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.pdf-close-button:hover {
+  background: #dc2626;
 }

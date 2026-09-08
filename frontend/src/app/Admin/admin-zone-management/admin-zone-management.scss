@@ -306,7 +306,15 @@ tbody {
   background-color: #dc2626;
 }   
 
+/* ================= DISABLED DELETE BUTTON ================= */
 
+.delete-btn:disabled {
+  background-color: #fca5a5;
+  color: #ffffff;
+  cursor: not-allowed;
+  opacity: 0.6;
+  filter: blur(0.2px);
+}
 
 
 /* ================= PAGINATION ================= */

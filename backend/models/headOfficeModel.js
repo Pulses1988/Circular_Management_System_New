@@ -1,7 +1,80 @@
 const db = require("../config/db");
 
+// exports.getAllHeadOffice = () => {
+//   return db.query("SELECT * FROM head_office");
+// };
 exports.getAllHeadOffice = () => {
-  return db.query("SELECT * FROM head_office");
+  return db.query(`
+    SELECT
+      h.*,
+
+      (
+        SELECT COUNT(*)
+        FROM branches b
+        WHERE b.head_office_id = h.id
+      ) AS branch_count,
+
+      (
+        SELECT COUNT(*)
+        FROM departments d
+        WHERE d.head_office_id = h.id
+      ) AS direct_department_count,
+
+      (
+        SELECT COUNT(*)
+        FROM departments d
+        INNER JOIN branches b
+          ON d.branch_id = b.id
+        WHERE b.head_office_id = h.id
+      ) AS branch_department_count,
+
+      (
+        SELECT COUNT(*)
+        FROM employees e
+        WHERE e.head_office_id = h.id
+      ) AS employee_count,
+
+      CASE
+        WHEN
+          (
+            SELECT COUNT(*)
+            FROM branches b
+            WHERE b.head_office_id = h.id
+          ) = 0
+
+          AND
+
+          (
+            SELECT COUNT(*)
+            FROM departments d
+            WHERE d.head_office_id = h.id
+          ) = 0
+
+          AND
+
+          (
+            SELECT COUNT(*)
+            FROM departments d
+            INNER JOIN branches b
+              ON d.branch_id = b.id
+            WHERE b.head_office_id = h.id
+          ) = 0
+
+          AND
+
+          (
+            SELECT COUNT(*)
+            FROM employees e
+            WHERE e.head_office_id = h.id
+          ) = 0
+
+        THEN 1
+        ELSE 0
+      END AS can_delete
+
+    FROM head_office h
+    ORDER BY h.id
+  `);
 };
 
 exports.getHeadOfficeById = (id) => {
@@ -153,4 +226,48 @@ exports.updateHeadOffice = (id, data) => {
   );
 };   
 
+//to getting the count of employee,branch,departemt 
+exports.getHeadOfficeUsage = (headOfficeId) => {
+  return db.query(
+    `
+    SELECT
+
+      /* Direct employees + branch employees */
+      (
+        SELECT COUNT(*)
+        FROM employees e
+        WHERE e.head_office_id = ?
+      ) AS employee_count,
+
+      /* All branches under this Head Office */
+      (
+        SELECT COUNT(*)
+        FROM branches b
+        WHERE b.head_office_id = ?
+      ) AS branch_count,
+
+      /* Direct HO departments */
+      (
+        SELECT COUNT(*)
+        FROM departments d
+        WHERE d.head_office_id = ?
+      ) AS direct_department_count,
+
+      /* Departments belonging to branches of this HO */
+      (
+        SELECT COUNT(*)
+        FROM departments d
+        INNER JOIN branches b
+          ON d.branch_id = b.id
+        WHERE b.head_office_id = ?
+      ) AS branch_department_count
+    `,
+    [
+      headOfficeId,
+      headOfficeId,
+      headOfficeId,
+      headOfficeId
+    ]
+  );
+};
 
