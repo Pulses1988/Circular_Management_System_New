@@ -1,7 +1,8 @@
 const circularChatModel = require("../models/circularChatModel");
 const notificationModel = require("../models/notificationModel");
 const circularVisibilityModel = require("../models/circularVisibilityModel"); 
-const db = require("../config/db");
+const db = require("../config/db"); 
+const auditService = require("../services/auditService");
 
 // ✅ Add a new chat
 exports.createChat = async (req, res) => {
@@ -12,8 +13,55 @@ exports.createChat = async (req, res) => {
       return res.status(400).json({ error: "All fields are required" });
     }
 
-    const chatId = await circularChatModel.createChat({ circular_id, employee_id, message,is_system_message: false });
+    // const chatId = await circularChatModel.createChat({ circular_id, employee_id, message,is_system_message: false });
     
+// Check whether this employee has already started a query
+const hasQueryAudit =
+  await circularChatModel.hasQueryStartedAudit(
+    circular_id,
+    employee_id
+  );
+
+console.log("Has QUERY_STARTED audit:", hasQueryAudit);
+
+// Create the chat message
+const chatId = await circularChatModel.createChat({
+  circular_id,
+  employee_id,
+  message,
+  is_system_message: false
+});
+
+// Create audit log only for the employee's first message
+if (!hasQueryAudit) {
+  console.log("Starting QUERY_STARTED audit insertion:", {
+    circular_id,
+    employee_id
+  });
+
+  try {
+   await auditService.logAudit({
+  circularId: circular_id,
+  action: "QUERY_STARTED",
+  performedBy: employee_id,
+  description: "Employee started a query"
+});
+
+    console.log("QUERY_STARTED audit inserted successfully");
+
+  } catch (auditError) {
+    console.error("QUERY_STARTED AUDIT ERROR:", auditError);
+    
+    // Show the actual database error
+    console.error("Error message:", auditError.message);
+    console.error("SQL error code:", auditError.code);
+    console.error("SQL error details:", auditError.sqlMessage);
+
+    throw auditError;
+  }
+}
+
+
     // Fetch the complete chat data with employee details
     const newChatMessage = await circularChatModel.getChatById(chatId);
 
@@ -66,7 +114,12 @@ exports.createChat = async (req, res) => {
       chat_id: chatId,
       chat: newChatMessage
     });
-  } catch (error) {
+  } catch (error) { 
+    console.error("Error creating chat:", error);
+  console.error("Error message:", error.message);
+  console.error("SQL error code:", error.code);
+  console.error("SQL error details:", error.sqlMessage);
+
     console.error("Error creating chat:", error);
     res.status(500).json({ error: "Failed to create chat" });
   }

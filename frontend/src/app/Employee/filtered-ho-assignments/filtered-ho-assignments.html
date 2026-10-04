@@ -1,0 +1,612 @@
+<div
+  class="ho-assignment-wrapper"
+  [class.dark-mode]="isDarkMode"
+>
+
+  <!-- =====================================================
+       HEADER
+  ====================================================== -->
+
+  <div class="page-header">
+
+    <div class="title-section">
+
+      <div class="title-icon">
+
+        <mat-icon>
+
+          {{
+            filterType === 'urgent'
+              ? 'priority_high'
+              : filterType === 'read'
+                ? 'mark_email_read'
+                : 'visibility_off'
+          }}
+
+        </mat-icon>
+
+      </div>
+
+      <div>
+
+        <h1>
+          {{ getPageTitle() }}
+        </h1>
+
+        <p>
+          {{ getPageDescription() }}
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <!-- HEADER ACTIONS -->
+
+    <div class="header-actions">
+
+      <!-- THEME -->
+
+      <button
+        type="button"
+        class="theme-btn"
+        (click)="toggleTheme()"
+        title="Toggle Theme"
+      >
+
+        <mat-icon>
+
+          {{
+            isDarkMode
+              ? 'light_mode'
+              : 'dark_mode'
+          }}
+
+        </mat-icon>
+
+      </button>
+
+
+      <!-- CREATE -->
+
+      <button
+        type="button"
+        class="create-btn"
+        (click)="createAssignment()"
+      >
+
+        <mat-icon>
+          add
+        </mat-icon>
+
+        <span>
+          Create Assignment
+        </span>
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       CONTENT
+  ====================================================== -->
+
+  <div class="content-container">
+
+    <div class="assignment-card">
+
+
+      <!-- =================================================
+           TABLE HEADER
+      ================================================== -->
+
+      <div class="table-header">
+
+        <div>
+          {{ getPageTitle() }}
+        </div>
+
+        <div class="count">
+
+          {{ assignments.length }}
+
+          {{
+            assignments.length === 1
+              ? 'Assignment'
+              : 'Assignments'
+          }}
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           LOADING
+      ================================================== -->
+
+      <div
+        class="empty-state"
+        *ngIf="isLoading"
+      >
+
+        <div class="empty-icon">
+
+          <mat-icon>
+            sync
+          </mat-icon>
+
+        </div>
+
+        <h3>
+          Loading Assignments
+        </h3>
+
+        <p>
+          Please wait while the assignments are being loaded.
+        </p>
+
+      </div>
+
+
+      <!-- =================================================
+           EMPTY STATE
+      ================================================== -->
+
+      <div
+        class="empty-state"
+        *ngIf="
+          !isLoading &&
+          assignments.length === 0
+        "
+      >
+
+        <div class="empty-icon">
+
+          <mat-icon>
+
+            {{
+              filterType === 'urgent'
+                ? 'priority_high'
+                : filterType === 'read'
+                  ? 'mark_email_read'
+                  : 'mark_email_unread'
+            }}
+
+          </mat-icon>
+
+        </div>
+
+
+        <h3>
+          {{ getEmptyTitle() }}
+        </h3>
+
+
+        <p>
+          There are currently no assignments in this category.
+        </p>
+
+      </div>
+
+
+      <!-- =================================================
+           ASSIGNMENT LIST
+      ================================================== -->
+
+      <div
+        class="assignment-list"
+        *ngIf="
+          !isLoading &&
+          assignments.length > 0
+        "
+      >
+
+        <div
+          class="assignment-item"
+          *ngFor="let assignment of assignments"
+        >
+
+
+          <!-- =============================================
+               ASSIGNMENT MAIN
+          ============================================== -->
+
+          <div class="assignment-main">
+
+            <div class="assignment-icon">
+
+              <mat-icon>
+                assignment
+              </mat-icon>
+
+            </div>
+
+
+            <div class="assignment-info">
+
+              <h3>
+                {{ assignment.title }}
+              </h3>
+
+              <p>
+                {{ assignment.assignment_code }}
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <!-- =============================================
+               ASSIGNMENT META
+          ============================================== -->
+
+          <div class="assignment-meta">
+
+            <span class="priority-badge">
+
+              {{ assignment.priority }}
+
+            </span>
+
+          </div>
+
+
+          <!-- =============================================
+               ASSIGNMENT ACTIONS
+          ============================================== -->
+
+          <div class="assignment-actions">
+
+
+            <!-- VIEW -->
+
+            <button
+              type="button"
+              title="View"
+              (click)="viewAssignment(assignment)"
+            >
+
+              <mat-icon>
+                visibility
+              </mat-icon>
+
+            </button>
+
+
+            <!-- MARK AS READ -->
+
+            <button
+              *ngIf="
+                filterType === 'unread' &&
+                (
+                  assignment.is_seen === false ||
+                  assignment.is_seen === 0
+                )
+              "
+              type="button"
+              title="Mark as Read"
+              (click)="markAsRead(assignment)"
+            >
+
+              <mat-icon>
+                mark_email_read
+              </mat-icon>
+
+            </button>
+
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       VIEW ASSIGNMENT MODAL
+  ====================================================== -->
+
+  <div
+    class="assignment-modal-overlay"
+    *ngIf="isViewModalOpen"
+    (click)="closeViewModal()"
+  >
+
+    <div
+      class="assignment-modal"
+      (click)="$event.stopPropagation()"
+    >
+
+
+      <!-- =================================================
+           MODAL HEADER
+      ================================================== -->
+
+      <div class="assignment-modal-header">
+
+        <div class="modal-title-section">
+
+          <div class="modal-icon">
+
+            <mat-icon>
+              assignment
+            </mat-icon>
+
+          </div>
+
+          <div>
+
+            <h2>
+              Assignment Details
+            </h2>
+
+            <p
+              *ngIf="selectedAssignment"
+            >
+              {{ selectedAssignment.assignment_code }}
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <!-- CLOSE -->
+
+        <button
+          type="button"
+          class="modal-close-btn"
+          title="Close"
+          (click)="closeViewModal()"
+        >
+
+          <mat-icon>
+            close
+          </mat-icon>
+
+        </button>
+
+      </div>
+
+
+      <!-- =================================================
+           MODAL BODY
+      ================================================== -->
+
+      <div
+        class="assignment-modal-body"
+        *ngIf="selectedAssignment"
+      >
+
+
+        <!-- TITLE -->
+
+        <div class="detail-row">
+
+          <div class="detail-label">
+            Title
+          </div>
+
+          <div class="detail-value">
+            {{ selectedAssignment.title || '—' }}
+          </div>
+
+        </div>
+
+
+        <!-- ASSIGNMENT CODE -->
+
+        <div class="detail-row">
+
+          <div class="detail-label">
+            Assignment Code
+          </div>
+
+          <div class="detail-value">
+            {{ selectedAssignment.assignment_code || '—' }}
+          </div>
+
+        </div>
+
+
+        <!-- DESCRIPTION -->
+
+        <div class="detail-row description-row">
+
+          <div class="detail-label">
+            Description
+          </div>
+
+          <div class="detail-value description-value">
+
+            {{
+              selectedAssignment.description || 'No description provided.'
+            }}
+
+          </div>
+
+        </div>
+
+
+        <!-- PRIORITY -->
+
+        <div class="detail-row">
+
+          <div class="detail-label">
+            Priority
+          </div>
+
+          <div class="detail-value">
+
+            <span class="priority-badge">
+
+              {{ selectedAssignment.priority || '—' }}
+
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <!-- DUE DATE -->
+
+        <div class="detail-row">
+
+          <div class="detail-label">
+            Due Date
+          </div>
+
+          <div class="detail-value">
+
+            {{
+              selectedAssignment.due_date
+                ? (selectedAssignment.due_date | date:'dd/MM/yyyy')
+                : '—'
+            }}
+
+          </div>
+
+        </div>
+
+
+        <!-- CREATED BY -->
+
+        <div class="detail-row">
+
+          <div class="detail-label">
+            Created By
+          </div>
+
+          <div class="detail-value">
+
+            {{ selectedAssignment.creator_name || '—' }}
+
+          </div>
+
+        </div>
+
+
+        <!-- CREATED DATE -->
+
+        <div class="detail-row">
+
+          <div class="detail-label">
+            Created Date
+          </div>
+
+          <div class="detail-value">
+
+            {{
+              selectedAssignment.created_at
+                ? (selectedAssignment.created_at | date:'dd/MM/yyyy hh:mm a')
+                : '—'
+            }}
+
+          </div>
+
+        </div>
+
+
+        <!-- READ STATUS -->
+
+        <div class="detail-row">
+
+          <div class="detail-label">
+            Status
+          </div>
+
+          <div class="detail-value">
+
+            <span
+              class="read-status"
+              *ngIf="
+                selectedAssignment.is_seen === true ||
+                selectedAssignment.is_seen === 1
+              "
+            >
+
+              <mat-icon>
+                mark_email_read
+              </mat-icon>
+
+              Read
+
+            </span>
+
+
+            <span
+              class="unread-status"
+              *ngIf="
+                selectedAssignment.is_seen === false ||
+                selectedAssignment.is_seen === 0
+              "
+            >
+
+              <mat-icon>
+                mark_email_unread
+              </mat-icon>
+
+              Unread
+
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           MODAL FOOTER
+      ================================================== -->
+
+      <div class="assignment-modal-footer">
+
+
+        <!-- CLOSE -->
+
+        <button
+          type="button"
+          class="modal-cancel-btn"
+          (click)="closeViewModal()"
+        >
+
+          Close
+
+        </button>
+
+
+        <!-- MARK AS COMPLETE -->
+
+        <button
+          type="button"
+          class="modal-complete-btn"
+        >
+
+          <mat-icon>
+            task_alt
+          </mat-icon>
+
+          Mark as Complete
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

@@ -115,6 +115,7 @@ exports.loginEmployee = (employee_id) => {
            e.head_office_id,
            e.can_create_circular,
            e.can_approve_circular,
+           e.can_create_ho_assignment,
            e.created_at,
            r.name AS role_name,
            d.name AS department_name,
@@ -155,7 +156,8 @@ exports.createEmployee = ({
   head_office_id,
   reporting_officer_id,
   can_create_circular,
-  can_approve_circular,
+  can_approve_circular, 
+   can_create_ho_assignment,
 }) => {
   const password_hash = bcrypt.hashSync(password, 10);
 
@@ -176,9 +178,10 @@ exports.createEmployee = ({
       head_office_id,
       reporting_officer_id,
       can_create_circular,
-      can_approve_circular
+      can_approve_circular,
+      can_create_ho_assignment
     ) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`,
     [
       employee_id,
       password_hash,
@@ -195,6 +198,7 @@ exports.createEmployee = ({
       reporting_officer_id || null,
       can_create_circular || null,
       can_approve_circular || null,
+       can_create_ho_assignment || false,
     ]
   );
 };
@@ -214,13 +218,14 @@ exports.updateEmployee = (
     head_office_id, 
     reporting_officer_id,
     can_create_circular,
-    can_approve_circular,
+    can_approve_circular, 
+     can_create_ho_assignment,
   }
 ) => {
   return db.query(
     `UPDATE employees 
      SET first_name=?, middle_name=?, last_name=?, phone_no=?, email=?, 
-         role_id=?, role_level=?, department_id=?, branch_id=?, head_office_id=?,reporting_officer_id=?, can_create_circular=?,can_approve_circular=?
+         role_id=?, role_level=?, department_id=?, branch_id=?, head_office_id=?,reporting_officer_id=?, can_create_circular=?,can_approve_circular=?,,can_create_ho_assignment=?
      WHERE id=?`,
     [
       first_name || null,
@@ -229,13 +234,14 @@ exports.updateEmployee = (
       phone_no || null,
       email || null,
       role_id || null,
-        role_level || null,
+      role_level || null,
       department_id || null,
       branch_id || null,
       head_office_id || null, 
       reporting_officer_id || null,
       can_create_circular || null,
-      can_approve_circular || null,
+      can_approve_circular || null, 
+       can_create_ho_assignment || false,
       id,
     ]
   );

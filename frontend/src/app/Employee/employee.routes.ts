@@ -9,6 +9,11 @@ import { AllCirculars } from './all-circulars/all-circulars';
 import { CircularDetails } from './circular-details/circular-details';
 import { ActivitySummary } from './activity-summary/activity-summary';
 import { FilteredCirculars } from './filtered-circulars/filtered-circulars';
+
+import { HoAssignmentCreater } from './ho-assignment-creater/ho-assignment-creater';
+import { AllHoAssignments } from './all-ho-assignments/all-ho-assignments';
+import { FilteredHoAssignments } from './filtered-ho-assignments/filtered-ho-assignments';
+
 import { EmployeeAuthGuard } from './Authentication/employee-auth.guard';
 import { EmployeePermissionGuard } from './Authentication/employee-permission.guard';
 import { Unauthorized } from './unauthorized/unauthorized';
@@ -79,7 +84,26 @@ export const Employee_ROUTS: Routes = [
     path: 'circular-details', 
     canActivate: [EmployeeAuthGuard], 
     component: CircularDetails 
-  },
+  }, 
+//Adding path to create a HO_Assignment 
+{
+  path: 'ho-assignment-creater',
+  canActivate: [EmployeeAuthGuard],
+  component: HoAssignmentCreater
+},
+{
+  path: 'all-ho-assignments',
+  canActivate: [EmployeeAuthGuard],
+  component: AllHoAssignments
+},
+{
+  path: 'filtered-ho-assignments',
+  canActivate: [EmployeeAuthGuard],
+  component: FilteredHoAssignments
+},
+
+
+
   {
     path:'unauthorized', component:Unauthorized
   },

@@ -40,16 +40,56 @@ exports.markAsCompleted = async (circularId, employeeId) => {
   return db.query(sql, [circularId, employeeId]);
 };
 
+// exports.getUnseenByEmployee = async (employeeId) => {
+//   const sql = `
+//     SELECT ct.*, c.title, c.effective_from, c.published_at
+//     FROM circular_tracking ct
+//     JOIN circulars c ON ct.circular_id = c.id
+//     WHERE ct.employee_id = ? AND ct.is_seen = FALSE AND c.status = 'APPROVED'
+//     ORDER BY c.published_at DESC
+//   `;
+//   return db.query(sql, [employeeId]);
+// };
 exports.getUnseenByEmployee = async (employeeId) => {
   const sql = `
-    SELECT ct.*, c.title, c.effective_from, c.published_at
+    SELECT 
+      ct.*,
+      c.title,
+        c.priority,
+      c.effective_from,
+      c.published_at,
+
+      CASE
+        WHEN EXISTS (
+          SELECT 1
+          FROM circular_approvals ca
+          WHERE ca.circular_id = c.id
+        )
+        THEN 'CIRCULAR'
+        ELSE 'HO_ASSIGNMENT'
+      END AS item_type
+
     FROM circular_tracking ct
-    JOIN circulars c ON ct.circular_id = c.id
-    WHERE ct.employee_id = ? AND ct.is_seen = FALSE AND c.status = 'APPROVED'
+
+    JOIN circulars c
+      ON ct.circular_id = c.id
+
+    WHERE
+      ct.employee_id = ?
+      AND ct.is_seen = FALSE
+      AND c.status = 'APPROVED'
+
     ORDER BY c.published_at DESC
   `;
+
   return db.query(sql, [employeeId]);
 };
+
+
+
+
+
+
 
 exports.getSeenByEmployee=async(employeeId)=>{
   const sql = `
@@ -197,22 +237,53 @@ exports.getCircularCompletionSummary = async (circularId) => {
 
 // Assigned employees and their current completion state.  Completion-status
 // notification rules use this without changing the tracking workflow.
+// exports.getCompletionStatusEmployees = async (circularId) => {
+//   const sql = `
+//     SELECT
+//       ct.employee_id,
+//       ct.is_completed,
+//       CONCAT_WS(' ', e.first_name, NULLIF(e.middle_name, ''), e.last_name) AS employee_name
+//     FROM circular_tracking ct
+//     JOIN employees e ON e.id = ct.employee_id
+//     WHERE ct.circular_id = ?
+//     ORDER BY e.first_name, e.last_name
+//   `;
+
+//   return db.query(sql, [circularId]);
+// };
+
+// Get assigned employees with read and completion status
 exports.getCompletionStatusEmployees = async (circularId) => {
   const sql = `
     SELECT
       ct.employee_id,
+      e.employee_id AS employee_code,
+
+      ct.is_seen,
+      ct.seen_at,
+
       ct.is_completed,
-      CONCAT_WS(' ', e.first_name, NULLIF(e.middle_name, ''), e.last_name) AS employee_name
+      ct.completed_at,
+
+      CONCAT_WS(
+        ' ',
+        e.first_name,
+        NULLIF(e.middle_name, ''),
+        e.last_name
+      ) AS employee_name
+
     FROM circular_tracking ct
-    JOIN employees e ON e.id = ct.employee_id
+
+    JOIN employees e
+      ON e.id = ct.employee_id
+
     WHERE ct.circular_id = ?
+
     ORDER BY e.first_name, e.last_name
   `;
 
   return db.query(sql, [circularId]);
 };
-
-
 //pending summary//
 
 exports.getPendingEmployees = async (circularId) => {
@@ -233,6 +304,20 @@ exports.getPendingEmployees = async (circularId) => {
     WHERE
       ct.circular_id = ?
       AND ct.is_completed = FALSE
+  `;
+
+  return db.query(sql, [circularId]);
+};
+
+
+//method for circular tracking 
+// Get total employees who have read a circular
+exports.getReadCount = async (circularId) => {
+  const sql = `
+    SELECT COUNT(*) AS readEmployees
+    FROM circular_tracking
+    WHERE circular_id = ?
+      AND is_seen = TRUE
   `;
 
   return db.query(sql, [circularId]);

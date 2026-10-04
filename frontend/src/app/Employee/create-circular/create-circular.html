@@ -9,11 +9,14 @@
         </button>
 
         <div class="title-info">
-          <h1>Create Circular</h1>
+          <!-- <h1>Create Circular</h1> -->
+            {{ isHOAssignment ? 'Create HO Assignment' : 'Create Circular' }}
           <div class="breadcrumb">
             <span>Dashboard</span>
             <mat-icon>chevron_right</mat-icon>
-            <span>New Circular</span>
+            <span>
+  {{ isHOAssignment ? 'New Assignment' : 'New Circular' }}
+</span>
           </div>
         </div>
       </div>
@@ -52,13 +55,18 @@
           <div class="form-field full-width">
 
             <label>
-              Title <span class="required">*</span>
+           {{ isHOAssignment ? 'Assignment Title' : 'Circular Title' }}
+               <span class="required">*</span>
             </label>
 
             <input
               type="text"
               formControlName="title"
-              placeholder="Enter circular title..."
+             [placeholder]="
+  isHOAssignment
+    ? 'Enter assignment title...'
+    : 'Enter circular title...'
+"
               class="form-input"
               [class.error]="isFieldInvalid('title')"
             />
@@ -70,13 +78,17 @@
               <span
                 *ngIf="circularForm.get('title')?.errors?.['required']"
               >
-                Title is required
+               {{ isHOAssignment ? 'Assignment title is required' : 'Circular title is required' }}
               </span>
 
               <span
                 *ngIf="circularForm.get('title')?.errors?.['minlength']"
               >
-                Title must contain at least 3 characters
+                {{
+  isHOAssignment
+    ? 'Assignment title must contain at least 3 characters'
+    : 'Circular title must contain at least 3 characters'
+}}
               </span>
             </div>
 
@@ -87,13 +99,18 @@
           <div class="form-field">
 
             <label>
-              Circular Code <span class="required">*</span>
+              {{ isHOAssignment ? 'Assignment Code' : 'Circular Code' }}
+  <span class="required">*</span>
             </label>
 
             <input
               type="text"
               formControlName="circular_code"
-              placeholder="Enter circular code"
+             [placeholder]="
+    isHOAssignment
+      ? 'Enter assignment code'
+      : 'Enter circular code'
+  "
               class="form-input"
               [class.error]="isFieldInvalid('circular_code')"
             />
@@ -102,7 +119,11 @@
               class="field-error"
               *ngIf="isFieldInvalid('circular_code')"
             >
-              Circular Code is required
+               {{
+    isHOAssignment
+      ? 'Assignment Code is required'
+      : 'Circular Code is required'
+  }}
             </div>
 
           </div>
@@ -136,7 +157,7 @@
           <!-- Previous Circular -->
          <!-- Previous Circular -->
 <div class="form-field">
-  <label>Previous Circular Reference</label>
+  <label>  {{ isHOAssignment ? 'Previous Assignment Reference' : 'Previous Circular Reference' }}</label>
 
   <div class="previous-circular-dropdown">
 
@@ -753,7 +774,7 @@
 
         <div class="section-header">
           <mat-icon>description</mat-icon>
-          <h3>Content</h3>
+          <h3>  {{ isHOAssignment ? 'Assignment Details' : 'Content' }}</h3>
         </div>
 
 
@@ -763,7 +784,8 @@
           <div class="attachment-section">
 
             <label>
-              Attachments <span class="required">*</span>
+              {{ isHOAssignment ? 'Assignment Attachment' : 'Attachments' }}
+ <span class="required">*</span>
             </label>
 
 
@@ -827,7 +849,7 @@
           <div class="form-field full-width">
 
             <label>
-              Content <span class="required">*</span>
+               {{ isHOAssignment ? 'Assignment Details' : 'Content' }} <span class="required">*</span>
             </label>
 
 
@@ -916,7 +938,11 @@
                     ?.errors?.['required']
                 "
               >
-                Content is required
+             {{
+  isHOAssignment
+    ? 'Assignment details are required'
+    : 'Content is required'
+}}
               </span>
 
 
@@ -927,7 +953,11 @@
                     ?.errors?.['minlength']
                 "
               >
-                Content must contain at least 10 characters
+               {{
+  isHOAssignment
+    ? 'Assignment details must contain at least 10 characters'
+    : 'Content must contain at least 10 characters'
+}}
               </span>
 
             </div>
@@ -941,7 +971,7 @@
 
       <!-- ================= APPROVERS ================= -->
 
-      <div class="form-section">
+      <div class="form-section" *ngIf="!isHOAssignment">
 
         <div class="section-header">
           <mat-icon>group</mat-icon>
@@ -1095,8 +1125,20 @@
           [disabled]="!canSaveDraft() || isProcessing"
         >
           <mat-icon>save</mat-icon>
-          Save Draft
+          {{ isHOAssignment ? 'Save Assignment Draft' : 'Save Draft' }}
         </button>
+
+<!-- <button
+  *ngIf="!isHOAssignment"
+  type="button"
+  class="action-btn secondary"
+  (click)="submitCircular('DRAFT')"
+  [disabled]="!canSaveDraft() || isProcessing"
+>
+  <mat-icon>save</mat-icon>
+  Save Draft
+</button> -->
+
 
       </div>
 
@@ -1131,8 +1173,9 @@
 
           {{
             isProcessing
-              ? 'Submitting...'
-              : 'Submit for Approve'
+             
+               ? (isHOAssignment ? 'Creating Assignment...' : 'Submitting...')
+    : (isHOAssignment ? 'Create Assignment and publish' : 'Submit for Approve')
           }}
 
         </button>

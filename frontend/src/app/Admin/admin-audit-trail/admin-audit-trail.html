@@ -1,0 +1,917 @@
+<div class="audit-trail-container">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h2>Audit Trail</h2>
+      <p>Track all activities and actions performed on circulars.</p>
+    </div>
+  </div>
+
+
+  <!-- Filter Section -->
+  <div class="filter-card">
+
+    <div class="filter-group search-group">
+      <label>Search</label>
+
+      <div class="search-box">
+        <span class="search-icon">⌕</span>
+
+        <input
+          type="text"
+          placeholder="Search circular, action, employee..." 
+           [(ngModel)]="searchTerm"
+  (input)="currentPage = 1; applyFilters()"
+        />
+      </div>
+    </div>
+
+
+    <div class="filter-group">
+      <label>Action</label>
+
+      <select  [(ngModel)]="selectedAction"
+  (change)="currentPage = 1; applyFilters()">
+        <option value="">All Actions</option>
+        <option value="CIRCULAR_CREATED">Circular Created</option>
+        <option value="CIRCULAR_APPROVED">Circular Approved</option>
+        <option value="CIRCULAR_REJECTED">Circular Rejected</option> 
+        <option value="EMPLOYEE_READ_CIRCULAR">
+  Employee Read
+</option>
+
+<option value="EMPLOYEE_COMPLETED_CIRCULAR">
+  Employee Completed
+</option>
+
+
+
+      </select>
+    </div>
+
+
+    <div class="filter-group">
+      <label>Status</label>
+
+      <select   [(ngModel)]="selectedStatus"
+  (change)="currentPage = 1; applyFilters()">
+        <option value="">All Status</option>
+        <option value="PENDING_APPROVAL">Pending Approval</option>
+        <option value="APPROVED">Approved</option>
+        <option value="REJECTED">Rejected</option>
+      </select>
+    </div>
+
+
+    <button  class="clear-btn"
+  (click)="clearFilters()">
+      Clear
+    </button>
+
+  </div>
+
+
+  <!-- Audit Table Card -->
+  <div class="table-card">
+
+    <div class="table-header">
+      <div>
+        <h3>Audit Logs</h3>
+        <span class="record-count">
+          Circular activity history
+        </span>
+      </div>
+    </div>
+
+
+    <div class="table-wrapper">
+
+      <!-- Loading -->
+      <div
+        *ngIf="loading"
+        class="empty-state"
+      >
+        <h3>Loading Audit Logs...</h3>
+        <p>Please wait while audit records are loaded.</p>
+      </div>
+
+
+      <!-- Error -->
+      <div
+        *ngIf="!loading && errorMessage"
+        class="empty-state"
+      >
+        <h3>Unable to Load Audit Logs</h3>
+        <p>{{ errorMessage }}</p>
+      </div>
+
+
+      <!-- No Records -->
+      <div
+       *ngIf="!loading && !errorMessage && displayAuditLogs.length === 0"
+        class="empty-state"
+      >
+        <div class="empty-icon">⌕</div>
+
+        <h3>No Audit Logs Found</h3>
+
+        <p>
+          There are no audit records available.
+        </p>
+      </div>
+
+
+      <!-- Audit Table -->
+      <table
+    *ngIf="!loading && !errorMessage && displayAuditLogs.length > 0"
+        class="audit-table"
+      >
+
+        <!-- Table Header -->
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Circular ID</th>
+            <th>Action</th>
+            <th>Performed By</th>
+            <th>Target Employee</th>
+            <th>Old Status</th>
+            <th>New Status</th>
+            <th>Description</th>
+            <th>Date & Time</th> 
+            <!-- new action column -->
+             <th>Actions</th> <!-- NEW HEADER -->
+          </tr>
+        </thead>
+
+
+        <!-- Table Body -->
+        <tbody>
+
+       <tr *ngFor="let log of displayAuditLogs">
+
+            <!-- ID -->
+            <td>
+              {{ log.id }}
+            </td>
+
+
+            <!-- Circular ID -->
+            <td>
+              <span class="circular-id">
+                {{ log.circular_id }}
+              </span>
+            </td>
+
+
+            <!-- Action -->
+            <td>
+
+              <span
+                class="action-badge"
+                [ngClass]="{
+                  'created': log.action === 'CIRCULAR_CREATED',
+                  'approved-action': log.action === 'CIRCULAR_APPROVED',
+                  'rejected-action': log.action === 'CIRCULAR_REJECTED',
+                  'employee-read-action': log.action === 'EMPLOYEE_READ_CIRCULAR',
+                 'employee-completed-action': log.action === 'EMPLOYEE_COMPLETED_CIRCULAR'  ,
+                    
+                 'completed-action': log.action === 'CIRCULAR_COMPLETED',
+                 'pending-action': log.action === 'CIRCULAR_PENDING'
+
+                }"
+              >
+                <!-- {{ log.action.replace('CIRCULAR_', '') | titlecase }} -->
+
+
+                {{
+  log.action === 'EMPLOYEE_READ_CIRCULAR'
+    ? 'Employee Read'
+    : log.action === 'EMPLOYEE_COMPLETED_CIRCULAR'
+      ? 'Employee Completed'
+      : log.action.replace('CIRCULAR_', '') | titlecase
+}}
+              </span>
+
+            </td>
+
+
+            <!-- Performed By -->
+            <td>
+
+              <div class="employee-cell">
+
+                <span class="employee-avatar">
+                  {{ log.performed_by || '—' }}
+                </span>
+
+                <!-- <span>
+                  {{ log.performed_by || '—' }}
+                </span> -->
+
+              </div>
+
+            </td>
+
+
+            <!-- Target Employee -->
+            <td>
+
+               <span
+    *ngIf="log.target_employee_id; else noTarget"
+    class="employee-id"
+  >
+    {{ log.target_employee_code || log.target_employee_id }}
+  </span>
+
+
+              <ng-template #noTarget>
+                <span class="null-value">
+                  —
+                </span>
+              </ng-template>
+
+            </td>
+
+
+            <!-- Old Status -->
+            <td>
+
+              <span
+                *ngIf="log.old_status; else noOldStatus"
+                class="status-badge"
+               [ngClass]="{
+  'pending': log.old_status === 'PENDING_APPROVAL',
+  'approved': log.old_status === 'APPROVED',
+  'rejected': log.old_status === 'REJECTED',
+  'unseen': log.old_status === 'UNSEEN',
+  'seen': log.old_status === 'SEEN',
+  'completed': log.old_status === 'COMPLETED'
+}"
+              >
+                {{ log.old_status.replace('_', ' ') | titlecase }}
+              </span>
+
+              <ng-template #noOldStatus>
+                <span class="status-badge empty">
+                  —
+                </span>
+              </ng-template>
+
+            </td>
+
+
+            <!-- New Status -->
+            <td>
+
+              <span
+                *ngIf="log.new_status; else noNewStatus"
+                class="status-badge"
+              [ngClass]="{
+  'pending': log.new_status === 'PENDING_APPROVAL',
+  'approved': log.new_status === 'APPROVED',
+  'rejected': log.new_status === 'REJECTED',
+  'unseen': log.new_status === 'UNSEEN',
+  'seen': log.new_status === 'SEEN',
+  'completed': log.new_status === 'COMPLETED'
+}"
+              >
+                {{ log.new_status.replace('_', ' ') | titlecase }}
+              </span>
+
+              <ng-template #noNewStatus>
+                <span class="status-badge empty">
+                  —
+                </span>
+              </ng-template>
+
+            </td>
+
+
+            <!-- Description -->
+            <td class="description">
+             {{ getCleanDescription(log.description) }}
+            </td>
+
+
+            <!-- Date & Time -->
+            <td class="date-time">
+
+              <span>
+                {{ log.created_at | date:'dd MMM yyyy' }}
+              </span>
+
+              <small>
+                {{ log.created_at | date:'hh:mm:ss a' }}
+              </small>
+
+            </td> 
+
+<!-- Action Column code -->
+<!-- NEW ACTIONS COLUMN -->
+    <td>
+      <div class="action-buttons">
+        <button class="action-btn view-btn" (click)="openViewModal(log)">View</button>
+        <button class="action-btn delete-btn" (click)="deleteAuditLog(log.id)">Delete</button>
+      </div>
+    </td>
+
+
+          </tr>
+
+        </tbody> 
+
+
+
+
+
+
+
+
+      </table>
+
+
+<!-- 
+//Model popup -->
+<!-- MODAL POPUP (Place this at the bottom of admin-audit-trail.html) -->
+<div class="modal-backdrop" *ngIf="isModalOpen" (click)="closeViewModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    
+    <div class="modal-header">
+      <h3>Audit Log Details</h3>
+      <button class="modal-close-btn" (click)="closeViewModal()">×</button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedLog">
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>Log ID</label>
+          <p>{{ selectedLog.id }}</p>
+        </div>
+        <div class="detail-item">
+          <label>Circular ID</label>
+          <p>{{ selectedLog.circular_id }}</p>
+        </div> 
+
+
+<!-- Visibility / Confidentiality -->
+<div class="detail-item">
+  <label>Visibility Type</label>
+  <p>
+    {{ selectedLog.visibility_type || '—' }}
+  </p>
+</div>
+
+
+
+<!-- REGION_WISE Hierarchy -->
+<div
+  class="detail-item full-width"
+  *ngIf="
+    selectedLog.visibility_type === 'REGION_WISE' &&
+    regionWiseHierarchy
+  "
+>
+ <label class="hierarchy-title">
+  REGION_WISE Selection Details
+</label>
+
+  <div class="hierarchy-details">
+
+    <!-- Regions -->
+    <div class="hierarchy-level">
+      <strong>Regions</strong>
+
+      <div
+        *ngIf="
+          regionWiseHierarchy.regionIds &&
+          regionWiseHierarchy.regionIds.length > 0
+        "
+        class="hierarchy-list"
+      >
+        <span
+          class="hierarchy-badge"
+          *ngFor="let regionId of regionWiseHierarchy.regionIds"
+        >
+          Region ID: {{ regionId }}
+        </span>
+      </div>
+
+      <span
+        *ngIf="
+          !regionWiseHierarchy.regionIds ||
+          regionWiseHierarchy.regionIds.length === 0
+        "
+      >
+        —
+      </span>
+    </div>
+
+
+    <!-- Zones -->
+    <div class="hierarchy-level">
+      <strong>Zones</strong>
+
+      <div
+        *ngIf="
+          regionWiseHierarchy.zoneIds &&
+          regionWiseHierarchy.zoneIds.length > 0
+        "
+        class="hierarchy-list"
+      >
+        <span
+          class="hierarchy-badge"
+          *ngFor="let zoneId of regionWiseHierarchy.zoneIds"
+        >
+          Zone ID: {{ zoneId }}
+        </span>
+      </div>
+
+      <span
+        *ngIf="
+          !regionWiseHierarchy.zoneIds ||
+          regionWiseHierarchy.zoneIds.length === 0
+        "
+      >
+        —
+      </span>
+    </div>
+
+
+    <!-- Circles -->
+    <div class="hierarchy-level">
+      <strong>Circles</strong>
+
+      <div
+        *ngIf="
+          regionWiseHierarchy.circleIds &&
+          regionWiseHierarchy.circleIds.length > 0
+        "
+        class="hierarchy-list"
+      >
+        <span
+          class="hierarchy-badge"
+          *ngFor="let circleId of regionWiseHierarchy.circleIds"
+        >
+          Circle ID: {{ circleId }}
+        </span>
+      </div>
+
+      <span
+        *ngIf="
+          !regionWiseHierarchy.circleIds ||
+          regionWiseHierarchy.circleIds.length === 0
+        "
+      >
+        —
+      </span>
+    </div>
+
+
+    <!-- Branches -->
+    <div class="hierarchy-level">
+      <strong>Branches</strong>
+
+      <div
+        *ngIf="
+          regionWiseHierarchy.branchIds &&
+          regionWiseHierarchy.branchIds.length > 0
+        "
+        class="hierarchy-list"
+      >
+        <span
+          class="hierarchy-badge"
+          *ngFor="let branchId of regionWiseHierarchy.branchIds"
+        >
+          Branch ID: {{ branchId }}
+        </span>
+      </div>
+
+      <span
+        *ngIf="
+          !regionWiseHierarchy.branchIds ||
+          regionWiseHierarchy.branchIds.length === 0
+        "
+      >
+        —
+      </span>
+    </div>
+
+
+    <!-- Departments -->
+    <div class="hierarchy-level">
+      <strong>Departments</strong>
+
+      <div
+        *ngIf="
+          regionWiseHierarchy.departmentIds &&
+          regionWiseHierarchy.departmentIds.length > 0
+        "
+        class="hierarchy-list"
+      >
+        <span
+          class="hierarchy-badge"
+          *ngFor="
+            let departmentId of regionWiseHierarchy.departmentIds
+          "
+        >
+          Department ID: {{ departmentId }}
+        </span>
+      </div>
+
+      <span
+        *ngIf="
+          !regionWiseHierarchy.departmentIds ||
+          regionWiseHierarchy.departmentIds.length === 0
+        "
+      >
+        —
+      </span>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
+        <div class="detail-item">
+          <label>Action</label>
+          <p>{{ selectedLog.action }}</p>
+        </div>
+        <div class="detail-item">
+          <label>Performed By</label>
+          <p>{{ selectedLog.performed_by || '—' }}</p>
+        </div>  
+       
+
+
+<!-- Employee Details - Only for QUERY_STARTED -->
+<ng-container
+  *ngIf="selectedLog.action === 'QUERY_STARTED'"
+>
+
+  <!-- Employee Name -->
+  <div class="detail-item">
+    <label>Employee Name</label>
+    <p>
+      {{ selectedLog.performed_by_name || '—' }}
+    </p>
+  </div>
+
+  <!-- Employee ID -->
+  <div class="detail-item">
+    <label>Employee ID</label>
+    <p>
+      {{ selectedLog.performed_by_code || '—' }}
+    </p>
+  </div>
+
+</ng-container>
+
+
+
+
+
+
+        <div class="detail-item">
+          <label>Target Employee ID</label>
+          <p> {{ selectedLog.target_employee_code || selectedLog.target_employee_id || '—' }}</p>
+        </div>
+        <div class="detail-item">
+          <label>Old Status</label>
+          <p>{{ selectedLog.old_status || '—' }}</p>
+        </div>
+        <div class="detail-item">
+          <label>New Status</label>
+          <p>{{ selectedLog.new_status || '—' }}</p>
+        </div>
+        <div class="detail-item">
+          <label>Date & Time</label>
+          <p>{{ selectedLog.created_at | date:'dd MMM yyyy, hh:mm:ss a' }}</p>
+        </div> 
+
+        <!-- <div class="detail-item full-width">
+          <label>Description</label>
+         <p class="clean-description">
+    {{ getCleanDescription(selectedLog.description) }}
+  </p>
+       </div> -->
+<!-- Description -->
+<div class="detail-item full-width description-section">
+
+  <label>Description</label>
+
+  <p class="clean-description">
+    {{ getCleanDescription(selectedLog.description) }}
+  </p>
+
+  <!-- Rejection Reason -->
+  <div
+    class="rejection-reason"
+    *ngIf="
+      selectedLog.action === 'CIRCULAR_REJECTED' &&
+      getRejectionReason(selectedLog.description)
+    "
+  >
+
+    <label>Rejection Reason</label>
+
+    <p>
+      {{ getRejectionReason(selectedLog.description) }}
+    </p>
+
+  </div>
+
+</div>
+
+
+
+
+
+<!-- Employee Tracking Summary -->
+<div  class="detail-item full-width tracking-summary"
+  *ngIf="
+    selectedLog.action === 'EMPLOYEE_READ_CIRCULAR' ||
+    selectedLog.action === 'EMPLOYEE_COMPLETED_CIRCULAR'
+  ">
+
+  <label>Employee Tracking Summary</label>
+
+  <!-- Loading -->
+  <div *ngIf="trackingLoading" class="tracking-message">
+    Loading employee tracking details...
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="!trackingLoading && trackingError" class="tracking-error">
+    {{ trackingError }}
+  </div>
+
+  <!-- Summary Data -->
+  <div
+    *ngIf="!trackingLoading && trackingSummary"
+    class="tracking-content"
+  >
+
+    <!-- Counts -->
+    <div class="tracking-counts">
+
+      <div class="tracking-count-card">
+        <span class="count-label">Total Employees</span>
+        <strong>
+          {{ trackingSummary.totalEmployees || 0 }}
+        </strong>
+      </div>
+
+      <div class="tracking-count-card">
+        <span class="count-label">Pending Read</span>
+        <strong>
+          {{ trackingSummary.pendingReadCount || 0 }}
+        </strong>
+      </div>
+
+      <div class="tracking-count-card">
+        <span class="count-label">Pending Completion</span>
+        <strong>
+          {{ trackingSummary.pendingCompletionCount || 0 }}
+        </strong>
+      </div>
+
+      <div class="tracking-count-card">
+        <span class="count-label">Completed</span>
+        <strong>
+          {{ trackingSummary.completedEmployees || 0 }}
+        </strong>
+      </div>
+
+    </div>
+
+
+    <!-- Employees Pending Read -->
+    <div class="employee-status-section">
+
+      <h4>
+        Employees Who Have Not Read
+      </h4>
+
+      <p
+        *ngIf="
+          !trackingSummary.pendingReadEmployees ||
+          trackingSummary.pendingReadEmployees.length === 0
+        "
+        class="no-employees"
+      >
+        All employees have read this circular.
+      </p>
+
+      <div
+        *ngIf="
+          trackingSummary.pendingReadEmployees &&
+          trackingSummary.pendingReadEmployees.length > 0
+        "
+        class="employee-code-list"
+      >
+
+        <span
+          class="employee-code-badge"
+          *ngFor="
+            let employee of trackingSummary.pendingReadEmployees
+          "
+        >
+          {{ employee.employee_code || employee.employee_id }}
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <!-- Employees Pending Completion -->
+    <div class="employee-status-section">
+
+      <h4>
+        Employees Who Have read but Not Completed
+      </h4>
+
+      <p
+        *ngIf="
+          !trackingSummary.pendingCompletionEmployees ||
+          trackingSummary.pendingCompletionEmployees.length === 0
+        "
+        class="no-employees"
+      >
+        All employees have completed this circular.
+      </p>
+
+      <div
+        *ngIf="
+          trackingSummary.pendingCompletionEmployees &&
+          trackingSummary.pendingCompletionEmployees.length > 0
+        "
+        class="employee-code-list"
+      >
+
+        <span
+          class="employee-code-badge"
+          *ngFor="
+            let employee of trackingSummary.pendingCompletionEmployees
+          "
+        >
+          {{ employee.employee_code || employee.employee_id }}
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- Employee Action History -->
+<div
+  class="detail-item full-width"
+  *ngIf="
+    selectedLog.relatedLogs &&
+    selectedLog.relatedLogs.length > 0
+  "
+>
+  <label>Employee Action History</label>
+
+  <div class="employee-history">
+
+    <table class="history-table">
+
+      <thead>
+        <tr>
+          <th>Employee ID</th>
+          <th>Performed By</th>
+          <th>Action</th>
+          <th>Date & Time</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let employeeLog of selectedLog.relatedLogs">
+
+          <td>
+             {{ employeeLog.target_employee_code || employeeLog.target_employee_id || '—' }}
+
+          </td>
+
+          <td>
+            {{ employeeLog.performed_by || '—' }}
+          </td>
+
+          <td>
+            {{
+              employeeLog.action === 'EMPLOYEE_READ_CIRCULAR'
+                ? 'Employee Read'
+                : 'Employee Completed'
+            }}
+          </td>
+
+          <td>
+            {{ employeeLog.created_at | date:'dd MMM yyyy, hh:mm:ss a' }}
+          </td>
+
+        </tr>
+      </tbody>
+
+    </table> 
+
+
+
+
+    
+
+  </div>
+</div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="close-btn-secondary" (click)="closeViewModal()">Close</button>
+    </div>
+
+  </div>
+</div> 
+
+<!-- Pagination -->
+<div
+  class="pagination-container"
+  *ngIf="!loading && !errorMessage && allDisplayAuditLogs.length > 0"
+>
+
+  <!-- Records Per Page -->
+  <div class="pagination-left">
+
+    <label>Rows per page:</label>
+
+    <select
+      [value]="itemsPerPage"
+      (change)="changeItemsPerPage($event)"
+    >
+
+      <option value="10">10</option>
+      <option value="25">25</option>
+      <option value="50">50</option>
+      <option value="100">100</option>
+
+    </select>
+
+  </div>
+
+
+  <!-- Page Information -->
+  <div class="pagination-center">
+
+    Page {{ currentPage }} of {{ totalPages }}
+
+  </div>
+
+
+  <!-- Pagination Buttons -->
+  <div class="pagination-right">
+
+    <button
+      class="pagination-btn"
+      (click)="previousPage()"
+      [disabled]="currentPage === 1"
+    >
+      Previous
+    </button>
+
+
+    <button
+      class="pagination-btn"
+      (click)="nextPage()"
+      [disabled]="currentPage === totalPages"
+    >
+      Next
+    </button>
+
+  </div>
+
+</div>
+<!-- END Pagination -->
+
+
+
+
+
+    </div> 
+    <!-- END table-wrapper -->
+
+
+  </div>
+  <!-- END table-card -->
+
+
+</div>
+<!-- END audit-trail-container -->

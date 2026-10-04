@@ -4,8 +4,8 @@ const circularModel = require("../models/circularModel");
 const employeeModel = require("../models/employeesModal");
 const circularVisibilityModel = require("../models/circularVisibilityModel")
 const eventEmitter = require("../events/eventEmitter");
-
-
+// const circularAuditService = require("../services/circularAuditService");
+const auditService = require("../services/auditService");
 const emitCircularUpdate = (req, approver_id, eventType, data) => {
   const io = req.app.get('io');
   if (io) {
@@ -284,6 +284,22 @@ exports.markAsSeen= async(req, res)=> {
 
     } 
 
+//Audit service log for approval action
+await auditService.logAudit({
+  circularId: circularId,
+  action: "CIRCULAR_APPROVED",
+  performedBy: approverId,
+  targetEmployeeId: approverId,
+  oldStatus: "PENDING_APPROVAL",
+  newStatus: result.allApproved ? "APPROVED" : "PENDING_APPROVAL",
+  description: result.allApproved
+    ? `Approver ${approverId} approved the circular. All approvers have approved.`
+    : `Approver ${approverId} approved the circular. ${result.pendingCount} approval(s) still pending.`
+});
+
+
+
+
 eventEmitter.emit("CIRCULAR_APPROVED", {
   circularId,
   approverId,
@@ -507,11 +523,6 @@ eventEmitter.emit("CIRCULAR_FULLY_APPROVED", {
     ); 
 
 
-
-
-
-
-
     return res.status(500).json({
       success: false,
       message: 'Error approving circular',
@@ -521,15 +532,10 @@ eventEmitter.emit("CIRCULAR_FULLY_APPROVED", {
 
   }
 
-
-
-
-
-
-
-
-
   }
+ 
+
+
 
   exports.reject=async(req, res)=> {
     const { circularId,approverId } = req.params;
@@ -552,7 +558,26 @@ eventEmitter.emit("CIRCULAR_FULLY_APPROVED", {
         }); 
 
       
-      } 
+      }  
+
+
+
+// AUDIT LOG for rejection action 
+await auditService.logAudit({
+  circularId: circularId,
+  action: "CIRCULAR_REJECTED",
+  performedBy: approverId,
+  targetEmployeeId: approverId,
+  oldStatus: "PENDING_APPROVAL",
+  newStatus: "REJECTED",
+  description: `Circular rejected by approver ${approverId}. Reason: ${comments}`
+});
+
+
+
+
+
+
 
   eventEmitter.emit("CIRCULAR_REJECTED", {
   circularId,

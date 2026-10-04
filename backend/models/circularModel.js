@@ -68,15 +68,43 @@ exports.getAllCirculars = () => {
   `);
 };
 
+// exports.getAllApprovedCirculars = () => {
+//   return db.query(`
+//     SELECT c.*, 
+//            e.first_name AS creator_name,
+//            st.name AS source_type
+//     FROM circulars c
+//     JOIN employees e ON c.creator_employee_id = e.id
+//     JOIN source_types st ON c.source_type_id = st.id
+//     WHERE c.status = 'APPROVED'
+//     ORDER BY c.created_at DESC
+//   `);
+// };
+
+
 exports.getAllApprovedCirculars = () => {
   return db.query(`
-    SELECT c.*, 
-           e.first_name AS creator_name,
-           st.name AS source_type
+    SELECT 
+      c.*, 
+      e.first_name AS creator_name,
+      st.name AS source_type,
+
+      CASE
+        WHEN EXISTS (
+          SELECT 1
+          FROM circular_approvals ca
+          WHERE ca.circular_id = c.id
+        )
+        THEN 'CIRCULAR'
+        ELSE 'HO_ASSIGNMENT'
+      END AS item_type
+
     FROM circulars c
     JOIN employees e ON c.creator_employee_id = e.id
     JOIN source_types st ON c.source_type_id = st.id
+
     WHERE c.status = 'APPROVED'
+
     ORDER BY c.created_at DESC
   `);
 };
@@ -102,7 +130,23 @@ exports.getCircularByCreaterId = (createrId) => {
   return db.query(
     `SELECT 
         c.*,  -- all circular fields
-        st.name AS source_type_name,  -- source type
+
+        CASE
+          WHEN c.status IN ('APPROVED', 'COMPLETED')
+               AND NOT EXISTS (
+                 SELECT 1
+                 FROM circular_approvals ca
+                 WHERE ca.circular_id = c.id
+               )
+          THEN 'HO_ASSIGNMENT'
+          ELSE 'CIRCULAR'
+        END AS item_type,
+
+        st.name AS source_type_name,
+
+
+
+
         rc.name AS repeat_cycle_name, -- repeat cycle
         rc.duration_days AS repeat_cycle_duration, -- optional
 
@@ -230,7 +274,7 @@ exports.deleteCircular = async (circularId) => {
 exports.getAllCircularsByEmployeeIdWithTrackingDetails = async (employeeId) => {
   const [rows] = await db.query(
     `
-   SELECT 
+    SELECT 
       c.id AS circular_id,
       c.title,
       c.content,
@@ -239,6 +283,16 @@ exports.getAllCircularsByEmployeeIdWithTrackingDetails = async (employeeId) => {
       c.priority,
       c.status AS circular_status,
       c.circular_code,
+
+      CASE
+        WHEN EXISTS (
+          SELECT 1
+          FROM circular_approvals ca
+          WHERE ca.circular_id = c.id
+        )
+        THEN 'CIRCULAR'
+        ELSE 'HO_ASSIGNMENT'
+      END AS item_type,
 
       ct.track_id AS tracking_id,
       ct.is_seen,
@@ -258,11 +312,14 @@ exports.getAllCircularsByEmployeeIdWithTrackingDetails = async (employeeId) => {
     LEFT JOIN employees e ON c.creator_employee_id = e.id
     LEFT JOIN departments d ON e.department_id = d.id
     LEFT JOIN branches b ON e.branch_id = b.id
+
     WHERE ct.employee_id = ?
+
     ORDER BY c.published_at DESC
     `,
     [employeeId]
   );
+
   return rows;
 };
 

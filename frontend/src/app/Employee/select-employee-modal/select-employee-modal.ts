@@ -3248,9 +3248,12 @@ this.rebuildSelectedEmployees();
       this.confirmRegionSelectionWhenLoaded =
         false;
 
+      // this.dialogRef.close(
+      //   this.selectedEmployees
+      // ); 
       this.dialogRef.close(
-        this.selectedEmployees
-      );
+  this.getSelectionResult()
+);
 
     }
 
@@ -3398,10 +3401,12 @@ private loadTopLevelEmployees(): void {
       this.confirmZoneSelectionWhenLoaded =
         false;
 
-      this.dialogRef.close(
-        this.selectedEmployees
-      );
-
+      // this.dialogRef.close(
+      //   this.selectedEmployees
+      // );
+this.dialogRef.close(
+  this.getSelectionResult()
+);
     }
 
   }
@@ -3502,9 +3507,12 @@ this.rebuildSelectedEmployees();
       this.confirmCircleSelectionWhenLoaded =
         false;
 
+      // this.dialogRef.close(
+      //   this.selectedEmployees
+      // ); 
       this.dialogRef.close(
-        this.selectedEmployees
-      );
+  this.getSelectionResult()
+);
 
     }
 
@@ -3792,9 +3800,12 @@ private loadDepartmentWiseEmployees(): void {
       this.confirmBranchSelectionWhenLoaded =
         false;
 
+      // this.dialogRef.close(
+      //   this.selectedEmployees
+      // ); 
       this.dialogRef.close(
-        this.selectedEmployees
-      );
+  this.getSelectionResult()
+);
 
     }
 
@@ -4364,6 +4375,38 @@ searchEmployees(): void {
 
   }
 
+
+
+// =========================================================
+// RETURN SELECTION WITH HIERARCHY
+// =========================================================
+
+private getSelectionResult(): any {
+  // Keep existing structure for other selection types
+  if (!this.isRegionWiseSelection()) {
+    return this.selectedEmployees;
+  }
+
+  // Return employees and hierarchy for REGION_WISE
+  return {
+    employees: this.selectedEmployees,
+    hierarchy: {
+      regionIds: this.selectedRegionIds,
+      zoneIds: this.selectedZoneIds,
+      circleIds: this.selectedCircleIds,
+      branchIds: this.selectedBranchIds,
+      departmentIds: this.selectedDepartmentIds
+    }
+  };
+}
+
+
+
+
+
+
+
+
   // =========================================================
   // CONFIRM SELECTION
   // =========================================================
@@ -4473,9 +4516,13 @@ if (this.isMdCeoSelection()) {
   // =====================================================
 
     // Return selected employees
-    this.dialogRef.close(
-      this.selectedEmployees
-    );
+    // this.dialogRef.close(
+    //   this.selectedEmployees
+    // ); 
+    // Return selected employees
+this.dialogRef.close(
+  this.getSelectionResult()
+);
 
   }
 

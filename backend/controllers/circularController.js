@@ -7,6 +7,7 @@ const notificationModel = require("../models/notificationModel");
 const repeatCycleModel = require("../models/repeatCyclesModel");
 const eventEmitter = require("../events/eventEmitter");
 const higherAuthorityModel = require("../models/higherAuthorityModel");
+const auditService = require("../services/auditService");
 
 // helper function---------------
 async function createCircularTrackingEntries(circularId, employeeIds) {
@@ -92,9 +93,77 @@ visibility_type: req.body.visibility_type || null,
     };
 
     const [result] = await circularModal.createCircular(data);
-    const circularId = result.insertId;
+    const circularId = result.insertId;   
 
-    
+
+
+//Adding a new code for herachy
+// Read REGION_WISE hierarchy sent from frontend
+let regionWiseHierarchy = null;
+
+if (
+  req.body.visibility_type === "REGION_WISE" &&
+  req.body.regionWiseHierarchy
+) {
+  try {
+    regionWiseHierarchy = JSON.parse(
+      req.body.regionWiseHierarchy
+    );
+
+    console.log(
+      "REGION_WISE Hierarchy:",
+      regionWiseHierarchy
+    );
+
+  } catch (error) {
+    console.error(
+      "Invalid REGION_WISE hierarchy:",
+      error
+    );
+  }
+}
+
+console.log("========== BEFORE AUDIT ==========");
+// ============================================
+// AUDIT - CIRCULAR CREATED
+// ============================================
+
+// ============================================
+// AUDIT - CIRCULAR CREATED
+// ============================================
+
+let auditDescription =
+  `Circular "${req.body.title}" was created`;
+
+// Add REGION_WISE hierarchy to audit description
+if (
+  req.body.visibility_type === "REGION_WISE" &&
+  regionWiseHierarchy
+) {
+  auditDescription +=
+    ` | REGION_WISE_HIERARCHY: ${JSON.stringify(
+      regionWiseHierarchy
+    )}`;
+}
+
+await auditService.logAudit({
+
+  circularId: circularId,
+
+  action: "CIRCULAR_CREATED",
+
+  performedBy: req.body.creator_employee_id,
+
+  targetEmployeeId: null,
+
+  oldStatus: null,
+
+  newStatus: req.body.status,
+
+  description: auditDescription
+
+});
+    console.log("========== AFTER AUDIT ==========");
      // Trigger Event
     // eventEmitter.emit("CIRCULAR_CREATED", {
     //   circularId: circularId,
@@ -104,6 +173,9 @@ visibility_type: req.body.visibility_type || null,
 
     const approvers = req.body.approvers ? JSON.parse(req.body.approvers) : [];
    
+
+
+    const isHOAssignment = req.body.assignmentType === "HO_ASSIGNMENT";
     const io = req.app.get("io");
 
    
@@ -138,7 +210,7 @@ visibility_type: req.body.visibility_type || null,
 //   ? JSON.parse(req.body.approvers)
 //   : [];
 
-if (Array.isArray(approvers) && approvers.length > 0) {
+if (!isHOAssignment && Array.isArray(approvers) && approvers.length > 0) {
 
     const io = req.app.get("io");
 
@@ -204,6 +276,19 @@ if (Array.isArray(approvers) && approvers.length > 0) {
       io,
       priority: req.body.priority,
     });
+
+
+console.log(
+  "Visibility Type:",
+  req.body.visibility_type
+);
+
+console.log(
+  "REGION_WISE Hierarchy Received:",
+  regionWiseHierarchy
+);
+
+
 
     const visiblityEmployee = req.body.visiblityEmployee
       ? JSON.parse(req.body.visiblityEmployee)
@@ -368,7 +453,8 @@ exports.getCircularByCreaterId = async (req, res) => {
         circularMap.set(row.id, {
           id: row.id,
           title: row.title,
-          content: row.content,
+          content: row.content, 
+          item_type: row.item_type,
           circular_code: row.circular_code,
           send_type: row.send_type,
           status: row.status,

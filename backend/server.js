@@ -8,6 +8,7 @@ require("./rules/circularRules");
 const app = express();
 const server = http.createServer(app);
 const subscribedCircularRooms = new Set();
+const auditRoutes = require("./routes/auditRoutes");
 
 // const io = new Server(server, {
 //   cors: {
@@ -50,6 +51,7 @@ const circularRoutes = require("./routes/circularRoutes");
 
 const recurrenceRoutes =require("./routes/recurrenceRoutes");
 
+const hoAssignmentRoutes = require("./routes/hoAssignmentRoute");
 
 const sourceTypeRoutes = require("./routes/sourceTypesRoutes");
 const circularApprovalRoutes = require("./routes/CircularApprovalsRoutes");
@@ -239,7 +241,7 @@ app.use("/api/employees", express.json(), employeeRoutes);
 app.use("/api/roles", express.json(), roleRoutes);
 app.use("/api/circular", circularRoutes);
 
-
+app.use("/api/ho-assignments", express.json(), hoAssignmentRoutes);
 
 app.use("/api/source-type", express.json(), sourceTypeRoutes);
 app.use("/api/circular-approvals", express.json(), circularApprovalRoutes);
@@ -267,7 +269,10 @@ app.use("/api/zones", zoneRoutes);
 app.use("/api/circle",circleRoutes);
 
 //Route for commitee
-app.use("/api/committee", committeeRoutes);
+app.use("/api/committee", committeeRoutes); 
+
+//Route for Audit trail 
+app.use("/api/audit", auditRoutes);
 
 app.get("/api/test-reminders", async (req, res) => {
   try {

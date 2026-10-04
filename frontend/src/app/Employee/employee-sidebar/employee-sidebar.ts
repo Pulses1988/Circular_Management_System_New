@@ -30,6 +30,7 @@ interface NavItem {
   badgeType?: 'urgent' | 'info' | 'success';
   exact?: boolean;
   isActive?: boolean;
+   queryParams?: any;
   subItems?: SubNavItem[];
 
 }
@@ -109,7 +110,8 @@ export class EmployeeSidebar implements OnInit, OnDestroy {
         {
           label: 'All Circulars',
           icon: 'list_alt',
-          route: '/employee/all-circulars',
+          route: '/employee/all-circulars', 
+           queryParams: { type: 'CIRCULAR' },
         },
         {
           label: 'Unread',
@@ -136,7 +138,78 @@ export class EmployeeSidebar implements OnInit, OnDestroy {
          route: '/employee/circular-approval',
         },
       ],
+    },  
+
+    //Adding HO_Assignment route 
+
+{
+  label: 'HO Assignment',
+  icon: 'assignment',
+ route: '/employee/all-circulars',
+    queryParams: { type: 'HO_ASSIGNMENT' },
+  subItems: [
+    {
+       label: 'All HO Assignments',
+  icon: 'list_alt',
+  route: '/employee/all-circulars',
+  queryParams: { type: 'HO_ASSIGNMENT' },
     },
+    // {
+    //   label: 'Unread',
+    //   icon: 'visibility_off',
+    //   route: '/employee/filtered-ho-assignments',
+    //   queryParams: { type: 'unread' }
+    // },
+    // {
+    //   label: 'Urgent',
+    //   icon: 'priority_high',
+    //   route: '/employee/filtered-ho-assignments',
+    //   queryParams: { type: 'urgent' }
+    // }, 
+   
+{
+  label: 'Unread',
+  icon: 'visibility_off',
+  route: '/employee/filtered-circulars',
+  queryParams: {
+    type: 'unread',
+    itemType: 'HO_ASSIGNMENT'
+  }
+},
+{
+  label: 'Urgent',
+  icon: 'priority_high',
+  route: '/employee/filtered-circulars',
+  queryParams: {
+    type: 'urgent',
+    itemType: 'HO_ASSIGNMENT'
+  }
+},
+
+
+
+
+
+
+
+    {
+    
+       label: 'Create Assignment',
+  icon: 'assignment',
+  // route: '/employee/create-circular',
+   route: '/employee/circular-creater',
+  queryParams: { type: 'HO_ASSIGNMENT' }, 
+    },
+  ],
+},
+
+
+
+
+
+
+
+
     {
       label: 'My Profile',
       icon: 'account_circle',

@@ -16,7 +16,7 @@ import { AdminZoneManagement } from './admin-zone-management/admin-zone-manageme
 import { AdminCircleManagement } from './admin-circle-management/admin-circle-management';
 import { AdminCommitteeManagement } from './admin-committee-management/admin-committee-management';
 import { AdminRuleEngine } from './rule-engine/rule-engine';
-
+import { AdminAuditTrail } from './admin-audit-trail/admin-audit-trail';
 
 export const ADMIN_ROUTS: Routes = [
   // { path: '', redirectTo: 'admin-login', pathMatch: 'full' },
@@ -61,7 +61,19 @@ export const ADMIN_ROUTS: Routes = [
     path: 'rule-engine', component: AdminRuleEngine,
     canActivate: [AuthGuard, RoleGuard], data: { roles: ['HO_ADMIN', 'BRANCH_ADMIN'] }
   },
+
+//Routes for admin audit_trail
+// ... your other existing routes (e.g., admin-dashboard, employee-mangement)
+  {
+    path: 'admin-audit-trail', // or 'audit-trail' depending on your URL preference
+    component: AdminAuditTrail,
+  },
+
+
+
   // Add unauthorized route
+
+
   { 
     path: 'unauthorized', 
     component: UnauthorizedPage 

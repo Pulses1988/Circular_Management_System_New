@@ -1,0 +1,856 @@
+<div
+  class="create-circular-wrapper"
+  [class.dark-mode]="isDarkMode"
+>
+
+  <!-- ================================
+       HEADER
+  ================================= -->
+
+  <div class="header">
+
+    <div class="header-content">
+
+      <div class="header-left">
+
+        <button
+          type="button"
+          class="back-btn"
+          (click)="goBack()"
+          title="Go Back"
+        >
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+
+        <div class="title-info">
+
+          <h1>Create HO Assignment</h1>
+
+          <div class="breadcrumb">
+
+            <span>Dashboard</span>
+
+            <mat-icon>chevron_right</mat-icon>
+
+            <span>HO Assignment</span>
+
+            <mat-icon>chevron_right</mat-icon>
+
+            <span>New Assignment</span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Theme Button -->
+
+      <div class="header-actions">
+
+        <button
+          type="button"
+          class="theme-btn"
+          (click)="toggleTheme()"
+          title="Toggle Theme"
+        >
+          <mat-icon>
+            {{ isDarkMode ? 'light_mode' : 'dark_mode' }}
+          </mat-icon>
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ================================
+       FORM CONTAINER
+  ================================= -->
+
+  <div class="form-container">
+
+    <form
+      class="circular-form"
+      [formGroup]="hoAssignmentForm"
+    >
+
+      <!-- ================================
+           BASIC INFORMATION
+      ================================= -->
+
+      <div class="form-section">
+
+        <div class="section-header">
+
+          <mat-icon>assignment</mat-icon>
+
+          <h3>Basic Information</h3>
+
+        </div>
+
+
+        <div class="form-grid">
+
+          <!-- Title -->
+
+          <div class="form-field">
+
+            <label for="title">
+              Assignment Title
+              <span class="required">*</span>
+            </label>
+
+            <input
+              id="title"
+              type="text"
+              class="form-input"
+              formControlName="title"
+              placeholder="Enter assignment title"
+            />
+
+          </div>
+
+
+          <!-- Assignment Code -->
+
+          <div class="form-field">
+
+            <label for="assignment_code">
+              Assignment Code
+              <span class="required">*</span>
+            </label>
+
+            <input
+              id="assignment_code"
+              type="text"
+              class="form-input"
+              formControlName="assignment_code"
+              placeholder="Enter assignment code"
+              
+            />
+
+          </div>
+
+
+          <!-- Special Keyword -->
+
+          <div class="form-field">
+
+            <label for="specialKeyword">
+
+              Special Keyword
+
+              <span class="optional">
+                Optional
+              </span>
+
+            </label>
+
+            <input
+              id="specialKeyword"
+              type="text"
+              class="form-input"
+              formControlName="specialKeyword"
+              placeholder="Enter special keyword"
+            />
+
+          </div>
+
+
+          <!-- Previous Assignment -->
+
+          <div class="form-field">
+
+            <label for="previous_assignment_id">
+              Previous Assignment Reference
+            </label> 
+            
+<div class="select-wrapper">
+
+  <mat-form-field
+    appearance="outline"
+    class="previous-assignment-field"
+  >
+
+    <mat-select
+      id="previous_assignment_id"
+      formControlName="previous_assignment_id"
+      placeholder="Select Previous Assignment"
+    >
+
+      <mat-option value="">
+        Select Previous Assignment
+      </mat-option>
+
+      <mat-option
+        *ngFor="let assignment of previousAssignments"
+        [value]="assignment.id"
+      >
+        {{ assignment.assignment_code }} - {{ assignment.title }}
+      </mat-option>
+
+    </mat-select>
+
+  </mat-form-field>
+
+</div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- ================================
+           SOURCE & ORIGIN
+      ================================= -->
+
+      <div class="form-section">
+
+        <div class="section-header">
+
+          <mat-icon>business</mat-icon>
+
+          <h3>Source & Origin</h3>
+
+        </div>
+
+
+        <div class="form-grid">
+
+          <!-- Source Type -->
+
+          <div class="form-field">
+
+            <label for="source_type_id">
+
+              Source Type
+
+              <span class="required">*</span>
+
+            </label>
+
+            <div class="select-wrapper">
+
+             <select
+  id="source_type_id"
+  class="form-select"
+  formControlName="source_type_id"
+>
+
+  <option value="">
+    Select Source Type
+  </option>
+
+  <option
+    *ngFor="let sourceType of sourceTypes"
+    [value]="sourceType.id"
+  >
+    {{ sourceType.name }}
+  </option>
+
+</select>
+
+              <mat-icon>
+                expand_more
+              </mat-icon>
+
+            </div>
+
+          </div>
+
+
+          <!-- Originator -->
+
+          <div class="form-field">
+
+            <label for="originator">
+              Originator
+              <span class="required">*</span>
+            </label>
+
+            <input
+              id="originator"
+              type="text"
+              class="form-input"
+              formControlName="originator"
+              readonly
+            />
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- ================================
+           VISIBILITY & TIMELINE
+      ================================= -->
+
+      <div class="form-section">
+
+        <div class="section-header">
+
+          <mat-icon>security</mat-icon>
+
+          <h3>Visibility & Timeline</h3>
+
+        </div>
+
+
+        <div class="form-grid">
+
+          <!-- Visibility -->
+
+          <div class="form-field">
+
+            <label>
+              Visibility
+              <span class="required">*</span>
+            </label>
+
+            <div class="select-wrapper">
+
+              <select
+                class="form-select"
+                formControlName="confidentiality"
+                 (change)="onEmployeeVisibilityChange()"
+              >
+
+                <option value="">
+                  Select Visibility
+                </option>
+
+                <option value="INTERNAL">
+                  Internal
+                </option>
+
+                <option value="HEAD_OFFICE">
+                  Head Office
+                </option>
+
+                <option value="REGION_WISE">
+                  Region Wise
+                </option>
+
+                <option value="ZONE_WISE">
+                  Zone Wise
+                </option>
+
+                <option value="CIRCLE_WISE">
+                  Circle Wise
+                </option>
+
+                <option value="BRANCH_WISE">
+                  Branch Wise
+                </option>
+
+                <option value="DEPARTMENT_WISE">
+                  Department Wise
+                </option>
+
+                <option value="DESIGNATION_WISE">
+                  Designation Wise
+                </option>
+
+                <option value="ROLE_WISE">
+                  Role Wise
+                </option>
+
+                <option value="USER_WISE">
+                  User Wise
+                </option>
+
+              </select>
+
+              <mat-icon>
+                expand_more
+              </mat-icon>
+
+            </div>
+
+          </div>
+
+
+          <!-- Effective From -->
+
+          <div class="form-field">
+
+            <label for="effective_from">
+
+              Effective From
+
+              <span class="required">*</span>
+
+            </label>
+
+            <input
+              id="effective_from"
+              type="date"
+              class="form-input"
+              formControlName="effective_from"
+            />
+
+          </div>
+
+
+          <!-- Repeat Cycle -->
+
+<div class="selected-employees-preview">
+
+  <div class="selected-employees-header">
+
+    <span>
+      Selected Employees
+    </span>
+
+    <span
+      class="selected-count-link"
+      *ngIf="selectedEmployees.length > 3"
+      (click)="toggleSelectedEmployeesList()"
+    >
+      +{{ selectedEmployees.length - 3 }} more
+    </span>
+
+  </div>
+
+
+  <!-- First 3 employees -->
+
+  <div
+    class="selected-employees-names"
+    *ngIf="selectedEmployees.length > 0"
+  >
+
+    <span
+      class="employee-name"
+      *ngFor="
+        let employee of selectedEmployees | slice:0:3
+      "
+    >
+      {{ employee.first_name }} {{ employee.last_name }}
+    </span>
+
+  </div>
+
+
+  <!-- No employee selected -->
+
+  <div
+    class="no-selected-employees"
+    *ngIf="selectedEmployees.length === 0"
+  >
+    No employees selected
+  </div>
+
+
+  <!-- Complete employee list -->
+
+  <div
+    class="all-selected-employees"
+    *ngIf="
+      showSelectedEmployeesList &&
+      selectedEmployees.length > 3
+    "
+  >
+
+    <div
+      class="all-selected-employee"
+      *ngFor="let employee of selectedEmployees"
+    >
+
+      <span>
+        {{ employee.first_name }} {{ employee.last_name }}
+      </span>
+
+      <span
+        class="employee-id"
+        *ngIf="employee.id"
+      >
+        #{{ employee.id }}
+      </span>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+          <!-- <div class="form-field">
+
+            <label for="repeat_cycle">
+
+              Repeat Cycle
+
+              <span class="required">*</span>
+
+            </label>
+
+            <div class="select-wrapper">
+
+              <select
+                id="repeat_cycle"
+                class="form-select"
+                formControlName="repeat_cycle"
+              >
+
+                <option value="">
+                  Select Repeat Cycle
+                </option>
+
+              </select>
+
+              <mat-icon>
+                expand_more
+              </mat-icon>
+
+            </div>
+
+          </div> -->
+
+
+          <!-- Priority -->
+
+          <div class="form-field">
+
+            <label for="priority">
+
+              Priority
+
+              <span class="required">*</span>
+
+            </label>
+
+            <div class="select-wrapper">
+
+              <select
+                id="priority"
+                class="form-select"
+                formControlName="priority"
+              >
+
+                <option value="LOW">
+                  Low
+                </option>
+
+                <option value="MEDIUM">
+                  Medium
+                </option>
+
+                <option value="HIGH">
+                  High
+                </option>
+
+                <option value="URGENT">
+                  Urgent
+                </option>
+
+              </select>
+
+              <mat-icon>
+                expand_more
+              </mat-icon>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Selected Visibility -->
+
+       <!-- ================================
+     SELECTED EMPLOYEES
+================================= -->
+
+
+
+      </div>
+
+
+      <!-- ================================
+           EMPLOYEE / BRANCH VISIBILITY
+      ================================= -->
+
+     
+
+
+      <!-- ================================
+           ATTACHMENT
+      ================================= -->
+
+      <div class="form-section">
+
+        <div class="section-header">
+
+          <mat-icon>attach_file</mat-icon>
+
+          <h3>Attachment</h3>
+
+        </div>
+
+
+        <div class="form-grid">
+
+          <div class="form-field full-width">
+
+            <label>
+              Assignment Document
+            </label>
+
+            <div class="file-upload-area">
+
+              <input
+                type="file"
+                id="assignmentFile"
+                accept="application/pdf"
+                hidden
+                (change)="onFileSelected($event)"
+              />
+
+              <label
+                for="assignmentFile"
+                class="file-upload-label"
+              >
+
+                <mat-icon>
+                  cloud_upload
+                </mat-icon>
+
+                <span>
+                  Click to upload PDF
+                </span>
+
+                <small>
+                  Maximum file size: 10 MB
+                </small>
+
+              </label>
+
+              <!-- Selected file -->
+
+              <div
+                class="selected-file"
+                *ngIf="selectedFile"
+              >
+
+                <mat-icon>
+                  picture_as_pdf
+                </mat-icon>
+
+                <span>
+                  {{ getSelectedFileName() }}
+                </span>
+
+                <button
+                  type="button"
+                  (click)="removeSelectedFile()"
+                  title="Remove file"
+                >
+                  <mat-icon>
+                    close
+                  </mat-icon>
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- ================================
+           CONTENT
+      ================================= -->
+
+      <div class="form-section">
+
+        <div class="section-header">
+
+          <mat-icon>description</mat-icon>
+
+          <h3>Assignment Content</h3>
+
+        </div>
+
+
+        <div class="form-grid">
+
+          <div class="form-field full-width">
+
+            <label>
+              Content
+              <span class="required">*</span>
+            </label>
+
+
+            <div class="editor-container">
+
+              <!-- Toolbar -->
+
+              <div class="editor-toolbar">
+
+                <button
+                  type="button"
+                  title="Bold"
+                  (click)="executeCommand('bold')"
+                >
+                  <mat-icon>
+                    format_bold
+                  </mat-icon>
+                </button>
+
+
+                <button
+                  type="button"
+                  title="Italic"
+                  (click)="executeCommand('italic')"
+                >
+                  <mat-icon>
+                    format_italic
+                  </mat-icon>
+                </button>
+
+
+                <button
+                  type="button"
+                  title="Underline"
+                  (click)="executeCommand('underline')"
+                >
+                  <mat-icon>
+                    format_underlined
+                  </mat-icon>
+                </button>
+
+
+                <span class="toolbar-divider"></span>
+
+
+                <button
+                  type="button"
+                  title="Bullet List"
+                  (click)="executeCommand('insertUnorderedList')"
+                >
+                  <mat-icon>
+                    format_list_bulleted
+                  </mat-icon>
+                </button>
+
+
+                <button
+                  type="button"
+                  title="Numbered List"
+                  (click)="executeCommand('insertOrderedList')"
+                >
+                  <mat-icon>
+                    format_list_numbered
+                  </mat-icon>
+                </button>
+
+              </div>
+
+
+              <!-- Editor -->
+
+              <div
+                #richEditor
+                class="rich-editor"
+                contenteditable="true"
+                (input)="onContentChange($event)"
+              ></div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </form>
+
+  </div>
+
+
+  <!-- ================================
+       ACTION BAR
+  ================================= -->
+
+  <div class="action-bar">
+
+    <div class="action-content">
+
+      <div class="action-left">
+
+        <button
+          type="button"
+          class="action-btn secondary"
+          (click)="discardDraft()"
+        >
+
+          <mat-icon>
+            delete_outline
+          </mat-icon>
+
+          <span>
+            Discard
+          </span>
+
+        </button>
+
+      </div>
+
+
+      <div class="action-right">
+
+        <button
+          type="button"
+          class="action-btn secondary"
+          (click)="saveDraft()"
+        >
+
+          <mat-icon>
+            save
+          </mat-icon>
+
+          <span>
+            Save Draft
+          </span>
+
+        </button>
+
+
+        <button
+          type="button"
+          class="action-btn primary"
+          (click)="createAssignment()"
+        >
+
+          <mat-icon>
+            assignment_turned_in
+          </mat-icon>
+
+          <span>
+            Create Assignment
+          </span>
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

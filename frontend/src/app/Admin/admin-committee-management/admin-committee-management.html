@@ -1,618 +1,305 @@
 <!-- ========================================================= -->
-<!-- HEADER / TOTAL COMMITTEES -->
+<!-- MAIN RESPONSIVE CONTAINER -->
 <!-- ========================================================= -->
-<!-- HEADER -->
-<!-- ========================================================= -->
-<div class="mb-5 ml-6">
-  <h2 class="m-0 text-[30px] font-bold text-slate-800">
-    Committee Management
-  </h2>
-
-  <p class="mt-1.5 text-sm text-slate-500">
-    Manage Committees
-  </p>
-</div>
-
-<!-- ========================================================= -->
-<!-- ADD COMMITTEE BUTTON -->
-<!-- ========================================================= -->
-<!-- Add Committee Button - visible only when form is closed -->
-<button
-  *ngIf="!showForm"
-  type="button"
-  (click)="toggleForm()"
-  class="bg-green-600 text-white border-0 rounded-lg px-6 py-2 cursor-pointer text-sm font-medium transition-colors duration-200 hover:bg-green-700 mb-6 ml-6"
->
-  Add Committee
-</button>
-
-
-<!-- ========================================================= -->
-<!-- COMMITTEE FORM -->
-<!-- ========================================================= -->
-
-<form
-  *ngIf="showForm"
-  [formGroup]="committeeForm"
-  (ngSubmit)="submitForm()"
-  class="bg-white rounded-lg shadow-sm p-6 mb-6"
->
-
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-    <!-- Committee Name -->
-
-    <div>
-
-      <label class="block text-sm font-medium mb-2">
-        Committee Name
-      </label>
-
-      <input
-        type="text"
-        formControlName="committee_name"
-        class="w-full border rounded-lg p-3"
-        placeholder="Enter Committee Name"
-      >
-
-    </div>
-
-
-    <!-- Description -->
-
-    <div>
-
-      <label class="block text-sm font-medium mb-2">
-        Description
-      </label>
-
-      <input
-        type="text"
-        formControlName="description"
-        class="w-full border rounded-lg p-3"
-        placeholder="Description"
-      >
-
-    </div>
-
-
-    <!-- Status -->
-
-    <div>
-
-      <label class="block text-sm font-medium mb-2">
-        Status
-      </label>
-
-      <select
-        formControlName="status"
-        class="w-full border rounded-lg p-3"
-      >
-
-        <option value="ACTIVE">
-          ACTIVE
-        </option>
-
-        <option value="INACTIVE">
-          INACTIVE
-        </option>
-
-      </select>
-
-    </div>
-
-  </div>
-
-
-  <!-- Allowed Member Types -->
-
-  <div class="mt-4">
-
-    <label class="block text-sm font-medium mb-2">
-      Allowed Member Types
-    </label>
-
-    <div
-      class="flex flex-wrap gap-x-5 gap-y-2 border rounded-lg p-3"
-    >
-
-      <label
-        *ngFor="let memberType of memberTypes"
-        class="inline-flex items-center gap-2 cursor-pointer"
-      >
-
-        <input
-          type="checkbox"
-          [checked]="isMemberTypeSelected(memberType.id)"
-          (change)="toggleMemberType(
-            memberType.id,
-            $any($event.target).checked
-          )"
-        >
-
-        <span>
-          {{ memberType.member_type_name }}
-        </span>
-
-      </label>
-
-
-      <span
-        *ngIf="memberTypes.length === 0"
-        class="text-sm text-gray-500"
-      >
-        No active member types available.
-      </span>
-
-    </div>
-
-  </div>
-
-
-  <!-- Form Buttons -->
-
-  <!-- Form Buttons -->
-
-<div class="mt-6 flex gap-3">
-
-  <!-- Save / Update -->
-  <button
-    type="submit"
-    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-  >
-    {{ isEditMode ? 'Update Committee' : 'Save Committee' }}
-  </button>
-
-  <!-- Cancel - closes the form -->
-  <button
-    type="button"
-    (click)="resetForm()"
-    class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
-  >
-    Cancel
-  </button>
-
-  <!-- Clear - clears fields but keeps form open -->
-  <button
-    type="button"
-    (click)="clearForm()"
-    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-  >
-    Clear
-  </button>
-
-</div>
-
-</form>
-
-
-
-<!-- ========================================================= -->
-<!-- COMMITTEE TABLE -->
-<!-- ========================================================= -->
-
-
-<div class="bg-white rounded-lg shadow-sm overflow-x-auto ml-6">
-  <table class="min-w-full">
-
-   <thead class="bg-blue-600 text-white">
-  <tr>
-
-    <th class="px-6 py-4 text-left font-semibold">
-      #
-    </th>
-
-    <th class="px-6 py-4 text-left font-semibold">
-      Committee Name
-    </th>
-
-    <th class="px-6 py-4 text-left font-semibold">
-      Description
-    </th>
-
-    <th class="px-6 py-4 text-left font-semibold">
-      Status
-    </th>
-
-    <th class="px-6 py-4 text-left font-semibold">
-      Created At
-    </th>
-
-    <th class="px-6 py-4 text-left font-semibold whitespace-nowrap">
-      Actions
-    </th>
-
-  </tr>
-</thead>
-
-
-    <tbody>
-
-      <tr
-        *ngFor="let committee of committees; let i = index"
-        class="border-t"
-      >
-
-        <!-- Number -->
-
-        <td class="px-6 py-4">
-          {{ i + 1 }}
-        </td>
-
-
-        <!-- Committee Name -->
-
-        <td class="px-6 py-4">
-          {{ committee.committee_name }}
-        </td>
-
-
-        <!-- Description -->
-
-        <td class="px-6 py-4">
-          {{ committee.description }}
-        </td>
-
-
-        <!-- Status -->
-
-        <td class="px-6 py-4">
-          {{ committee.status }}
-        </td>
-
-
-        <!-- Created At -->
-
-        <td class="px-6 py-4">
-          {{ committee.created_at | date:'dd/MM/yyyy' }}
-        </td>
-
-
-        <!-- Actions -->
-
-        <td class="px-6 py-4">
-  
-  <div class="flex flex-wrap items-center gap-2">
-
-    <!-- Edit -->
-    <button 
-      type="button" 
-      (click)="editCommittee(committee)" 
-      class="bg-yellow-500 text-white px-3 py-1 rounded whitespace-nowrap"
-    >
-      Edit 
-    </button>
-
-    <!-- Delete -->
-    <button 
-      type="button" 
-      (click)="deleteCommittee(committee.id)" 
-      class="bg-red-500 text-white px-3 py-1 rounded whitespace-nowrap"
-    >
-      Delete 
-    </button>
-
-    <!-- Assign Employees -->
-    <button 
-      type="button" 
-      (click)="assignEmployees(committee)" 
-      class="bg-blue-600 text-white px-3 py-1 rounded whitespace-nowrap"
-    >
-      Assign Director/officers 
-    </button>
-
-  </div>
-
-</td>
-
-      </tr>
-
-
-      <!-- No Committees -->
-
-      <tr *ngIf="committees.length === 0">
-
-        <td
-          colspan="6"
-          class="text-center py-6 text-gray-500"
-        >
-          No committees found.
-        </td>
-
-      </tr>
-
-    </tbody>
-
-  </table>
-
-</div>
-
-
-
-<!-- ========================================================= -->
-<!-- ASSIGNED EMPLOYEES TABLE -->
-<!-- IMPORTANT: THIS IS OUTSIDE THE POPUP -->
-<!-- ========================================================= -->
-
-<div
-  *ngIf="committeeMembers.length > 0"
-  class="mt-6 bg-white rounded-lg shadow-sm p-6"
->
-
-  <div class="flex items-center justify-between mb-4">
-
-    <h2 class="text-xl font-semibold">
-      Assigned Employees
+<div class="p-4 md:p-6 w-full max-w-full overflow-x-hidden">
+
+  <!-- HEADER -->
+  <div class="mb-5">
+    <h2 class="m-0 text-2xl md:text-[30px] font-bold text-slate-800">
+      Committee Management
     </h2>
-
-    <span
-      *ngIf="selectedCommittee"
-      class="text-sm text-gray-500"
-    >
-      Committee:
-      <span class="font-semibold text-gray-700">
-        {{ selectedCommittee.committee_name }}
-      </span>
-    </span>
-
+    <p class="mt-1.5 text-sm text-slate-500">
+      Manage Committees
+    </p>
   </div>
 
-
-  <div class="overflow-x-auto">
-
-    <table class="min-w-full">
-
-      <thead>
-
-        <tr class="bg-gray-100">
-
-          <th class="p-2 border">
-            Employee ID
-          </th>
-
-          <th class="p-2 border">
-            Name
-          </th>
-
-          <th class="p-2 border">
-            Action
-          </th>
-
-        </tr>
-
-      </thead>
-
-
-      <tbody>
-
-        <tr
-          *ngFor="let member of committeeMembers"
-        >
-
-          <!-- Employee ID -->
-
-          <td class="p-2 border">
-            {{ member.employee_id }}
-          </td>
-
-
-          <!-- Name -->
-
-          <td class="p-2 border">
-            {{ member.first_name }}
-            {{ member.last_name }}
-          </td>
-
-
-          <!-- Remove -->
-
-          <td class="p-2 border">
-
-            <button
-              type="button"
-              class="bg-red-600 text-white px-3 py-1 rounded"
-              (click)="removeMember(member.id)"
-            >
-              Remove
-            </button>
-
-          </td>
-
-        </tr>
-
-      </tbody>
-
-    </table>
-
-  </div>
-
-</div>
-
-
-
-<!-- ========================================================= -->
-<!-- ASSIGN EMPLOYEE POPUP -->
-<!-- ========================================================= -->
-
-<div
-  *ngIf="showAssignEmployee"
-  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4"
->
-
-
-  <!-- Popup Box -->
-
-  <div
-    class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden"
+  <!-- ADD COMMITTEE BUTTON -->
+  <button
+    *ngIf="!showForm"
+    type="button"
+    (click)="toggleForm()"
+    class="bg-green-600 text-white border-0 rounded-lg px-5 py-2.5 cursor-pointer text-sm font-medium transition-colors duration-200 hover:bg-green-700 mb-6"
   >
+    Add Committee
+  </button>
 
-
-    <!-- ===================================================== -->
-    <!-- POPUP HEADER -->
-    <!-- ===================================================== -->
-
-    <div
-      class="flex items-center justify-between px-6 py-4 border-b"
-    >
-
+  <!-- ========================================================= -->
+  <!-- COMMITTEE FORM -->
+  <!-- ========================================================= -->
+  <form
+    *ngIf="showForm"
+    [formGroup]="committeeForm"
+    (ngSubmit)="submitForm()"
+    class="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-6 border border-gray-100"
+  >
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Committee Name -->
       <div>
-
-        <h2 class="text-xl font-semibold">
-          Assign Employee
-        </h2>
-
-        <p class="text-sm text-gray-600 mt-1">
-
-          Committee :
-
-          <span class="font-semibold">
-            {{ selectedCommittee?.committee_name }}
-          </span>
-
-        </p>
-
+        <label class="block text-sm font-medium mb-2">Committee Name</label>
+        <input
+          type="text"
+          formControlName="committee_name"
+          class="w-full border rounded-lg p-3 text-sm"
+          placeholder="Enter Committee Name"
+        >
       </div>
 
+      <!-- Description -->
+      <div>
+        <label class="block text-sm font-medium mb-2">Description</label>
+        <input
+          type="text"
+          formControlName="description"
+          class="w-full border rounded-lg p-3 text-sm"
+          placeholder="Description"
+        >
+      </div>
 
-      <!-- Close X -->
+      <!-- Status -->
+      <div>
+        <label class="block text-sm font-medium mb-2">Status</label>
+        <select
+          formControlName="status"
+          class="w-full border rounded-lg p-3 text-sm bg-white"
+        >
+          <option value="ACTIVE">ACTIVE</option>
+          <option value="INACTIVE">INACTIVE</option>
+        </select>
+      </div>
+    </div>
 
+    <!-- Allowed Member Types -->
+    <div class="mt-4">
+      <label class="block text-sm font-medium mb-2">Allowed Member Types</label>
+      <div class="flex flex-wrap gap-x-5 gap-y-2 border rounded-lg p-3">
+        <label
+          *ngFor="let memberType of memberTypes"
+          class="inline-flex items-center gap-2 cursor-pointer text-sm"
+        >
+          <input
+            type="checkbox"
+            [checked]="isMemberTypeSelected(memberType.id)"
+            (change)="toggleMemberType(memberType.id, $any($event.target).checked)"
+          >
+          <span>{{ memberType.member_type_name }}</span>
+        </label>
+
+        <span *ngIf="memberTypes.length === 0" class="text-sm text-gray-500">
+          No active member types available.
+        </span>
+      </div>
+    </div>
+
+    <!-- Form Buttons -->
+    <div class="mt-6 flex flex-wrap gap-3">
+      <button
+        type="submit"
+        class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+      >
+        {{ isEditMode ? 'Update Committee' : 'Save Committee' }}
+      </button>
+      <button
+        type="button"
+        (click)="resetForm()"
+        class="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        (click)="clearForm()"
+        class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+      >
+        Clear
+      </button>
+    </div>
+  </form>
+
+  <!-- ========================================================= -->
+  <!-- COMMITTEE TABLE -->
+  <!-- ========================================================= -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-x-auto w-full">
+    <table class="w-full text-left border-collapse">
+      <thead class="bg-blue-600 text-white text-sm">
+        <tr>
+          <th class="px-4 py-3 font-semibold whitespace-nowrap">#</th>
+          <th class="px-4 py-3 font-semibold whitespace-nowrap">Committee Name</th>
+          <th class="px-4 py-3 font-semibold whitespace-nowrap">Description</th>
+          <th class="px-4 py-3 font-semibold whitespace-nowrap">Status</th>
+          <th class="px-4 py-3 font-semibold whitespace-nowrap">Created At</th>
+          <th class="px-4 py-3 font-semibold whitespace-nowrap">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="text-sm">
+        <tr *ngFor="let committee of committees; let i = index" class="border-t hover:bg-slate-50">
+          <td class="px-4 py-3 whitespace-nowrap">{{ i + 1 }}</td>
+          <td class="px-4 py-3 whitespace-nowrap">{{ committee.committee_name }}</td>
+          <td class="px-4 py-3 min-w-[200px]">{{ committee.description }}</td>
+          <td class="px-4 py-3 whitespace-nowrap">
+            <span [class]="committee.status === 'ACTIVE' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
+              {{ committee.status }}
+            </span>
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap">{{ committee.created_at | date:'dd/MM/yyyy' }}</td>
+          <td class="px-4 py-3 whitespace-nowrap">
+            <div class="flex flex-wrap items-center gap-2">
+              <button 
+                type="button" 
+                (click)="editCommittee(committee)" 
+                class="bg-yellow-500 text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-yellow-600 transition-colors"
+              >
+                Edit 
+              </button>
+              <button 
+                type="button" 
+                (click)="deleteCommittee(committee.id)" 
+                class="bg-red-500 text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-red-600 transition-colors"
+              >
+                Delete 
+              </button>
+              <button 
+                type="button" 
+                (click)="assignEmployees(committee)" 
+                class="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors"
+              >
+                Assign Director/officers 
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <tr *ngIf="committees.length === 0">
+          <td colspan="6" class="text-center py-6 text-gray-500">
+            No committees found.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- ASSIGNED EMPLOYEES TABLE -->
+  <!-- ========================================================= -->
+  <div *ngIf="committeeMembers.length > 0" class="mt-6 bg-white rounded-lg shadow-sm p-4 md:p-6 border border-gray-100">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+      <h2 class="text-lg md:text-xl font-semibold">Assigned Employees</h2>
+      <span *ngIf="selectedCommittee" class="text-sm text-gray-500">
+        Committee: <span class="font-semibold text-gray-700">{{ selectedCommittee.committee_name }}</span>
+      </span>
+    </div>
+
+    <div class="overflow-x-auto w-full">
+      <table class="w-full text-left text-sm border-collapse">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="p-2.5 border whitespace-nowrap">Employee ID</th>
+            <th class="p-2.5 border whitespace-nowrap">Name</th>
+            <th class="p-2.5 border whitespace-nowrap">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let member of committeeMembers" class="hover:bg-slate-50">
+            <td class="p-2.5 border whitespace-nowrap">{{ member.employee_id }}</td>
+            <td class="p-2.5 border whitespace-nowrap">{{ member.first_name }} {{ member.last_name }}</td>
+            <td class="p-2.5 border whitespace-nowrap">
+              <button
+                type="button"
+                class="bg-red-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-red-700 transition-colors"
+                (click)="removeMember(member.id)"
+              >
+                Remove
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========================================================= -->
+<!-- ASSIGN EMPLOYEE POPUP (MODAL) -->
+<!-- ========================================================= -->
+<div
+  *ngIf="showAssignEmployee"
+  class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4"
+>
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+    <!-- POPUP HEADER -->
+    <div class="flex items-center justify-between px-4 sm:px-6 py-4 border-b">
+      <div>
+        <h2 class="text-lg sm:text-xl font-semibold">Assign Employee</h2>
+        <p class="text-xs sm:text-sm text-gray-600 mt-1">
+          Committee: <span class="font-semibold">{{ selectedCommittee?.committee_name }}</span>
+        </p>
+      </div>
       <button
         type="button"
         (click)="closeAssignEmployee()"
-        class="text-gray-500 hover:text-gray-800 text-2xl font-bold"
+        class="text-gray-500 hover:text-gray-800 text-2xl font-bold p-1 leading-none"
       >
         &times;
       </button>
-
     </div>
 
-
-
-    <!-- ===================================================== -->
     <!-- POPUP BODY -->
-    <!-- ===================================================== -->
-
-    <div class="px-6 py-5 overflow-y-auto max-h-[60vh]">
-
-      <label class="block text-sm font-medium mb-2">
-        Select Employees
-      </label>
-
-
-      <!-- Search -->
-
+    <div class="p-4 sm:p-6 overflow-y-auto flex-1">
+      <label class="block text-sm font-medium mb-2">Select Employees</label>
       <input
         type="text"
         [(ngModel)]="employeeSearch"
         placeholder="Search by employee ID, name, or role"
-        class="w-full border rounded-lg p-3 mb-4"
+        class="w-full border rounded-lg p-3 text-sm mb-4"
       >
 
-
-      <!-- Select All -->
-
-      <label
-        class="flex items-center gap-2 pb-2 mb-2 border-b cursor-pointer font-medium"
-      >
-
+      <label class="flex items-center gap-2 pb-2 mb-2 border-b cursor-pointer text-sm font-medium">
         <input
           type="checkbox"
           [checked]="areAllVisibleEmployeesSelected()"
-          (change)="toggleAllVisibleEmployees(
-            $any($event.target).checked
-          )"
+          (change)="toggleAllVisibleEmployees($any($event.target).checked)"
         >
-
-        <span>
-          Select All visible employees
-          ({{ filteredEmployees.length }})
-        </span>
-
+        <span>Select All visible employees ({{ filteredEmployees.length }})</span>
       </label>
 
-
-      <!-- Employee List -->
-
-      <div
-        class="max-h-56 overflow-y-auto space-y-2"
-      >
-
+      <div class="max-h-56 overflow-y-auto space-y-2">
         <label
           *ngFor="let emp of filteredEmployees"
-          class="flex items-center gap-2 cursor-pointer"
+          class="flex items-center gap-2 cursor-pointer text-sm hover:bg-slate-50 p-1.5 rounded"
         >
-
           <input
             type="checkbox"
             [checked]="isEmployeeSelected(emp.id)"
-            (change)="toggleEmployee(
-              emp.id,
-              $any($event.target).checked
-            )"
+            (change)="toggleEmployee(emp.id, $any($event.target).checked)"
           >
-
-
           <span>
-
-            {{ emp.employee_id }} -
-            {{ emp.first_name }}
-            {{ emp.last_name }}
-
-            <span class="text-sm text-gray-500">
-              ({{ emp.role_name }})
-            </span>
-
+            {{ emp.employee_id }} - {{ emp.first_name }} {{ emp.last_name }}
+            <span class="text-xs text-gray-500">({{ emp.role_name }})</span>
           </span>
-
         </label>
 
-
-        <!-- No Employees -->
-
-        <p
-          *ngIf="filteredEmployees.length === 0"
-          class="text-sm text-gray-500"
-        >
+        <p *ngIf="filteredEmployees.length === 0" class="text-sm text-gray-500 py-2">
           No eligible employees found.
         </p>
-
       </div>
-
     </div>
 
-
-
-    <!-- ===================================================== -->
     <!-- POPUP FOOTER -->
-    <!-- ===================================================== -->
-
-    <div
-      class="flex justify-end gap-3 px-6 py-4 border-t"
-    >
-
-      <!-- Cancel -->
-
+    <div class="flex justify-end gap-3 px-4 sm:px-6 py-4 border-t bg-gray-50">
       <button
         type="button"
         (click)="closeAssignEmployee()"
-        class="bg-gray-400 text-white px-6 py-2 rounded"
+        class="bg-gray-400 text-white px-5 py-2 rounded text-sm font-medium hover:bg-gray-500"
       >
         Cancel
       </button>
-
-
-      <!-- Save Employees -->
-
       <button
         type="button"
         (click)="saveCommitteeMember()"
-        class="bg-green-600 text-white px-6 py-2 rounded"
+        class="bg-green-600 text-white px-5 py-2 rounded text-sm font-medium hover:bg-green-700"
       >
         Save Employees
       </button>
-
     </div>
-
   </div>
-
 </div>

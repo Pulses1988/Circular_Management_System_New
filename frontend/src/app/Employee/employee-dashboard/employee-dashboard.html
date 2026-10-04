@@ -1,533 +1,1490 @@
-<!-- Complete Employee Dashboard HTML Template -->
-<div class="min-h-screen bg-gray-50">
-  <!-- Header -->
 
-  <!-- Main Content -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Welcome Section -->
-    @if (employeeData) {
-    <div class="mb-8">
-      <h2 class="text-3xl font-bold text-gray-900 mb-2">
-        Welcome back, {{ employeeData!.first_name }} ..!
-      </h2>
-      <div class="text-gray-600 flex items-center space-x-4">
-        @if(employeeData!.department_name){
-        <span class="flex items-center"
-          ><mat-icon class="text-sm mr-1">business</mat-icon
-          >{{ employeeData!.department_name }}</span
-        >
-        } @if (employeeData.head_office_name) {
-        <span class="flex items-center"
-          ><mat-icon class="text-sm mr-1">location_on</mat-icon
-          >{{ employeeData!.head_office_name }}</span
-        >
-        }@else {
-        <span class="flex items-center"
-          ><mat-icon class="text-sm mr-1">location_on</mat-icon
-          >{{ employeeData!.branch_name }}</span
-        >
+<div class="dashboard-page">
 
-        }
-        <span class="flex items-center"
-          ><mat-icon class="text-sm mr-1">badge</mat-icon>{{ employeeData!.employee_id }}</span
-        >
-      </div>
-    </div>
-    }
+  <!-- ========================= HEADER / WELCOME ========================= -->
+  <section class="dashboard-header">
 
-    <!-- Stats Cards -->
-    <!-- <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"> -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-      <!-- Total Circulars -->
-      <div
-        class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500 hover:shadow-xl transition-shadow stats-card"
-      >
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-gray-500 text-sm font-medium">Total Circulars</p>
-           
-            <p class="text-3xl font-bold text-gray-900">{{ circularStats.total }}</p>
-            
-          </div>
-          <div class="stats-card-icon bg-blue-100">
-            <mat-icon class="text-blue-600">article</mat-icon>
-          </div>
+    <div class="header-content">
+
+      <div class="welcome-area">
+
+        <div class="welcome-icon">
+          <mat-icon>dashboard</mat-icon>
         </div>
+
+        <div>
+          @if (employeeData) {
+            <p class="welcome-small">WELCOME BACK</p>
+
+            <h1>
+              {{ employeeData.first_name }} {{ employeeData.last_name }}
+            </h1>
+
+            <div class="employee-meta">
+
+              @if (employeeData.department_name) {
+                <span>
+                  <mat-icon>business</mat-icon>
+                  {{ employeeData.department_name }}
+                </span>
+              }
+
+              @if (employeeData.head_office_name) {
+                <span>
+                  <mat-icon>location_on</mat-icon>
+                  {{ employeeData.head_office_name }}
+                </span>
+              } @else if (employeeData.branch_name) {
+                <span>
+                  <mat-icon>location_on</mat-icon>
+                  {{ employeeData.branch_name }}
+                </span>
+              }
+
+              <span>
+                <mat-icon>badge</mat-icon>
+                {{ employeeData.employee_id }}
+              </span>
+
+            </div>
+          }
+        </div>
+
       </div>
 
-      <!-- Seen Circulars -->
-      <div
-        class="bg-white rounded-xl shadow-lg p-6 cursor-pointer border-l-4 border-green-500 hover:shadow-xl transition-shadow stats-card"
-         (click)="openSeenModal()"
-      >
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-gray-500 text-sm font-medium">Read</p>
-            <p class="text-3xl font-bold text-gray-900">{{ circularStats.seen }}</p>
-          </div>
-          <div class="stats-card-icon bg-green-100">
-            <mat-icon class="text-green-600">visibility</mat-icon>
-          </div>
-        </div>
-        <div class="mt-1">
-          <div class="flex items-center text-green-600 text-sm">
-            <mat-icon class="text-xs mt-2">trending_up</mat-icon>
-            <span
-              >{{ ((circularStats.seen / circularStats.total) * 100).toFixed(1) }}% Reading Rate</span
-            >
-          </div>
+      <div class="header-date">
+        <mat-icon>calendar_today</mat-icon>
+        <div>
+          <span>Today</span>
+          <strong>{{ currentDate | date:'dd MMM yyyy' }}</strong>
         </div>
       </div>
-
-      <!-- Unseen Circulars -->
-      <div
-        class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500 hover:shadow-xl transition-shadow stats-card"
-        (click)="openUnseenModal()"
-      >
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-gray-500 text-sm font-medium">Unread</p>
-            <p class="text-3xl font-bold text-gray-900">{{ circularStats.unseen }}</p>
-          </div>
-          <div class="stats-card-icon bg-red-100">
-            <mat-icon class="text-red-600">visibility_off</mat-icon>
-          </div>
-        </div>
-        <div class="mt-1" *ngIf="circularStats.unseen > 0">
-          <div class="flex items-center text-red-600 text-sm">
-            <mat-icon class="text-xs mt-2">schedule</mat-icon>
-            <span>Requires attention</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Urgent Circulars -->
-      <div
-        class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-500 hover:shadow-xl transition-shadow stats-card"
-        (click)="openUrgentModal()"
-      >
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-gray-500 text-sm font-medium">Urgent</p>
-            <p class="text-3xl font-bold text-gray-900">{{ circularStats.urgent }}</p>
-          </div>
-          <div class="stats-card-icon bg-orange-100">
-            <mat-icon class="text-orange-600">priority_high</mat-icon>
-          </div>
-        </div>
-        <div class="mt-1" *ngIf="circularStats.urgent > 0">
-          <div class="flex items-center text-orange-600 text-sm animate-pulse">
-            <mat-icon class="text-xs mt-2">warning</mat-icon>
-            <span>Immediate action needed</span>
-          </div>
-        </div>
-      </div>
-
-
-      <!-- Pending Approval -->
-<div
-  class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500 hover:shadow-xl transition-shadow stats-card cursor-pointer"
-  (click)="openPendingApprovalModal()"
->
-  <div class="flex items-center justify-between">
-
-    <div>
-
-      <p class="text-gray-500 text-sm font-medium">
-        Pending Approval
-      </p>
-
-      <p class="text-3xl font-bold text-gray-900">
-        {{ pendingApprovalCount }}
-      </p>
 
     </div>
 
-    <div class="stats-card-icon bg-purple-100">
-      <mat-icon class="text-purple-600">
-        approval
-      </mat-icon>
+  </section>
+
+
+  <!-- ========================= MAIN CONTENT ========================= -->
+  <main class="dashboard-content">
+
+
+    <!-- ========================= STATISTICS ========================= -->
+    <section class="section-block">
+
+      <div class="section-heading">
+        <div>
+          <p class="section-label">OVERVIEW</p>
+          <h2>Circular Summary</h2>
+        </div>
+
+        <div class="live-status">
+          <span class="status-dot"></span>
+          Live
+        </div>
+      </div>
+
+
+      <div class="stats-grid">
+
+
+        <!-- TOTAL -->
+        <div  class="stat-card total-card clickable"
+  (click)="navigateToAction('/employee/all-circulars?type=CIRCULAR')">
+
+          <div class="stat-top">
+            <div class="stat-icon">
+              <mat-icon>article</mat-icon>
+            </div>
+
+            <span class="stat-label">TOTAL</span>
+          </div>
+
+          <div class="stat-number">
+            {{ circularStats.total }}
+          </div>
+
+          <div class="stat-bottom">
+            <span>All circulars</span>
+            <mat-icon>arrow_forward</mat-icon>
+          </div>
+
+        </div>
+
+
+        <!-- READ -->
+        <div
+          class="stat-card read-card clickable"
+          (click)="openSeenModal()"
+        >
+
+          <div class="stat-top">
+
+            <div class="stat-icon">
+              <mat-icon>visibility</mat-icon>
+            </div>
+
+            <span class="stat-label">READ</span>
+
+          </div>
+
+          <div class="stat-number">
+            {{ circularStats.seen }}
+          </div>
+
+          <div class="stat-bottom">
+
+            <span>
+              {{ circularStats.total > 0
+                ? ((circularStats.seen / circularStats.total) * 100).toFixed(1)
+                : 0 }}% reading rate
+            </span>
+
+            <mat-icon>arrow_forward</mat-icon>
+
+          </div>
+
+        </div>
+
+
+        <!-- UNREAD -->
+        <div
+          class="stat-card unread-card clickable"
+          (click)="openUnseenModal()"
+        >
+
+          <div class="stat-top">
+
+            <div class="stat-icon">
+              <mat-icon>visibility_off</mat-icon>
+            </div>
+
+            <span class="stat-label">UNREAD</span>
+
+          </div>
+
+          <div class="stat-number">
+            {{ circularStats.unseen }}
+          </div>
+
+          <div class="stat-bottom">
+
+            <span>
+              {{ circularStats.unseen > 0
+                ? 'Requires attention'
+                : 'All caught up' }}
+            </span>
+
+            <mat-icon>arrow_forward</mat-icon>
+
+          </div>
+
+        </div>
+
+
+        <!-- URGENT -->
+        <div
+          class="stat-card urgent-card clickable"
+          (click)="openUrgentModal()"
+        >
+
+          <div class="stat-top">
+
+            <div class="stat-icon">
+              <mat-icon>priority_high</mat-icon>
+            </div>
+
+            <span class="stat-label">URGENT</span>
+
+          </div>
+
+          <div class="stat-number">
+            {{ circularStats.urgent }}
+          </div>
+
+          <div class="stat-bottom">
+
+            <span>
+              {{ circularStats.urgent > 0
+                ? 'Immediate attention'
+                : 'No urgent items' }}
+            </span>
+
+            <mat-icon>arrow_forward</mat-icon>
+
+          </div>
+
+        </div>
+
+
+        <!-- PENDING APPROVAL -->
+        <div
+          class="stat-card approval-card clickable"
+          (click)="openPendingApprovalModal()"
+        >
+
+          <div class="stat-top">
+
+            <div class="stat-icon">
+              <mat-icon>approval</mat-icon>
+            </div>
+
+            <span class="stat-label">APPROVAL</span>
+
+          </div>
+
+          <div class="stat-number">
+            {{ pendingApprovalCount }}
+          </div>
+
+          <div class="stat-bottom">
+
+            <span>
+              {{ pendingApprovalCount > 0
+                ? 'Awaiting approval'
+                : 'Nothing pending' }}
+            </span>
+
+            <mat-icon>arrow_forward</mat-icon>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- ========================= QUICK ACTIONS ========================= -->
+    <section class="section-block">
+
+      <div class="section-heading">
+
+        <div>
+          <p class="section-label">SHORTCUTS</p>
+          <h2>Quick Actions</h2>
+        </div>
+
+      </div>
+
+
+      <div class="quick-actions-grid">
+
+        <div
+          *ngFor="let action of quickActions"
+          class="quick-action"
+          (click)="navigateToAction(action.route)"
+        >
+
+          <div class="quick-icon" [ngClass]="action.color">
+            <mat-icon>{{ action.icon }}</mat-icon>
+          </div>
+
+          <div class="quick-content">
+
+            <h3>{{ action.title }}</h3>
+
+            <p>{{ action.description }}</p>
+
+          </div>
+
+          <div class="quick-arrow">
+            <mat-icon>arrow_forward</mat-icon>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- ========================= RECENT CIRCULARS ========================= -->
+    <!-- Recent Circulars + Pending Assignments -->
+
+<!-- ========================= RECENT CIRCULARS + PENDING TASKS ========================= -->
+
+<!-- =========================================================
+     DASHBOARD LOWER SECTION
+     My Tasks Overview + Pending Tasks + Recent Circulars
+     ========================================================= -->
+
+<div class="dashboard-three-column-grid">
+
+  <!-- =======================================================
+       1. MY TASKS OVERVIEW
+       ======================================================= -->
+
+  <div class="dashboard-panel tasks-overview-panel">
+
+    <div class="dashboard-panel-header">
+
+      <div>
+        <h3 class="dashboard-panel-title">
+          My Tasks Overview
+        </h3>
+
+        <p class="dashboard-panel-subtitle">
+          Your circular summary
+        </p>
+      </div>
+
+    </div>
+
+
+    <div class="tasks-overview-body">
+
+      <!-- DONUT / PIE CHART -->
+
+      <div class="task-donut-wrapper">
+
+        <div class="task-donut">
+
+          <div class="task-donut-center">
+            <strong>
+              {{ circularStats.total }}
+            </strong>
+
+            <span>
+              Total
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- TASK LEGEND -->
+
+      <div class="task-overview-legend">
+
+        <!-- READ -->
+
+        <div class="task-legend-item">
+
+          <div class="task-legend-left">
+
+            <span class="task-legend-dot read-dot"></span>
+
+            <span class="task-legend-name">
+              Read
+            </span>
+
+          </div>
+
+          <strong>
+            {{ circularStats.seen }}
+          </strong>
+
+        </div>
+
+
+        <!-- UNREAD -->
+
+        <div class="task-legend-item">
+
+          <div class="task-legend-left">
+
+            <span class="task-legend-dot unread-dot"></span>
+
+            <span class="task-legend-name">
+              Unread
+            </span>
+
+          </div>
+
+          <strong>
+            {{ circularStats.unseen }}
+          </strong>
+
+        </div>
+
+
+        <!-- URGENT -->
+
+        <div class="task-legend-item">
+
+          <div class="task-legend-left">
+
+            <span class="task-legend-dot urgent-dot"></span>
+
+            <span class="task-legend-name">
+              Urgent
+            </span>
+
+          </div>
+
+          <strong>
+            {{ circularStats.urgent }}
+          </strong>
+
+        </div>
+
+
+        <!-- APPROVAL -->
+
+        <div class="task-legend-item">
+
+          <div class="task-legend-left">
+
+            <span class="task-legend-dot approval-dot"></span>
+
+            <span class="task-legend-name">
+              Approval
+            </span>
+
+          </div>
+
+          <strong>
+            {{ pendingApprovalCount }}
+          </strong>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- TOTAL -->
+
+    <div class="task-overview-footer">
+
+      <span>Total Tasks</span>
+
+      <strong>
+        {{ circularStats.total + pendingApprovalCount }}
+      </strong>
+
     </div>
 
   </div>
 
-  <div class="mt-1" *ngIf="pendingApprovalCount>0">
 
-      <div class="flex items-center text-purple-600 text-sm">
 
-          <mat-icon class="text-xs mt-2">
-              pending_actions
-          </mat-icon>
+  <!-- =======================================================
+       2. MY PENDING TASKS
+       ======================================================= -->
 
-          <span>
-              Awaiting Approval
-          </span>
+  <div class="dashboard-panel pending-tasks-panel">
+
+    <div class="dashboard-panel-header">
+
+      <div>
+
+        <h3 class="dashboard-panel-title">
+          My Pending Tasks
+        </h3>
+
+        <p class="dashboard-panel-subtitle">
+          Assignments that require your attention
+        </p>
 
       </div>
+
+
+      <button
+        class="dashboard-view-all"
+        (click)="navigateToAction('/employee/all-circulars?type=HO_ASSIGNMENT')"
+      >
+
+        View all
+
+        <mat-icon>
+          arrow_forward
+        </mat-icon>
+
+      </button>
+
+    </div>
+
+
+    <div class="dashboard-panel-body">
+
+      <!-- EMPTY -->
+
+      <div
+        *ngIf="!pendingAssignments || pendingAssignments.length === 0"
+        class="dashboard-empty-state"
+      >
+
+        <mat-icon>
+          task_alt
+        </mat-icon>
+
+        <p>
+          No pending assignments
+        </p>
+
+      </div>
+
+
+      <!-- ASSIGNMENTS -->
+
+      <div
+        *ngFor="let assignment of pendingAssignments"
+        class="dashboard-list-item assignment-item"
+        (click)="viewPendingAssignment(assignment)"
+      >
+
+        <div class="dashboard-list-icon assignment-icon">
+
+          <mat-icon>
+            assignment
+          </mat-icon>
+
+        </div>
+
+
+        <div class="dashboard-list-content">
+
+          <div class="dashboard-list-title-row">
+
+            <h4 class="dashboard-list-title">
+              {{ assignment.title }}
+            </h4>
+
+            <span class="assignment-pending-badge">
+              Pending
+            </span>
+
+          </div>
+
+
+          <p class="dashboard-list-meta">
+
+            Due:
+            {{ assignment.effective_from | date:'dd MMM yyyy' }}
+
+          </p>
+
+        </div>
+
+
+        <mat-icon class="dashboard-list-arrow">
+          chevron_right
+        </mat-icon>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- =======================================================
+       3. RECENT CIRCULARS
+       ======================================================= -->
+
+  <div class="dashboard-panel recent-circulars-panel">
+
+    <div class="dashboard-panel-header">
+
+      <div>
+
+        <h3 class="dashboard-panel-title">
+          Recent Circulars
+        </h3>
+
+        <p class="dashboard-panel-subtitle">
+          Latest circulars assigned to you
+        </p>
+
+      </div>
+
+
+      <button
+        class="dashboard-view-all"
+        (click)="navigateToAction('/employee/all-circulars')"
+      >
+
+        View all
+
+        <mat-icon>
+          arrow_forward
+        </mat-icon>
+
+      </button>
+
+    </div>
+
+
+    <div class="dashboard-panel-body">
+
+      <!-- EMPTY -->
+
+      <div
+        *ngIf="!recentCirculars || recentCirculars.length === 0"
+        class="dashboard-empty-state"
+      >
+
+        <mat-icon>
+          description
+        </mat-icon>
+
+        <p>
+          No recent circulars
+        </p>
+
+      </div>
+
+
+      <!-- RECENT CIRCULARS -->
+
+      <div
+        *ngFor="let circular of recentCirculars"
+        class="dashboard-list-item"
+        (click)="$event.stopPropagation(); viewUrgentCircular(circular.id)"
+      >
+
+        <!-- ICON -->
+
+        <div
+          class="dashboard-list-icon"
+          [ngClass]="getPriorityBadgeClass(circular.priority)"
+        >
+
+          <mat-icon>
+            {{ getPriorityIcon(circular.priority) }}
+          </mat-icon>
+
+        </div>
+
+
+        <!-- INFORMATION -->
+
+        <div class="dashboard-list-content">
+
+          <div class="dashboard-list-title-row">
+
+            <h4 class="dashboard-list-title">
+              {{ circular.title }}
+            </h4>
+
+            <span class="new-badge">
+              New
+            </span>
+
+          </div>
+
+
+          <p class="dashboard-list-meta">
+
+            Published:
+            {{ circular.published_at | date:'dd MMM yyyy' }}
+
+          </p>
+
+        </div>
+
+
+        <!-- ARROW -->
+
+        <mat-icon class="dashboard-list-arrow">
+          chevron_right
+        </mat-icon>
+
+      </div>
+
+    </div>
 
   </div>
 
 </div>
 
 
+<!-- Adding bottom grid for dashbord -->
+<!-- =========================================================
+     DASHBOARD ACTIONS ROW
+     ========================================================= -->
+
+<div class="dashboard-actions-grid">
+
+  <!-- =====================================================
+       CIRCULARS REQUIRING YOUR ACTION
+       ===================================================== -->
+
+  <section class="action-card circular-action-card">
+
+    <div class="action-card-header">
+
+      <div>
+        <h2>Circulars Requiring Your Action</h2>
+        <p>Items that require your attention</p>
+      </div>
+
+      <button
+        type="button"
+        class="action-view-all"
+        
+      >
+        View all
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+
     </div>
 
 
+    <div class="action-circular-list">
+
+     <!-- EMPTY STATE -->
+
+<div
+  *ngIf="!urgentCirculars || urgentCirculars.length === 0"
+  class="action-empty-state"
+>
+  <mat-icon>check_circle</mat-icon>
+
+  <p>
+    No urgent circulars
+  </p>
+</div>
 
 
+<!-- URGENT CIRCULARS -->
+
+<div
+  *ngFor="let circular of urgentCirculars.slice(0, 3)"
+  class="action-circular-item"
+  (click)="viewUrgentCircular(circular.id)"
+>
+
+  <!-- ICON -->
+
+  <div
+    class="action-circular-icon action-icon-red"
+  >
+    <mat-icon>
+      priority_high
+    </mat-icon>
+  </div>
 
 
+  <!-- CONTENT -->
+
+  <div class="action-circular-content">
+
+    <h3>
+      {{ circular.title }}
+    </h3>
+
+    <p>
+      {{ circular.circular_code }}
+    </p>
+
+  </div>
 
 
+  <!-- RIGHT SIDE -->
 
-    <!-- Quick Actions -->
-    <div class="mb-8">
-      <h3 class="text-xl font-semibold text-gray-900 mb-6">Quick Actions</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div
-          *ngFor="let action of quickActions"
-          class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 quick-action-card"
-          (click)="navigateToAction(action.route)"
-        >
-          <div class="flex items-center space-x-4">
-            <div class="quick-action-icon {{ action.color }}">
-              <mat-icon class="text-white">{{ action.icon }}</mat-icon>
-            </div>
-            <div class="flex-1">
-              <h4 class="font-semibold text-gray-900">{{ action.title }}</h4>
-              <p class="text-sm text-gray-500">{{ action.description }}</p>
-            </div>
-            <mat-icon class="text-gray-400">chevron_right</mat-icon>
-          </div>
-        </div>
-      </div>
+  <div class="action-circular-right">
+
+    <span class="action-due urgent">
+      URGENT
+    </span>
+
+    <button
+      type="button"
+      class="take-action-btn"
+      (click)="$event.stopPropagation(); viewUrgentCircular(circular.id)"
+    >
+      Take Action
+    </button>
+
+  </div>
+
+</div>
+
     </div>
 
-    <!-- Recent Circulars -->
-    <div class="bg-white rounded-xl shadow-lg">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <div class="flex items-center justify-between">
-          <h3 class="text-xl font-semibold text-gray-900">Recent Circulars</h3>
-          <button class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
-            View all
-            <mat-icon class="ml-1 text-sm">arrow_forward</mat-icon>
-          </button>
-        </div>
-      </div>
 
-      <div class="divide-y divide-gray-200">
-        <div
-          *ngFor="let circular of recentCirculars; let i = index"
-          class="px-6 py-4 cursor-pointer circular-row"
-          (click)="viewUrgentCircular(circular.id)"
-        >
-          <div class="flex items-center space-x-4">
-            <div class="flex-shrink-0">
-              <div
-                class="priority-badge"
-                [ngClass]="getPriorityBadgeClass(circular.priority)"
-              >
-                <mat-icon>{{ getPriorityIcon(circular.priority) }}</mat-icon>
-              </div>
-            </div>
+    <div class="action-card-footer">
 
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center space-x-2">
-                <h4 class="circular-title" class="font-bold">
-                  {{ circular.title }}
-                </h4>
-                <span class="new-badge"> New </span>
-              </div>
-              <!-- <p class="circular-department">{{ circular.department }}</p> -->
-            </div>
+      <button
+        type="button"
+        class="action-footer-link"
+      
+      >
+        View all my tasks
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
 
-            <div class="text-right">
-              <p class="circular-date">
-                Published At - {{ circular.published_at | date : 'dd MMM yyyy' }}
-              </p>
-              <div class="flex items-center justify-end mt-1">
-                <span
-                  class="priority-text"
-                  [ngClass]="getPriorityTextClass(circular.priority)"
-                >
-                  Effective From - {{ circular.effective_from | date : 'dd MMM yyyy' }}
-                </span>
-              </div>
-            </div>
-
-            <!-- <div class="flex-shrink-0">
-              <mat-icon class="read-status-icon" 
-                        [class.unread-icon]="!circular.isRead"
-                        [class.read-icon]="circular.isRead">
-                {{ circular.isRead ? 'visibility' : 'visibility_off' }}
-              </mat-icon>
-            </div> -->
-          </div>
-        </div>
-      </div>
     </div>
-    <!-- Urgent Circulars Modal -->
+
+  </section>
+
+
+  <!-- =====================================================
+       CIRCULAR CALENDAR
+       ===================================================== -->
+
+  <section class="action-card calendar-card">
+
+    <div class="action-card-header">
+
+      <div>
+        <h2>Circular Calendar</h2>
+      </div>
+
+      <button
+        type="button"
+        class="action-view-all"
+      >
+        View calendar
+      </button>
+
+    </div>
+
+
+   <div class="calendar-container">
+
+  <div class="calendar-month-header">
+
+    <button
+      type="button"
+      class="calendar-nav-btn"
+      (click)="previousMonth()"
+    >
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+
+    <strong>
+      {{ getCalendarMonthName() }} {{ getCalendarYear() }}
+    </strong>
+
+    <button
+      type="button"
+      class="calendar-nav-btn"
+      (click)="nextMonth()"
+    >
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+
+  </div>
+
+
+  <div class="calendar-weekdays">
+
+    <span>SUN</span>
+    <span>MON</span>
+    <span>TUE</span>
+    <span>WED</span>
+    <span>THU</span>
+    <span>FRI</span>
+    <span>SAT</span>
+
+  </div>
+
+
+<div class="calendar-days">
+
+  <span
+    *ngFor="let day of calendarDays"
+    class="calendar-day"
+    [class.muted]="!day.currentMonth"
+    [class.calendar-today]="
+      day.currentMonth &&
+      day.fullDate.toDateString() === currentDate.toDateString()
+    "
+  >
+
+    <!-- DATE NUMBER -->
+    <span class="calendar-date-number">
+      {{ day.date }}
+    </span>
+
+    <!-- RED DUE-DATE DOT -->
+    <span
+      *ngIf="day.currentMonth && getDueCirculars(day.fullDate).length > 0"
+      class="due-date-dot"
+      title="Circular due on this date"
+      (click)="openDueCirculars(day.fullDate); $event.stopPropagation()"
+    ></span>
+
+  </span>
+
+</div>
+
+</div>
+
+  </section>
+
+
+  <!-- =====================================================
+       QUICK LINKS
+       ===================================================== -->
+
+  <section class="action-card quick-links-card">
+
+    <div class="action-card-header">
+
+      <div>
+        <h2>Quick Links</h2>
+      </div>
+
+    </div>
+
+
+    <div class="quick-links-grid">
+
+      <button
+        type="button"
+        class="quick-link-item quick-blue"
+       (click)="navigateToAction('/employee/all-circulars?type=HO_ASSIGNMENT')"
+      >
+        <div class="quick-link-icon">
+          <mat-icon>assignment</mat-icon> 
+          
+        </div>
+
+        <span>My Tasks</span>
+      </button>
+
+
+      <button
+        type="button"
+        class="quick-link-item quick-purple" 
+         (click)="navigateToAction('/employee/all-circulars?type=CIRCULAR')"
+      >
+        <div class="quick-link-icon">
+          <mat-icon>description</mat-icon>
+        </div>
+
+        <span>My Circulars</span>
+      </button>
+
+
+      <button
+        type="button"
+        class="quick-link-item quick-green" 
+         (click)="navigateToAction('/employee/circular-details?circularId=103')"
+      >
+        <div class="quick-link-icon">
+          <mat-icon>download</mat-icon>
+        </div>
+
+        <span>Downloads</span>
+      </button>
+
+
+      <button
+        type="button"
+        class="quick-link-item quick-orange" 
+          (click)="navigateToAction('/employee/reading-history')"
+      >
+        <div class="quick-link-icon">
+          <mat-icon>bar_chart</mat-icon>
+        </div>
+
+        <span>Reports</span>
+      </button>
+
+    </div>
+
+
+    <div class="help-box">
+
+      <div class="help-icon">
+        <mat-icon>headset_mic</mat-icon>
+      </div>
+
+      <div class="help-content">
+
+        <h3>Need Help?</h3>
+
+        <p>
+          Visit help & support center for guidelines and assistance.
+        </p>
+
+        <button type="button">
+          Go to Help Center
+        </button>
+
+      </div>
+
+    </div>
+
+  </section>
+
+</div>
+
+
+
+
+
+
+
+
+    <!-- ========================= URGENT MODAL ========================= -->
     <div
       *ngIf="showUrgentModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      class="modal-overlay"
       (click)="closeUrgentModal()"
     >
+
       <div
-        class="bg-white rounded-xl shadow-2xl max-w-3xl w-full mx-4 max-h-[80vh] flex flex-col"
+        class="dashboard-modal"
         (click)="$event.stopPropagation()"
       >
-        <!-- Modal Header -->
-        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h3 class="text-xl font-semibold text-gray-900 flex items-center">
-            <mat-icon class="text-orange-600 mr-2">priority_high</mat-icon>
-            Urgent Circulars ({{ urgentCirculars.length }})
-          </h3>
-          <button (click)="closeUrgentModal()" class="text-gray-400 hover:text-gray-600">
+
+        <div class="modal-header">
+
+          <div class="modal-title urgent-title">
+
+            <div class="modal-icon">
+              <mat-icon>priority_high</mat-icon>
+            </div>
+
+            <div>
+              <h2>Urgent Circulars</h2>
+              <span>{{ urgentCirculars.length }} items</span>
+            </div>
+
+          </div>
+
+          <button
+            type="button"
+            class="modal-close"
+            (click)="closeUrgentModal()"
+          >
             <mat-icon>close</mat-icon>
           </button>
+
         </div>
 
-        <!-- Modal Body -->
-        <div class="flex-1 overflow-y-auto p-6">
-          <div *ngIf="urgentCirculars.length === 0" class="text-center py-8 text-gray-500">
-            <mat-icon class="text-xl text-gray-300">check_circle</mat-icon>
-            <p class="mt-2">No urgent circulars at the moment</p>
+
+        <div class="modal-body">
+
+          <div
+            *ngIf="urgentCirculars.length === 0"
+            class="modal-empty"
+          >
+            <mat-icon>check_circle</mat-icon>
+            <p>No urgent circulars at the moment.</p>
           </div>
+
 
           <div
             *ngFor="let circular of urgentCirculars"
-            class="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg hover:shadow-md transition-shadow"
+            class="modal-circular urgent-modal-item" 
+             (click)="viewUrgentCircular(circular.id)"
           >
-            <div class="flex items-start justify-between">
-              <div class="flex-1">
-                <h4 class="font-semibold text-black-900 mb-2">{{ circular.title }}</h4>
-                <div class="space-y-1 text-sm text-black-900">
-                  <div class="flex items-center">
-                    <mat-icon class="text-xs mr-2">event</mat-icon>
-                    <span
-                      >Published: {{ circular.published_at | date : 'dd MMM yyyy, hh:mm a' }}</span
-                    >
-                  </div>
-                  <div class="flex items-center text-orange-600">
-                    <mat-icon class="text-xs mr-2">schedule</mat-icon>
-                    <span
-                      >Effective From:
-                      {{ circular.effective_from | date : 'dd MMM yyyy, hh:mm a' }}</span
-                    >
-                  </div>
-                </div>
+
+            <div>
+
+              <h3>{{ circular.title }}</h3>
+
+              <div class="modal-details">
+
+                <span>
+                  <mat-icon>event</mat-icon>
+                  {{ circular.published_at | date:'dd MMM yyyy, hh:mm a' }}
+                </span>
+
+                <span>
+                  <mat-icon>schedule</mat-icon>
+                  {{ circular.effective_from | date:'dd MMM yyyy, hh:mm a' }}
+                </span>
+
               </div>
-              <button
-                (click)="viewUrgentCircular(circular.id)"
-                class="ml-4 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center"
-              >
-                <mat-icon class="text-sm mr-1">visibility</mat-icon>
-                View
-              </button>
+
             </div>
+
+            <button
+              type="button"
+              class="modal-action urgent-action"
+              (click)="viewUrgentCircular(circular.id)"
+            >
+              <mat-icon>visibility</mat-icon>
+              View
+            </button>
+
           </div>
+
         </div>
+
       </div>
+
     </div>
 
-    <!-- Unseen Circular Moadl -->
-    <div
-      *ngIf="showUnSeenModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      (click)="closeUnseenModal()"
-    >
-      <div
-        class="bg-white rounded-xl shadow-2xl max-w-3xl w-full mx-4 max-h-[80vh] flex flex-col"
-        (click)="$event.stopPropagation()"
-      >
-        <!-- Modal Header -->
-        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h3 class="text-xl font-semibold text-gray-900 flex items-center">
-            <mat-icon class="text-orange-600 mr-2">priority_high</mat-icon>
-            Unseen Circulars ({{ unSeenCirculars.length }})
-          </h3>
-          <button (click)="closeUnseenModal()" class="text-gray-400 hover:text-gray-600">
-            <mat-icon>close</mat-icon>
-          </button>
+<!-- MOdals for view circular and assignment -->
+<!-- ========================= DUE CIRCULAR MODAL ========================= -->
+
+<div
+  *ngIf="showDueCircularModal"
+  class="modal-overlay"
+  (click)="closeDueCircularModal()"
+>
+
+  <div
+    class="dashboard-modal"
+    (click)="$event.stopPropagation()"
+  >
+
+    <div class="modal-header">
+
+      <div class="modal-title">
+
+        <div class="modal-icon">
+          <mat-icon>event</mat-icon>
         </div>
 
-        <!-- Modal Body -->
-        <div class="flex-1 overflow-y-auto p-6">
-          <div *ngIf="unSeenCirculars.length === 0" class="text-center py-8 text-gray-500">
-            <mat-icon class="text-xl text-gray-300">check_circle</mat-icon>
-            <p class="mt-2">No unseen circulars at the moment</p>
+        <div>
+          <h2>Due Circulars</h2>
+
+          <span>
+            {{ selectedDueCirculars.length }} items
+          </span>
+        </div>
+
+      </div>
+
+      <button
+        type="button"
+        class="modal-close"
+        (click)="closeDueCircularModal()"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+
+    </div>
+
+
+    <div class="modal-body">
+
+      <div
+        *ngFor="let circular of selectedDueCirculars"
+        class="modal-circular"
+      >
+
+        <div>
+
+          <h3>
+            {{ circular.title }}
+          </h3>
+
+          <div class="modal-details">
+
+            <span>
+              <mat-icon>event</mat-icon>
+
+              Due:
+              {{ circular.next_recurrence_date | date:'dd MMM yyyy' }}
+            </span>
+
+            <span *ngIf="circular.circular_code">
+              <mat-icon>description</mat-icon>
+
+              {{ circular.circular_code }}
+            </span>
+
           </div>
+
+        </div>
+
+
+        <button
+          type="button"
+          class="modal-action"
+          (click)="viewDueCircular(circular)"
+        >
+
+          <mat-icon>visibility</mat-icon>
+
+          View
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+
+    <!-- ========================= UNREAD MODAL ========================= -->
+    <div
+      *ngIf="showUnSeenModal"
+      class="modal-overlay"
+      (click)="closeUnseenModal()"
+    >
+
+      <div
+        class="dashboard-modal"
+        (click)="$event.stopPropagation()"
+      >
+
+        <div class="modal-header">
+
+          <div class="modal-title unread-title">
+
+            <div class="modal-icon">
+              <mat-icon>visibility_off</mat-icon>
+            </div>
+
+            <div>
+              <h2>Unread Circulars</h2>
+              <span>{{ unSeenCirculars.length }} items</span>
+            </div>
+
+          </div>
+
+          <button
+            type="button"
+            class="modal-close"
+            (click)="closeUnseenModal()"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+
+        </div>
+
+
+        <div class="modal-body">
+
+          <div
+            *ngIf="unSeenCirculars.length === 0"
+            class="modal-empty"
+          >
+            <mat-icon>check_circle</mat-icon>
+            <p>You have no unread circulars.</p>
+          </div>
+
 
           <div
             *ngFor="let circular of unSeenCirculars"
-            class="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg hover:shadow-md transition-shadow"
+            class="modal-circular"
           >
-            <div class="flex items-start justify-between">
-              <div class="flex-1">
-                <h4 class="font-semibold text-black-900 mb-2">{{ circular.title }}</h4>
-                <div class="space-y-1 text-sm text-black-900">
-                  <div class="flex items-center">
-                    <mat-icon class="text-xs mr-2">event</mat-icon>
-                    <span
-                      >Published: {{ circular.published_at | date : 'dd MMM yyyy, hh:mm a' }}</span
-                    >
-                  </div>
-                  <div class="flex items-center text-orange-600">
-                    <mat-icon class="text-xs mr-2">schedule</mat-icon>
-                    <span
-                      >Effective From:
-                      {{ circular.effective_from | date : 'dd MMM yyyy, hh:mm a' }}</span
-                    >
-                  </div>
-                </div>
+
+            <div>
+
+              <h3>{{ circular.title }}</h3>
+
+              <div class="modal-details">
+
+                <span>
+                  <mat-icon>event</mat-icon>
+                  {{ circular.published_at | date:'dd MMM yyyy, hh:mm a' }}
+                </span>
+
+                <span>
+                  <mat-icon>schedule</mat-icon>
+                  {{ circular.effective_from | date:'dd MMM yyyy, hh:mm a' }}
+                </span>
+
               </div>
-              <button
-                (click)="viewCircular(circular)"
-                class="ml-4 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center"
-              >
-                <mat-icon class="text-sm mr-1">visibility</mat-icon>
-                View
-              </button>
+
             </div>
+
+            <button
+              type="button"
+              class="modal-action"
+              (click)="viewCircular(circular)"
+            >
+              <mat-icon>visibility</mat-icon>
+              View
+            </button>
+
           </div>
+
         </div>
+
       </div>
+
     </div>
 
-    <!-- Seen Circular Modal -->
-     <div
+
+
+    <!-- ========================= READ MODAL ========================= -->
+    <div
       *ngIf="showSeenModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      class="modal-overlay"
       (click)="closeSeenModal()"
     >
+
       <div
-        class="bg-white rounded-xl shadow-2xl max-w-3xl w-full mx-4 max-h-[80vh] flex flex-col"
+        class="dashboard-modal"
         (click)="$event.stopPropagation()"
       >
-        <!-- Modal Header -->
-        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h3 class="text-xl font-semibold text-gray-900 flex items-center">
-            <mat-icon class="text-orange-600 mr-2">priority_high</mat-icon>
-            Seen Circulars ({{ seenCirculars.length }})
-          </h3>
-          <button (click)="closeSeenModal()" class="text-gray-400 hover:text-gray-600">
+
+        <div class="modal-header">
+
+          <div class="modal-title read-title">
+
+            <div class="modal-icon">
+              <mat-icon>visibility</mat-icon>
+            </div>
+
+            <div>
+              <h2>Read Circulars</h2>
+              <span>{{ seenCirculars.length }} items</span>
+            </div>
+
+          </div>
+
+          <button
+            type="button"
+            class="modal-close"
+            (click)="closeSeenModal()"
+          >
             <mat-icon>close</mat-icon>
           </button>
+
         </div>
 
-        <!-- Modal Body -->
-        <div class="flex-1 overflow-y-auto p-6">
-          <div *ngIf="seenCirculars.length === 0" class="text-center py-8 text-gray-500">
-            <mat-icon class="text-xl text-gray-300">check_circle</mat-icon>
-            <p class="mt-2">No Seen circulars at the moment</p>
+
+        <div class="modal-body">
+
+          <div
+            *ngIf="seenCirculars.length === 0"
+            class="modal-empty"
+          >
+            <mat-icon>article</mat-icon>
+            <p>No read circulars available.</p>
           </div>
+
 
           <div
             *ngFor="let circular of seenCirculars"
-            class="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg hover:shadow-md transition-shadow"
+            class="modal-circular"
           >
-            <div class="flex items-start justify-between">
-              <div class="flex-1">
-                <h4 class="font-semibold text-black-900 mb-2">{{ circular.title }}</h4>
-                <div class="space-y-1 text-sm text-black-900">
-                  <div class="flex items-center">
-                    <mat-icon class="text-xs mr-2">event</mat-icon>
-                    <span
-                      >Published: {{ circular.published_at | date : 'dd MMM yyyy, hh:mm a' }}</span
-                    >
-                  </div>
-                  <div class="flex items-center text-orange-600">
-                    <mat-icon class="text-xs mr-2">schedule</mat-icon>
-                    <span
-                      >Effective From:
-                      {{ circular.effective_from | date : 'dd MMM yyyy, hh:mm a' }}</span
-                    >
-                  </div>
-                </div>
+
+            <div>
+
+              <h3>{{ circular.title }}</h3>
+
+              <div class="modal-details">
+
+                <span>
+                  <mat-icon>event</mat-icon>
+                  {{ circular.published_at | date:'dd MMM yyyy' }}
+                </span>
+
+                <span>
+                  <mat-icon>schedule</mat-icon>
+                  {{ circular.effective_from | date:'dd MMM yyyy' }}
+                </span>
+
               </div>
-              <button
-                (click)="viewCircular(circular)"
-                class="ml-4 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center"
-              >
-                <mat-icon class="text-sm mr-1">visibility</mat-icon>
-                View
-              </button>
+
             </div>
+
+            <button
+              type="button"
+              class="modal-action"
+              (click)="viewCircular(circular)"
+            >
+              <mat-icon>visibility</mat-icon>
+              View
+            </button>
+
           </div>
+
         </div>
+
       </div>
-    </div>  
 
-     
-
+    </div>
 
 
+
+    <!-- ========================= PENDING APPROVAL MODAL ========================= -->
     <div
-  *ngIf="showPendingApprovalModal"
-  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-  (click)="closePendingApprovalModal()"
->
+      *ngIf="showPendingApprovalModal"
+      class="modal-overlay"
+      (click)="closePendingApprovalModal()"
+    >
 
-<div
-class="bg-white rounded-xl shadow-2xl max-w-3xl w-full mx-4 max-h-[80vh] flex flex-col"
-(click)="$event.stopPropagation()"
->
+      <div
+        class="dashboard-modal"
+        (click)="$event.stopPropagation()"
+      >
 
-<div class="px-6 py-4 border-b flex justify-between">
+        <div class="modal-header">
 
-<h3 class="text-xl font-semibold">
+          <div class="modal-title approval-title">
 
-Pending Approvals ({{pendingApprovalCount}})
+            <div class="modal-icon">
+              <mat-icon>approval</mat-icon>
+            </div>
 
-</h3>
+            <div>
+              <h2>Pending Approvals</h2>
+              <span>{{ pendingApprovalCount }} items</span>
+            </div>
 
-<button (click)="closePendingApprovalModal()">
+          </div>
 
-<mat-icon>close</mat-icon>
+          <button
+            type="button"
+            class="modal-close"
+            (click)="closePendingApprovalModal()"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
 
-</button>
-
-</div>
-
-<div class="flex-1 overflow-y-auto p-6">
-
-<div
-*ngFor="let approval of pendingApprovals"
-class="mb-4 p-4 border rounded-lg"
->
-
-<h4 class="font-semibold">
-
-{{approval.title}}
-
-</h4>
-
-<p>
-
-Published :
-{{approval.published_at | date:'dd MMM yyyy'}}
-
-</p>
-
-<button
-class="mt-2 px-4 py-2 bg-purple-600 text-white rounded"
- (click)="viewPendingApproval(approval)">
-
-View
-
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
+        </div>
 
 
+        <div class="modal-body">
+
+          <div
+            *ngIf="pendingApprovals.length === 0"
+            class="modal-empty"
+          >
+            <mat-icon>check_circle</mat-icon>
+            <p>No pending approvals.</p>
+          </div>
 
 
+          <div
+            *ngFor="let approval of pendingApprovals"
+            class="modal-circular approval-modal-item"
+          >
+
+            <div>
+
+              <h3>{{ approval.title }}</h3>
+
+              <div class="modal-details">
+
+                <span>
+                  <mat-icon>event</mat-icon>
+                  Published:
+                  {{ approval.published_at | date:'dd MMM yyyy' }}
+                </span>
+
+              </div>
+
+            </div>
+
+            <button
+              type="button"
+              class="modal-action approval-action"
+              (click)="viewPendingApproval(approval)"
+            >
+              <mat-icon>visibility</mat-icon>
+              Review
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
 
   </main>
+
 </div>
+

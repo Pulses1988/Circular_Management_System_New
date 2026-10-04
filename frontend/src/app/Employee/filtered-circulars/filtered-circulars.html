@@ -35,11 +35,18 @@
     <!-- Empty State -->
     <div *ngIf="!loading && filteredCirculars.length === 0" class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-12 text-center transition-colors duration-300">
       <i class="material-icons text-7xl text-gray-400 dark:text-slate-500 mb-4">inbox</i>
-      <h3 class="text-2xl font-bold text-gray-700 dark:text-slate-300 mb-2">No Circulars Found</h3>
+      <h3 class="text-2xl font-bold text-gray-700 dark:text-slate-300 mb-2">
+        {{ itemType === 'HO_ASSIGNMENT' ? 'No HO Assignments Found' : 'No Circulars Found' }}</h3>
       <p class="text-gray-500 dark:text-slate-400 mb-6">
-        <span *ngIf="filterType === 'urgent'">No urgent circulars at the moment</span>
-        <span *ngIf="filterType === 'unread'">You're all caught up! No unread circulars</span>
-        <span *ngIf="filterType === 'all'">No circulars assigned to you yet</span>
+        <span *ngIf="filterType === 'urgent'">  {{ itemType === 'HO_ASSIGNMENT'
+      ? 'No urgent HO Assignments at the moment'
+      : 'No urgent circulars at the moment' }}</span>
+        <span *ngIf="filterType === 'unread'">{{ itemType === 'HO_ASSIGNMENT'
+      ? "You're all caught up! No unread HO Assignments"
+      : "You're all caught up! No unread circulars" }}</span>
+        <span *ngIf="filterType === 'all'">  {{ itemType === 'HO_ASSIGNMENT'
+      ? 'No HO Assignments assigned to you yet'
+      : 'No circulars assigned to you yet' }}</span>
       </p>
       <button 
         (click)="router.navigate(['/employee/employee-dashboard'])"

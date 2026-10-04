@@ -14,6 +14,10 @@ router.post('/mark-seen', circularTrackingController.markSeen);
 
 // Mark circular as completed
 router.post('/mark-completed', circularTrackingController.markCompleted);
+router.get(
+  '/completion-status-employees/:circularId',
+  circularTrackingController.getCompletionStatusEmployees
+);
 
 router.get('/completion-status/:circularId/:employeeId', circularTrackingController.getCompletionStatus);
 

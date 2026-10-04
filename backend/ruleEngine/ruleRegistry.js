@@ -8,6 +8,12 @@ module.exports = {
         action: "CREATE_CIRCULAR",
         active: true
     }
+        
+    // {   ruleName: "Audit Circular Creation",
+    //     action: "AUDIT_CIRCULAR_CREATED",
+    //     active: true
+    // }
+
 ],
 
     CIRCULAR_FULLY_APPROVED: [

@@ -71,3 +71,39 @@ exports.deleteChat = async (chat_id) => {
 };
 
 
+
+//Adding new method for getting Audit 
+// Check whether an employee has already started a query
+exports.hasEmployeeStartedQuery = async (circular_id, employee_id) => {
+  const [rows] = await db.query(
+    `
+    SELECT chat_id
+    FROM circular_chats
+    WHERE circular_id = ?
+      AND employee_id = ?
+      AND is_system_message = 0
+    LIMIT 1
+    `,
+    [circular_id, employee_id]
+  );
+
+  return rows.length > 0;
+};
+
+
+// Check whether QUERY_STARTED audit already exists
+exports.hasQueryStartedAudit = async (circular_id, employee_id) => {
+  const [rows] = await db.query(
+    `
+    SELECT id
+    FROM circular_audit_logs
+    WHERE circular_id = ?
+      AND performed_by = ?
+      AND action = 'QUERY_STARTED'
+    LIMIT 1
+    `,
+    [circular_id, employee_id]
+  );
+
+  return rows.length > 0;
+};

@@ -738,7 +738,44 @@ getDepartmentsForHeadOfficeAdmin(headOfficeId: number) {
   );
 }
 
+//Audit trail method 
+// ================= AUDIT TRAIL API =================
 
+getAuditLogs(): Observable<any> {
+  return this.http.get(
+    `${this.apiUrl}/api/audit`,
+    {
+      headers: this.getHeaders()
+    }
+  ).pipe(
+    catchError(this.handleError)
+  );
+}
+
+//Delet audit logs
+deleteAuditLog(id: number | string): Observable<any> {
+
+  return this.http.delete(
+    `${this.apiUrl}/api/audit/${id}`,
+    {
+      headers: this.getHeaders()
+    }
+  ).pipe(
+    catchError(this.handleError)
+  );
+}
+
+// Get employee read and completion status for a circular
+getCompletionStatusEmployees(circularId: number | string): Observable<any> {
+  return this.http.get(
+    `${this.apiUrl}/api/circular-tracking/completion-status-employees/${circularId}`,
+    {
+      headers: this.getHeaders()
+    }
+  ).pipe(
+    catchError(this.handleError)
+  );
+}
 
 
 

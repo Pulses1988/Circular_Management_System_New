@@ -1,3 +1,9 @@
+
+
+
+
+
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,7 +15,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
 import { CircularService } from '../../services/circular-service';
 import { EmployeeService } from '../../services/employee-service';
-import { Router } from '@angular/router';
+// import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+
+
 
 interface Circular {
   circular_id: number;
@@ -33,7 +42,11 @@ interface Circular {
   hasAttachment: boolean;
   isRead: boolean;
   circular_code: string;
-  department: string;
+  department: string;  
+
+
+  item_type?: 'CIRCULAR' | 'HO_ASSIGNMENT';
+
 }
 
 interface GroupedCirculars {
@@ -93,7 +106,12 @@ availableYears: number[] = [];
   
   totalCirculars: number = 0;
   unreadCount: number = 0; 
-  pendingApprovalCount: number = 0;
+  pendingApprovalCount: number = 0; 
+  pageTitle: string = 'All Circulars';
+pageSubtitle: string = 'Browse and manage your circulars'; 
+currentType: 'CIRCULAR' | 'HO_ASSIGNMENT' = 'CIRCULAR';
+
+
    employeeData!: EmployeeData;
   
   allCirculars: Circular[] = [];
@@ -104,11 +122,55 @@ availableYears: number[] = [];
   isLoading: boolean = false;
   errorMessage: string = '';
 
-  constructor(private circularService: CircularService,private employeeService:EmployeeService, private router: Router) {}
+  constructor(private circularService: CircularService,private employeeService:EmployeeService, private router: Router,private route: ActivatedRoute) {}
 
   ngOnInit() {
-   this.loadEmployeeData();
-  }
+  //  this.loadEmployeeData(); 
+
+  //  this.route.queryParams.subscribe(params => {
+
+  //   const type = params['type'];
+
+  //   if (type === 'HO_ASSIGNMENT') {
+  //     this.pageTitle = 'HO Assignment';
+  //     this.pageSubtitle = 'Browse and manage your HO assignments';
+  //   } else {
+  //     this.pageTitle = 'All Circulars';
+  //     this.pageSubtitle = 'Browse and manage your circulars';
+  //   }
+
+  // });
+
+  this.route.queryParams.subscribe(params => {
+
+    console.log('QUERY PARAMS:', params);
+    console.log('TYPE:', params['type']);
+
+    const type = params['type'];
+
+    if (type === 'HO_ASSIGNMENT') {
+      this.currentType = 'HO_ASSIGNMENT';
+      this.pageTitle = 'All HO Assignments';
+      this.pageSubtitle = 'Browse and manage your HO assignments';
+    } else {
+      this.currentType = 'CIRCULAR';
+      this.pageTitle = 'All Circulars';
+      this.pageSubtitle = 'Browse and manage your circulars';
+    }
+
+    // Reload after determining the type
+    if (this.employeeData?.id) {
+      this.loadCirculars();
+    }
+
+  });
+
+  this.loadEmployeeData();
+ 
+}
+
+
+
 
  async loadEmployeeData() {
     this.employeeData = await this.employeeService.getCurrentEmployee();
@@ -180,15 +242,18 @@ loadPendingApprovalCount() {
    * Transform API data to component format
    */
   transformCircularData(apiData: any[]): Circular[] {
-    return apiData
-     .filter(item => item.circular_status === 'APPROVED') 
-     .map((item, index) => {
+  return apiData
+   .filter(item => item.circular_status === 'APPROVED')
+   .filter(item => item.item_type === this.currentType)
+   .map((item, index) => {
       // const priority = this.calculatePriority(item.effective_from);
       const hasAttachment = this.checkForAttachment(item.content);
       
       return {
         circular_id: item.circular_id,
         title: item.title,
+
+     item_type: item.item_type,
         content: item.content,
         effective_from: item.effective_from,
         published_at: item.published_at,
@@ -468,3 +533,42 @@ loadPendingApprovalCount() {
   }
 
 }
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

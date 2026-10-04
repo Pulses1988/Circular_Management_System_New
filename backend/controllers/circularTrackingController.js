@@ -1,4 +1,7 @@
 const circularTrackingModel = require('../models/circularTrackingModel');
+const auditService = require("../services/auditService");
+const employeeModal = require("../models/employeesModal");
+const circularAuditModel = require("../models/circularAuditModel");
 const circularModel = require("../models/circularModel");
 const eventEmitter = require("../events/eventEmitter");
 const employeeCompletionService = require("../services/employeeCompletionService");
@@ -24,16 +27,64 @@ exports.getSeenCirculars=async(req,res)=>{
   }
 }
 
+// exports.markSeen = async (req, res) => {
+//   try {
+//     const { circularId, employeeId } = req.body;
+//     await circularTrackingModel.markAsSeen(circularId, employeeId);
+//     res.json({ message: 'Circular marked as seen' });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: 'Failed to mark circular as seen' });
+//   }
+// }; 
+
 exports.markSeen = async (req, res) => {
   try {
     const { circularId, employeeId } = req.body;
-    await circularTrackingModel.markAsSeen(circularId, employeeId);
-    res.json({ message: 'Circular marked as seen' });
+
+    const result = await circularTrackingModel.markAsSeen(
+      circularId,
+      employeeId
+    );
+
+
+//Adding code for  description 
+const [employeeRows] = await employeeModal.getEmployeeById(employeeId);
+
+const employeeCode =
+  employeeRows.length > 0
+    ? employeeRows[0].employee_id
+    : employeeId;
+
+
+    // Add audit log only when the employee was newly marked as seen
+    if (result[0].affectedRows > 0) {
+      await auditService.logAudit({
+        circularId: circularId,
+        action: "EMPLOYEE_READ_CIRCULAR",
+        performedBy: employeeId,
+        targetEmployeeId: employeeId,
+        oldStatus: "UNSEEN",
+        newStatus: "SEEN",
+        // description: `Employee ${employeeId} read circular ${circularId}` 
+        description: `Employee ${employeeCode} read circular ${circularId}`
+
+      });
+    }
+
+    res.json({ message: "Circular marked as seen" });
+
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to mark circular as seen' });
+    res.status(500).json({
+      error: "Failed to mark circular as seen"
+    });
   }
 };
+
+
+
+
 
 exports.markCompleted = async (req, res) => {
   // try {
@@ -103,8 +154,38 @@ if (completionResult[0].affectedRows > 0) {
         circularId,
         employeeId,
         io: req.app.get('io')
-    });
-}
+    }); 
+
+    // New audit logging
+   
+const [employeeRows] =
+    await employeeModal.getEmployeeById(employeeId);
+
+const employeeCode =
+    employeeRows.length > 0
+        ? employeeRows[0].employee_id
+        : employeeId;
+
+await auditService.logAudit({
+    circularId: circularId,
+    action: "EMPLOYEE_COMPLETED_CIRCULAR",
+    performedBy: employeeId,
+    targetEmployeeId: employeeId,
+    oldStatus: "PENDING",
+    newStatus: "COMPLETED",
+    description: `Employee ${employeeCode} completed circular ${circularId}`
+});
+
+
+
+
+
+
+} 
+
+
+
+
 
 const [rows] =
     await circularTrackingModel.getCircularCompletionSummary(circularId);
@@ -117,25 +198,92 @@ const completedEmployees = Number(rows[0].completedEmployees || 0);
 console.log("Total Employees:", totalEmployees);
 console.log("Completed Employees:", completedEmployees);
 
-if (completedEmployees === totalEmployees) {
+// if (completedEmployees === totalEmployees) {
 
-    console.log(">>> EMITTING ALL_EMPLOYEES_COMPLETED <<<");
+//     console.log(">>> EMITTING ALL_EMPLOYEES_COMPLETED <<<");
 
+//     eventEmitter.emit("ALL_EMPLOYEES_COMPLETED", {
+//         circularId,
+//         employeeId,
+//         io: req.app.get('io')
+//     });
+
+// } else {
+
+//     console.log("Still Pending Employees:",
+//         totalEmployees - completedEmployees);
+
+// }
+
+
+if (
+    totalEmployees > 0 &&
+    completedEmployees === totalEmployees
+) {
+
+    console.log(">>> ALL EMPLOYEES COMPLETED <<<");
+
+    // Check if Circular Completed audit already exists
+    const auditAlreadyExists =
+        await circularAuditModel.checkCircularCompletedAudit(
+            circularId
+        );
+
+    // Add Circular Completed audit only once
+    if (!auditAlreadyExists) {
+
+        await auditService.logAudit({
+
+            circularId: circularId,
+
+            action: "CIRCULAR_COMPLETED",
+
+            performedBy: employeeId,
+
+            targetEmployeeId: null,
+
+            oldStatus: "APPROVED",
+
+            newStatus: "COMPLETED",
+
+            description:
+                `All employees completed circular ${circularId}`
+
+        });
+
+        console.log(
+            "Circular Completed Audit Logged:",
+            circularId
+        );
+
+    } else {
+
+        console.log(
+            "Circular Completed Audit already exists:",
+            circularId
+        );
+
+    }
+
+    // EXISTING EVENT — KEEP IT
     eventEmitter.emit("ALL_EMPLOYEES_COMPLETED", {
+
         circularId,
+
         employeeId,
+
         io: req.app.get('io')
+
     });
 
 } else {
 
-    console.log("Still Pending Employees:",
-        totalEmployees - completedEmployees);
+    console.log(
+        "Still Pending Employees:",
+        totalEmployees - completedEmployees
+    );
 
 }
-
-
-
 
 
     return res.json({
@@ -152,16 +300,11 @@ if (completedEmployees === totalEmployees) {
   }
 
   
-
-
-
-
-
-
-
-
-
 };
+
+
+
+
 
 exports.getCompletionStatus = async (req, res) => {
   try {
@@ -224,6 +367,61 @@ exports.getStatistics = async (req, res) => {
 
   }
 
+};   
+
+
+
+// Get read and completion status of all assigned employees
+exports.getCompletionStatusEmployees = async (req, res) => {
+  try {
+    const { circularId } = req.params;
+
+    const [rows] =
+      await circularTrackingModel.getCompletionStatusEmployees(circularId);
+
+    const pendingReadEmployees = rows.filter(
+      employee => !employee.is_seen
+    );
+
+    const pendingCompletionEmployees = rows.filter(
+      employee => employee.is_seen && !employee.is_completed
+    );
+
+    const completedEmployees = rows.filter(
+      employee => employee.is_completed
+    );
+
+    res.json({
+      success: true,
+
+      totalEmployees: rows.length,
+
+      readEmployees: rows.filter(employee => employee.is_seen).length,
+
+      completedEmployees: completedEmployees.length,
+
+      pendingReadCount: pendingReadEmployees.length,
+
+      pendingCompletionCount: pendingCompletionEmployees.length,
+
+      pendingReadEmployees,
+
+      pendingCompletionEmployees,
+
+      completedEmployeeList: completedEmployees
+    });
+
+  } catch (err) {
+    console.error(
+      "Failed to fetch employee completion status:",
+      err
+    );
+
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch employee completion status"
+    });
+  }
 };
 
 

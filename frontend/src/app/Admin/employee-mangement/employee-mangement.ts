@@ -117,7 +117,8 @@ roleLevels: any[] = [
 
        reporting_officer_id: [''],  
       can_create_circular: [false],
-      can_approve_circular: [false],
+      can_approve_circular: [false], 
+      can_create_ho_assignment: [false],
     });
   }
 
@@ -1103,7 +1104,7 @@ isClerkSelected(): boolean {
 
 
 
-    columns.push('Can Create Circular', 'Can Approve Circular');
+    columns.push('Can Create Circular', 'Can Approve Circular', 'Can Create HO Assignment');
 
     let exampleRow: any = {};
     columns.forEach((col) => {
@@ -1151,7 +1152,11 @@ isClerkSelected(): boolean {
           break;
         case 'Can Approve Circular':
           exampleRow[col] = false;
+          break; 
+        case 'Can Create HO Assignment':
+          exampleRow[col] = false;
           break;
+
         default:
           exampleRow[col] = '';
       }
@@ -1212,6 +1217,10 @@ columns.forEach((col) => {
 
     case 'Can Approve Circular':
       secondExampleRow[col] = false;
+      break; 
+
+    case 'Can Create HO Assignment':
+      secondExampleRow[col] = false;
       break;
 
     default:
@@ -1259,6 +1268,7 @@ const worksheet = XLSX.utils.json_to_sheet(
       const roleLevel = row['Role Level'];
       const canCreate = row['Can Create Circular'];
       const canApprove = row['Can Approve Circular'];
+      const canCreateHoAssignment = row['Can Create HO Assignment'];
 
       // Basic validation for required fields (can be expanded)
       if (!firstName || !lastName || !email || !employeeId || !password || !roleName) {
@@ -1416,7 +1426,8 @@ if (!roleLevel || !validRoleLevels.includes(roleLevel.toString().trim().toUpperC
 
         head_office_id: this.role === 'HO_ADMIN' ? this.userAssignment.id : null,
         can_create_circular: canCreate,
-        can_approve_circular: canApprove,
+        can_approve_circular: canApprove, 
+        can_create_ho_assignment: canCreateHoAssignment,
       };
 
       // --- Save employee via service ---
@@ -1591,7 +1602,8 @@ if (this.isReportingOfficerRequired()) {
         employee_id: emp.employee_id,
         password: '',
         can_create_circular: emp.can_create_circular,
-        can_approve_circular: emp.can_approve_circular,
+        can_approve_circular: emp.can_approve_circular, 
+        can_create_ho_assignment: emp.can_create_ho_assignment,
       });
 
       this.checkDepartmentValidation();
@@ -1614,6 +1626,7 @@ if (this.isReportingOfficerRequired()) {
     this.employeeForm.reset({
       can_create_circular: false,
       can_approve_circular: false,
+        can_create_ho_assignment: false,
       department_id: '',
       branch_id: '',
       role_id: '',
@@ -1693,7 +1706,8 @@ clearForm(): void {
   // Reset form values that should have default values
   this.employeeForm.patchValue({
     can_create_circular: false,
-    can_approve_circular: false,
+    can_approve_circular: false, 
+     can_create_ho_assignment: false,
     role_level: ''
   });
 

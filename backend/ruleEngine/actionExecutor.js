@@ -1,6 +1,7 @@
 const publishCircularService = require("../services/publishCircularService");
 const notifyApproverService = require("../services/notifyApproverService");
-const createCircularService = require("../services/createCircularService");
+const createCircularService = require("../services/createCircularService"); 
+const auditService = require("../services/auditService");
 const ruleExecutionModel = require("../models/ruleExecutionModel");
 const circularModel = require("../models/circularModel");
 const circularRejectionNotificationService = require("../services/circularRejectionNotificationService");
@@ -234,7 +235,74 @@ case "MARK_CIRCULAR_COMPLETED":
 break;
 
 
+// ============================================
+// AUDIT CIRCULAR CREATED
+// ============================================
+// case "AUDIT_CIRCULAR_CREATED":
 
+//     console.log("=================================");
+//     console.log("ACTION EXECUTOR");
+//     console.log("Executing Audit Circular Created Action");
+//     console.log("Circular ID :", data.circularId);
+//     console.log("Creator ID :", data.creatorId);
+//     console.log("=================================");
+
+//     try {
+
+//         await auditService.logAudit({
+
+//             circularId: data.circularId,
+
+//             action: "CIRCULAR_CREATED",
+
+//             performedBy: data.creatorId,
+
+//             targetEmployeeId: null,
+
+//             oldStatus: null,
+
+//             newStatus: data.status || "PENDING_APPROVAL",
+
+//             description: "Circular created"
+
+//         });
+
+//         await ruleExecutionModel.saveExecution({
+
+//             event_name: "CIRCULAR_CREATED",
+
+//             rule_name: "Audit Circular Creation",
+
+//             action_name: "AUDIT_CIRCULAR_CREATED",
+
+//             status: "SUCCESS",
+
+//             entity_id: data.circularId
+
+//         });
+
+//     } catch (err) {
+
+//         console.error("Audit Circular Created Action Failed");
+//         console.error(err);
+
+//         await ruleExecutionModel.saveExecution({
+
+//             event_name: "CIRCULAR_CREATED",
+
+//             rule_name: "Audit Circular Creation",
+
+//             action_name: "AUDIT_CIRCULAR_CREATED",
+
+//             status: "FAILED",
+
+//             entity_id: data.circularId
+
+//         });
+
+//     }
+
+//     break;
 
 
 

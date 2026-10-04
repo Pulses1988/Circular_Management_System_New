@@ -1,0 +1,776 @@
+<div
+  class="ho-assignment-wrapper"
+  [class.dark-mode]="isDarkMode"
+>
+
+  <!-- ================================
+       HEADER
+  ================================= -->
+
+  <div class="page-header">
+
+    <div class="header-left">
+
+      <div class="title-section">
+
+        <div class="title-icon">
+
+          <mat-icon>
+            assignment
+          </mat-icon>
+
+        </div>
+
+        <div>
+
+          <h1>
+            All HO Assignments
+          </h1>
+
+          <p>
+            View and manage all Head Office assignments
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="header-actions">
+
+      <!-- Theme Button -->
+
+      <button
+        type="button"
+        class="theme-btn"
+        (click)="toggleTheme()"
+        title="Toggle Theme"
+      >
+
+        <mat-icon>
+
+          {{
+            isDarkMode
+              ? 'light_mode'
+              : 'dark_mode'
+          }}
+
+        </mat-icon>
+
+      </button>
+
+
+      <!-- Create Assignment -->
+
+      <button
+        type="button"
+        class="create-btn"
+        (click)="createAssignment()"
+      >
+
+        <mat-icon>
+          add
+        </mat-icon>
+
+        <span>
+          Create Assignment
+        </span>
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- ================================
+       CONTENT
+  ================================= -->
+
+  <div class="content-container">
+
+
+    <!-- ================================
+         SEARCH / FILTER
+    ================================= -->
+
+    <div class="toolbar">
+
+      <div class="search-box">
+
+        <mat-icon>
+          search
+        </mat-icon>
+
+        <input
+          type="text"
+          placeholder="Search HO assignments..."
+        />
+
+      </div>
+
+
+      <button
+        type="button"
+        class="filter-btn"
+      >
+
+        <mat-icon>
+          filter_list
+        </mat-icon>
+
+        <span>
+          Filter
+        </span>
+
+      </button>
+
+    </div>
+
+
+    <!-- ================================
+         ASSIGNMENT TABLE
+    ================================= -->
+
+    <div class="assignment-card">
+
+
+      <!-- ================================
+           TABLE HEADER
+      ================================= -->
+
+      <div class="table-header">
+
+        <div>
+          HO Assignments
+        </div>
+
+        <div class="count">
+
+          {{ assignments.length }}
+
+          Assignments
+
+        </div>
+
+      </div>
+
+
+      <!-- ================================
+           LOADING STATE
+      ================================= -->
+
+      <div
+        class="empty-state"
+        *ngIf="isLoading"
+      >
+
+        <div class="empty-icon">
+
+          <mat-icon>
+            hourglass_empty
+          </mat-icon>
+
+        </div>
+
+        <h3>
+          Loading HO Assignments
+        </h3>
+
+        <p>
+          Please wait...
+        </p>
+
+      </div>
+
+
+      <!-- ================================
+           EMPTY STATE
+      ================================= -->
+
+      <div
+        class="empty-state"
+        *ngIf="
+          !isLoading &&
+          assignments.length === 0
+        "
+      >
+
+        <div class="empty-icon">
+
+          <mat-icon>
+            assignment
+          </mat-icon>
+
+        </div>
+
+        <h3>
+          No HO Assignments
+        </h3>
+
+        <p>
+          There are no HO assignments to display yet.
+        </p>
+
+
+        <button
+          type="button"
+          class="create-btn"
+          (click)="createAssignment()"
+        >
+
+          <mat-icon>
+            add
+          </mat-icon>
+
+          Create Assignment
+
+        </button>
+
+      </div>
+
+
+      <!-- ================================
+           ASSIGNMENT LIST
+      ================================= -->
+
+      <div
+        class="assignment-table"
+        *ngIf="
+          !isLoading &&
+          assignments.length > 0
+        "
+      >
+
+
+        <!-- ================================
+             TABLE HEADING
+        ================================= -->
+
+        <div
+          class="table-row table-heading"
+        >
+
+          <div>
+            Assignment
+          </div>
+
+          <div>
+            Code
+          </div>
+
+          <div>
+            Priority
+          </div>
+
+          <div>
+            Created By
+          </div>
+
+          <div>
+            Date
+          </div>
+
+          <div>
+            Status
+          </div>
+
+          <div>
+            Actions
+          </div>
+
+        </div>
+
+
+        <!-- ================================
+             ASSIGNMENT ROW
+        ================================= -->
+
+        <div
+          class="table-row"
+          *ngFor="
+            let assignment of assignments
+          "
+        >
+
+
+          <!-- Assignment -->
+
+          <div
+            class="assignment-title"
+          >
+
+            <mat-icon>
+              assignment
+            </mat-icon>
+
+            <span>
+
+              {{
+                assignment.title ||
+                '—'
+              }}
+
+            </span>
+
+          </div>
+
+
+          <!-- Assignment Code -->
+
+          <div>
+
+            {{
+              assignment.assignment_code ||
+              '—'
+            }}
+
+          </div>
+
+
+          <!-- Priority -->
+
+          <div>
+
+            <span
+              class="priority-badge"
+
+              [class.urgent]="
+                assignment.priority === 'URGENT'
+              "
+
+              [class.high]="
+                assignment.priority === 'HIGH'
+              "
+            >
+
+              {{
+                assignment.priority ||
+                '—'
+              }}
+
+            </span>
+
+          </div>
+
+
+          <!-- Created By -->
+
+          <div>
+
+            {{
+              assignment.creator_name ||
+              '—'
+            }}
+
+          </div>
+
+
+          <!-- Date -->
+
+          <div>
+
+            {{
+              assignment.created_at ||
+              '—'
+            }}
+
+          </div>
+
+
+          <!-- Status -->
+
+          <div>
+
+            <span
+              class="status-badge"
+              [class.read]="
+                assignment.is_seen === true ||
+                assignment.is_seen === 1
+              "
+              [class.unread]="
+                assignment.is_seen === false ||
+                assignment.is_seen === 0
+              "
+            >
+
+              {{
+                assignment.is_seen === true ||
+                assignment.is_seen === 1
+                  ? 'READ'
+                  : 'UNREAD'
+              }}
+
+            </span>
+
+          </div>
+
+
+          <!-- Actions -->
+
+          <div
+            class="action-buttons"
+          >
+
+            <!-- View -->
+
+            <button
+              type="button"
+              title="View"
+              (click)="
+                viewAssignment(
+                  assignment
+                )
+              "
+            >
+
+              <mat-icon>
+                visibility
+              </mat-icon>
+
+            </button>
+
+
+            <!-- Edit -->
+
+            <button
+              type="button"
+              title="Edit"
+              (click)="
+                editAssignment(
+                  assignment
+                )
+              "
+            >
+
+              <mat-icon>
+                edit
+              </mat-icon>
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =================================================
+       VIEW ASSIGNMENT POPUP
+  ================================================== -->
+
+  <div
+    class="view-modal-backdrop"
+    *ngIf="
+      isViewModalOpen &&
+      selectedAssignment
+    "
+    (click)="closeViewModal()"
+  >
+
+    <div
+      class="view-modal"
+      (click)="$event.stopPropagation()"
+    >
+
+
+      <!-- ================================
+           MODAL HEADER
+      ================================= -->
+
+      <div class="view-modal-header">
+
+        <div>
+
+          <div class="view-modal-title">
+
+            <mat-icon>
+              assignment
+            </mat-icon>
+
+            <h2>
+              HO Assignment
+            </h2>
+
+          </div>
+
+          <p>
+            Assignment Details
+          </p>
+
+        </div>
+
+
+        <!-- Close -->
+
+        <button
+          type="button"
+          class="close-modal-btn"
+          title="Close"
+          (click)="closeViewModal()"
+        >
+
+          <mat-icon>
+            close
+          </mat-icon>
+
+        </button>
+
+      </div>
+
+
+      <!-- ================================
+           MODAL BODY
+      ================================= -->
+
+      <div class="view-modal-body">
+
+
+        <!-- Assignment Title -->
+
+        <div class="detail-section">
+
+          <div class="detail-label">
+            Assignment Title
+          </div>
+
+          <div class="detail-value title-value">
+
+            {{
+              selectedAssignment.title ||
+              '—'
+            }}
+
+          </div>
+
+        </div>
+
+
+        <!-- Assignment Code -->
+
+        <div class="detail-row">
+
+          <div class="detail-section">
+
+            <div class="detail-label">
+              Assignment Code
+            </div>
+
+            <div class="detail-value">
+
+              {{
+                selectedAssignment.assignment_code ||
+                '—'
+              }}
+
+            </div>
+
+          </div>
+
+
+          <!-- Priority -->
+
+          <div class="detail-section">
+
+            <div class="detail-label">
+              Priority
+            </div>
+
+            <div class="detail-value">
+
+              <span
+                class="priority-badge"
+
+                [class.urgent]="
+                  selectedAssignment.priority === 'URGENT'
+                "
+
+                [class.high]="
+                  selectedAssignment.priority === 'HIGH'
+                "
+              >
+
+                {{
+                  selectedAssignment.priority ||
+                  '—'
+                }}
+
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Created By -->
+
+        <div class="detail-row">
+
+          <div class="detail-section">
+
+            <div class="detail-label">
+              Created By
+            </div>
+
+            <div class="detail-value">
+
+              {{
+                selectedAssignment.creator_name ||
+                '—'
+              }}
+
+            </div>
+
+          </div>
+
+
+          <!-- Read Status -->
+
+          <div class="detail-section">
+
+            <div class="detail-label">
+              Read Status
+            </div>
+
+            <div class="detail-value">
+
+              <span
+                class="status-badge"
+                [class.read]="
+                  selectedAssignment.is_seen === true ||
+                  selectedAssignment.is_seen === 1
+                "
+                [class.unread]="
+                  selectedAssignment.is_seen === false ||
+                  selectedAssignment.is_seen === 0
+                "
+              >
+
+                {{
+                  selectedAssignment.is_seen === true ||
+                  selectedAssignment.is_seen === 1
+                    ? 'READ'
+                    : 'UNREAD'
+                }}
+
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Due Date -->
+
+        <div class="detail-section">
+
+          <div class="detail-label">
+            Due Date
+          </div>
+
+          <div class="detail-value">
+
+            {{
+              selectedAssignment.due_date ||
+              '—'
+            }}
+
+          </div>
+
+        </div>
+
+
+        <!-- Created Date -->
+
+        <div class="detail-section">
+
+          <div class="detail-label">
+            Created Date
+          </div>
+
+          <div class="detail-value">
+
+            {{
+              selectedAssignment.created_at ||
+              '—'
+            }}
+
+          </div>
+
+        </div>
+
+
+        <!-- Description -->
+
+        <div class="detail-section">
+
+          <div class="detail-label">
+            Description
+          </div>
+
+          <div class="description-box">
+
+            {{
+              selectedAssignment.description ||
+              'No description available.'
+            }}
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- ================================
+           MODAL FOOTER
+      ================================= -->
+
+      <div class="view-modal-footer">
+
+        <!-- Mark as Complete -->
+
+        <button
+          type="button"
+          class="complete-btn"
+        >
+
+          <mat-icon>
+            check_circle
+          </mat-icon>
+
+          Mark as Complete
+
+        </button>
+
+
+        <!-- Close -->
+
+        <button
+          type="button"
+          class="close-btn"
+          (click)="closeViewModal()"
+        >
+
+          Close
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

@@ -10,7 +10,7 @@ import {
 } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { EmployeeService } from '../../services/employee-service';
-import { Router } from '@angular/router';
+import {ActivatedRoute, Router } from '@angular/router';
 import { MatIcon } from '@angular/material/icon';
 import { CommonModule, TitleCasePipe } from '@angular/common';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
@@ -33,13 +33,14 @@ export interface Circular {
   source_type: string;
   effective_from: string;
   created_at: string;
-  
+  item_type?: 'CIRCULAR' | 'HO_ASSIGNMENT';
   published_at: string | null;
   send_type: 'INTERNAL' | 'CONFIDENTIAL' | 'RESTRICTED' | 'PUBLIC';
   status: 'DRAFT' | 'PENDING_APPROVAL' | 'REJECTED' | 'APPROVED' | 'PUBLISHED';
   repeat_cycle: number;
   priority: 'LOW' | 'URGENT' | 'HIGH' | 'MEDIUM';
-  specialKeyword: string;
+  specialKeyword: string; 
+  
 }
 
 interface SourceType {
@@ -83,6 +84,16 @@ interface AttachedFile {
   file: File;
 }
 
+
+//Adding interface for Hierarchy
+interface RegionWiseHierarchy {
+  regionIds: number[];
+  zoneIds: number[];
+  circleIds: number[];
+  branchIds: number[];
+  departmentIds: number[];
+}
+
 @Component({
   selector: 'app-create-circular',
   imports: [MatIcon, FormsModule, CommonModule, ReactiveFormsModule],
@@ -114,9 +125,21 @@ isConfidentialityDropdownOpen = false;
   maxApprovers: number = 1;
   selectedEmployees: any[] = [];   
 
+  isHOAssignment = false;
 //Variable for showing multiple select option 
 // All confidentiality levels selected by the user
-selectedConfidentialityLevels: string[] = [];
+selectedConfidentialityLevels: string[] = [];  
+
+
+//Variables for herachy 
+// Store hierarchy selection for REGION_WISE
+selectedRegionWiseHierarchy: RegionWiseHierarchy = {
+  regionIds: [],
+  zoneIds: [],
+  circleIds: [],
+  branchIds: [],
+  departmentIds: []
+};
 
 // Employees selected for each confidentiality level
 employeesByConfidentiality: { [key: string]: any[] } = {};
@@ -209,7 +232,8 @@ selectedBranches: any[] = [];
   constructor(
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
-    private router: Router,
+    private router: Router, 
+    private route: ActivatedRoute,
     private circularService: CircularService,
     private employeeService: EmployeeService,
     private dialog: MatDialog,
@@ -226,12 +250,22 @@ selectedBranches: any[] = [];
     }
   }
 
-  ngOnInit(): void {
-    this.initializeForm();
-    this.loadEmployeeData();
-    this.loadData();
-    this.loadMaxApprovers();
-   
+  ngOnInit(): void { 
+  this.initializeForm();
+
+  this.route.queryParams.subscribe(params => {
+    this.isHOAssignment = params['mode'] === 'HO_ASSIGNMENT';
+
+    if (this.isHOAssignment) {
+      this.circularForm.patchValue({
+        circular_code: this.generateHOAssignmentCode()
+      });
+    }
+  });
+
+  this.loadEmployeeData();
+  this.loadData();
+  this.loadMaxApprovers();   
 
     const draft = localStorage.getItem(this.DRAFT_KEY);
 
@@ -681,56 +715,139 @@ openEmployeeModal(): void {
 
   });
 
-  dialogRef.afterClosed().subscribe((result) => {
+  // dialogRef.afterClosed().subscribe((result) => {
 
-    this.isModalOpening = false;
+  //   this.isModalOpening = false;
 
-    // User clicked Cancel / closed modal
-    if (result === null || result === undefined) {
-      return;
-    }
+  //   // User clicked Cancel / closed modal
+  //   if (result === null || result === undefined) {
+  //     return;
+  //   }
 
-    // User confirmed employees
-    if (Array.isArray(result)) {
+  //   // User confirmed employees
+  //   if (Array.isArray(result)) {
 
-      if (result.length > 0) {
+  //     if (result.length > 0) {
 
-        // Store employees under THIS confidentiality level
-        this.employeesByConfidentiality[confidentiality] = [...result];
+  //       // Store employees under THIS confidentiality level
+  //       this.employeesByConfidentiality[confidentiality] = [...result];
 
-        console.log(
-          'Employees for',
-          confidentiality,
-          ':',
-          this.employeesByConfidentiality[confidentiality]
-        );
+  //       console.log(
+  //         'Employees for',
+  //         confidentiality,
+  //         ':',
+  //         this.employeesByConfidentiality[confidentiality]
+  //       );
 
-        // Rebuild combined employee list
-        this.updateCombinedSelectedEmployees();
+  //       // Rebuild combined employee list
+  //       this.updateCombinedSelectedEmployees();
 
-        // Keep current confidentiality in form
-        this.circularForm.patchValue(
-          {
-            confidentiality: confidentiality
-          },
-          {
-            emitEvent: false
-          }
-        );
+  //       // Keep current confidentiality in form
+  //       this.circularForm.patchValue(
+  //         {
+  //           confidentiality: confidentiality
+  //         },
+  //         {
+  //           emitEvent: false
+  //         }
+  //       );
 
-        this.pendingConfidentialityChange = null;
+  //       this.pendingConfidentialityChange = null;
 
-      } else {
+  //     } else {
 
-        // Empty result = remove this newly selected level
-        this.removeConfidentialityLevel(confidentiality);
+  //       // Empty result = remove this newly selected level
+  //       this.removeConfidentialityLevel(confidentiality);
 
-        this.pendingConfidentialityChange = null;
+  //       this.pendingConfidentialityChange = null;
+  //     }
+
+  //   }
+
+  // }); 
+dialogRef.afterClosed().subscribe((result) => {
+
+  this.isModalOpening = false;
+
+  // User clicked Cancel / closed modal
+  if (result === null || result === undefined) {
+    return;
+  }
+
+  // =====================================================
+  // NEW FORMAT: Employees + hierarchy
+  // =====================================================
+
+  const employees = Array.isArray(result)
+    ? result
+    : result?.employees || [];
+
+  // Store hierarchy only for REGION_WISE
+  if (
+    confidentiality === 'REGION_WISE' &&
+    !Array.isArray(result) &&
+    result?.hierarchy
+  ) {
+    this.selectedRegionWiseHierarchy = {
+      regionIds: result.hierarchy.regionIds || [],
+      zoneIds: result.hierarchy.zoneIds || [],
+      circleIds: result.hierarchy.circleIds || [],
+      branchIds: result.hierarchy.branchIds || [],
+      departmentIds: result.hierarchy.departmentIds || []
+    };
+
+    console.log(
+      'REGION_WISE Hierarchy:',
+      this.selectedRegionWiseHierarchy
+    );
+  }
+
+  // =====================================================
+  // EXISTING EMPLOYEE FLOW
+  // =====================================================
+
+  if (employees.length > 0) {
+
+    // Store employees under THIS confidentiality level
+    this.employeesByConfidentiality[confidentiality] = [
+      ...employees
+    ];
+
+    console.log(
+      'Employees for',
+      confidentiality,
+      ':',
+      this.employeesByConfidentiality[confidentiality]
+    );
+
+    // Rebuild combined employee list
+    this.updateCombinedSelectedEmployees();
+
+    // Keep current confidentiality in form
+    this.circularForm.patchValue(
+      {
+        confidentiality: confidentiality
+      },
+      {
+        emitEvent: false
       }
+    );
 
-    }
+    this.pendingConfidentialityChange = null;
 
-  });
+  } else {
+
+    // Empty result = remove this newly selected level
+    this.removeConfidentialityLevel(confidentiality);
+
+    this.pendingConfidentialityChange = null;
+  }
+
+});
+
+
+
+
 }
 
 
@@ -922,7 +1039,8 @@ private confidentialityValidator(
       selectedDate.getFullYear(),
       selectedDate.getMonth(),
       selectedDate.getDate(),
-    );
+    ); 
+
     const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
     if (selectedDateOnly < todayOnly) {
@@ -959,7 +1077,24 @@ private confidentialityValidator(
   // getTodayDate(): string {
   //   const today = new Date();
   //   return today.toISOString().slice(0, 16);
-  // }
+  // } 
+
+
+private generateHOAssignmentCode(): string {
+  const counterKey = 'HO_ASSIGNMENT_COUNTER';
+
+  const lastNumber = Number(localStorage.getItem(counterKey) || '0');
+
+  const nextNumber = lastNumber + 1;
+
+  localStorage.setItem(counterKey, nextNumber.toString());
+
+  return `HOA-${String(nextNumber).padStart(4, '0')}`;
+}
+
+
+
+
   getTodayDate(): string {
     const now = new Date();
 
@@ -1064,10 +1199,41 @@ private confidentialityValidator(
     });
 
     // get circular
-    this.circularService.getAllApprovedCirculars().subscribe((data) => {
-      console.log(data);
-      this.previousCirculars = data as Circular[];
-    });
+    // this.circularService.getAllApprovedCirculars().subscribe((data) => {
+    //   console.log(data);
+    //   this.previousCirculars = data as Circular[];
+    // });
+// Get previous Circulars / Assignments based on current mode
+this.circularService.getAllApprovedCirculars().subscribe((data) => {
+  console.log('All approved records:', data);
+
+  const allRecords = data as any[];
+
+  if (this.isHOAssignment) {
+    // HO Assignment mode → show only HO Assignments
+    this.previousCirculars = allRecords.filter(
+      item => item.item_type === 'HO_ASSIGNMENT'
+    );
+
+    console.log(
+      'Previous HO Assignments:',
+      this.previousCirculars
+    );
+
+  } else {
+    // Normal Circular mode → show only Circulars
+    this.previousCirculars = allRecords.filter(
+      item => item.item_type === 'CIRCULAR'
+    );
+
+    console.log(
+      'Previous Circulars:',
+      this.previousCirculars
+    );
+  }
+}); 
+
+
 
     // get Approvers
     this.employeeService.getApprovers().subscribe((data) => {
@@ -1325,7 +1491,18 @@ loadBranches(): void {
     this.selectedEmployees = [];
     this.selectedConfidentialityLevels = [];
 
-this.employeesByConfidentiality = {};
+this.employeesByConfidentiality = {}; 
+
+this.selectedRegionWiseHierarchy = {
+  regionIds: [],
+  zoneIds: [],
+  circleIds: [],
+  branchIds: [],
+  departmentIds: []
+};
+
+
+
     this.circularForm.patchValue({
       confidentiality: 'INTERNAL',
     });
@@ -1378,7 +1555,11 @@ this.employeesByConfidentiality = {};
 
   employeesByConfidentiality:
     this.employeesByConfidentiality
-    };
+    }; 
+
+  selectedRegionWiseHierarchy:
+  this.selectedRegionWiseHierarchy
+
 
     localStorage.setItem(this.DRAFT_KEY, JSON.stringify(draft));
 
@@ -1410,6 +1591,17 @@ this.selectedConfidentialityLevels =
 
 this.employeesByConfidentiality =
   data.employeesByConfidentiality || {};
+
+
+this.selectedRegionWiseHierarchy =
+  data.selectedRegionWiseHierarchy || {
+    regionIds: [],
+    zoneIds: [],
+    circleIds: [],
+    branchIds: [],
+    departmentIds: []
+  };
+
 
 
   }
@@ -1444,7 +1636,7 @@ this.employeesByConfidentiality =
 
 
     // For APPROVAL - check everything
-    if (status === 'PENDING_APPROVAL') {
+    if (status === 'PENDING_APPROVAL' && !this.isHOAssignment) {
       if (this.circularForm.invalid) {
         this.circularForm.markAllAsTouched();
         setTimeout(() => {
@@ -1470,6 +1662,23 @@ this.employeesByConfidentiality =
     }
 
     this.isProcessing = true;
+
+
+if (status === 'PENDING_APPROVAL' && this.isHOAssignment) {
+  if (!this.selectedEmployees || this.selectedEmployees.length === 0) {
+    this.snackBar.open(
+      'Please select at least one employee for the HO Assignment.',
+      'Close',
+      {
+        duration: 3000,
+        panelClass: ['error-snackbar'],
+      }
+    );
+    this.isProcessing = false;
+    return;
+  }
+}
+
 
     const formData = new FormData();
     formData.append('title', this.circularForm.value.title || '');
@@ -1527,13 +1736,31 @@ formData.append('send_type', sendType);
 formData.append('visibility_type', confidentiality);
 
 
+// Send REGION_WISE hierarchy to backend
+if (confidentiality === 'REGION_WISE') {
 
+  formData.append(
+    'regionWiseHierarchy',
+    JSON.stringify(this.selectedRegionWiseHierarchy)
+  );
+
+}
 
 
 
     formData.append('effective_from', this.circularForm.value.effective_from || '');
     formData.append('repeat_cycle', this.circularForm.value.repeat_cycle);
-    formData.append('status', status);
+    // formData.append('status', status); 
+const submitStatus = this.isHOAssignment ? 'APPROVED' : status;
+// const submitStatus = this.isHOAssignment
+//   ? (status === 'DRAFT' ? 'DRAFT' : 'PUBLISHED')
+//   : status; 
+
+formData.append('status', submitStatus);
+    formData.append(
+  'assignmentType',
+  this.isHOAssignment ? 'HO_ASSIGNMENT' : 'CIRCULAR'
+);
     formData.append('reference_circular_id', this.circularForm.value.previous_circular_id || '');
     formData.append('priority', this.circularForm.value.priority || '');
     formData.append('specialKeyword', this.circularForm.value.specialKeyword || '');
@@ -1545,7 +1772,7 @@ formData.append('visibility_type', confidentiality);
       formData.append('approvers', JSON.stringify(this.selectedApprovers));
     }
 
-    if (status === 'PENDING_APPROVAL') {
+    if (status === 'PENDING_APPROVAL' || this.isHOAssignment) {
       const employeeIds = this.selectedEmployees.map((e) => e.id);
       formData.append('visiblityEmployee', JSON.stringify(employeeIds));
     }
@@ -1582,11 +1809,28 @@ formData.append('visibility_type', confidentiality);
         this.clearForm();
         this.loadEmployeeData();
 
-        if (status === 'PENDING_APPROVAL') {
-          setTimeout(() => {
-            this.router.navigate(['/employee/circular-creater']);
-          }, 1500);
-        }
+        // if (status === 'PENDING_APPROVAL') {
+        //   setTimeout(() => {
+        //     this.router.navigate(['/employee/circular-creater']);
+        //   }, 1500);
+        // }  
+        
+if (status === 'PENDING_APPROVAL') {
+  setTimeout(() => {
+
+    if (this.isHOAssignment) {
+      this.router.navigate(['/employee/circular-creater'], {
+        queryParams: { type: 'HO_ASSIGNMENT' }
+      });
+    } else {
+      this.router.navigate(['/employee/circular-creater']);
+    }
+
+  }, 1500);
+}
+
+
+
       },
       error: (err) => {
         this.isProcessing = false;

@@ -30,6 +30,7 @@
       <!-- Main Navigation Item -->
       <a
         [routerLink]="item.route"
+          [queryParams]="item.queryParams"
         [routerLinkActiveOptions]="{ exact: item.exact || false }"
         routerLinkActive="bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg"
         #rla="routerLinkActive"

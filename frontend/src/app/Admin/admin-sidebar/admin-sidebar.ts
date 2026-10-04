@@ -100,8 +100,19 @@ export class AdminSidebar implements OnInit {
   icon: 'groups',
   route: '/admin/admin-committee',
   roles: ['HO_ADMIN'],
-},
+}, 
+  {
+  label: 'Audit Trail',
+  route: '/admin/admin-audit-trail',
+  icon: 'history'
+}
+
+
+
   ];
+
+
+
 
   get filteredNavItems(): NavItem[] {
     return this.navItems.filter((item) => !item.roles || item.roles.includes(this.role || ''));

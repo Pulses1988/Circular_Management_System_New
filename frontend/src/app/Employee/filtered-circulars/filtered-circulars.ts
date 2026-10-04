@@ -36,7 +36,9 @@ interface Circular {
 })
 export class FilteredCirculars {
 
-filterType: 'urgent' | 'unread' | 'all' = 'all';
+filterType: 'urgent' | 'unread' | 'all' = 'all'; 
+
+itemType: 'CIRCULAR' | 'HO_ASSIGNMENT' = 'CIRCULAR';
   circulars: Circular[] = [];
   filteredCirculars: Circular[] = [];
   loading = true;
@@ -62,10 +64,19 @@ filterType: 'urgent' | 'unread' | 'all' = 'all';
   async ngOnInit() {
     this.employeeData = await this.employeeService.getCurrentEmployee();
     
-    this.route.queryParams.subscribe(params => {
-      this.filterType = params['type'] || 'all';
-      this.loadCirculars();
-    });
+    // this.route.queryParams.subscribe(params => {
+    //   this.filterType = params['type'] || 'all';
+    //   this.loadCirculars();
+    // }); 
+
+this.route.queryParams.subscribe(params => {
+  this.filterType = params['type'] || 'all';
+  this.itemType = params['itemType'] || 'CIRCULAR';
+  this.loadCirculars();
+});
+
+
+
   }
 
   loadCirculars() {
@@ -74,9 +85,19 @@ filterType: 'urgent' | 'unread' | 'all' = 'all';
     if (this.filterType === 'unread') {
       this.circularService.fetchUnseenCircularsByEmpId(this.employeeData.id).subscribe({
         next: (res: any) => {
-          this.circulars = res.data || [];
-          this.applyFilters();
-          this.loading = false;
+          // this.circulars = res.data || [];
+          // this.applyFilters();
+          // this.loading = false; 
+           console.log("EMPLOYEE ID:", this.employeeData.id);
+      console.log("UNREAD API RESPONSE:", res.data);
+
+          this.circulars = (res.data || []).filter(
+  (item: any) => item.item_type === this.itemType
+);
+ console.log("AFTER ITEM TYPE FILTER:", this.circulars);
+
+this.applyFilters();
+this.loading = false;
         },
         error: () => {
           this.loading = false;
@@ -85,7 +106,15 @@ filterType: 'urgent' | 'unread' | 'all' = 'all';
     } else {
       this.circularService.fetchCircularAssignToEmpById(this.employeeData.id).subscribe({
         next: (res: any) => {
-          this.circulars = res.data.filter((c: any) => c.status === 'APPROVED') || [];
+          // this.circulars = res.data.filter((c: any) => c.status === 'APPROVED') || []; 
+this.circulars = (res.data || []).filter(
+  (c: any) =>
+    c.status === 'APPROVED' &&
+    c.item_type === this.itemType
+);
+
+
+
           this.applyFilters();
           this.loading = false;
         },
@@ -178,26 +207,54 @@ filterType: 'urgent' | 'unread' | 'all' = 'all';
   }
 
   getFilterTitle(): string {
+   
+ if (this.itemType === 'HO_ASSIGNMENT') {
     switch (this.filterType) {
       case 'urgent':
-        return 'Urgent Circulars';
+        return 'Urgent HO Assignments';
       case 'unread':
-        return 'Unread Circulars';
+        return 'Unread HO Assignments';
       default:
-        return 'All Circulars';
+        return 'All HO Assignments';
     }
   }
 
+  switch (this.filterType) {
+    case 'urgent':
+      return 'Urgent Circulars';
+    case 'unread':
+      return 'Unread Circulars';
+    default:
+      return 'All Circulars';
+  }
+
+
+  }
+
   getFilterDescription(): string {
+    
+ if (this.itemType === 'HO_ASSIGNMENT') {
     switch (this.filterType) {
       case 'urgent':
-        return 'High priority circulars requiring immediate attention';
+        return 'Urgent HO assignments that require your attention';
       case 'unread':
-        return 'Circulars you haven\'t viewed yet';
+        return "HO assignments you haven't viewed yet";
       default:
-        return 'All approved circulars assigned to you';
+        return 'All HO assignments assigned to you';
     }
   }
+
+  switch (this.filterType) {
+    case 'urgent':
+      return 'Urgent circulars that require your attention';
+    case 'unread':
+      return "Circulars you haven't viewed yet";
+    default:
+      return 'All circulars assigned to you';
+  }
+
+  }
+
 
   formatDate(date: string): string {
     return new Date(date).toLocaleDateString('en-US', {

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CircularService } from '../../services/circular-service';
-import { Router } from '@angular/router';
+import {ActivatedRoute, Router } from '@angular/router';
 import { Toast } from '../../toast/toast';
 
 import { response } from 'express';
@@ -23,9 +23,12 @@ export interface Circular {
   id: number;
   title: string;
   content: string;
+    item_type?: 'CIRCULAR' | 'HO_ASSIGNMENT';
   circular_code: string;
   send_type: 'INTERNAL' | 'CONFIDENTIAL' | 'RESTRICTED' | 'PUBLIC' | 'CUSTOM';
-  status: 'DRAFT' | 'PENDING_APPROVAL' | 'REJECTED' | 'APPROVED' | 'PUBLISHED';
+  // status: 'DRAFT' | 'PENDING_APPROVAL' | 'REJECTED' | 'APPROVED' | 'PUBLISHED'; 
+
+  status: 'DRAFT' | 'PENDING_APPROVAL' | 'REJECTED' | 'APPROVED' | 'PUBLISHED' | 'COMPLETED';
   effective_from: string; // ISO date string
   published_at: string | null; // ISO date string or null
   created_at: string; // ISO date string
@@ -66,7 +69,10 @@ export interface Approval {
   styleUrl: './circular-creater.scss',
 })
 export class CircularCreater implements OnInit {
-  circulars = signal<Circular[]>([]);
+  circulars = signal<Circular[]>([]); 
+
+
+    currentType: 'CIRCULAR' | 'HO_ASSIGNMENT' = 'CIRCULAR';
   employee: any;
   // Add these signals to your component
   pdfViewUrl = signal<string | null>(null);
@@ -83,7 +89,8 @@ assignedCirculars = signal<any[]>([]);
   constructor(
     private circularService: CircularService,
     private router: Router,
-    private toast: Toast
+    private toast: Toast,
+    private route: ActivatedRoute
    
   ) {}
 
@@ -103,19 +110,59 @@ toggleDarkMode() {
 
   ngOnInit(): void {
     
-      this.loadEmployeeData();
+      // this.loadEmployeeData(); 
+ this.route.queryParams.subscribe(params => {
+
+    const type = params['type'];
+
+    if (type === 'HO_ASSIGNMENT') {
+      this.currentType = 'HO_ASSIGNMENT';
+    } else {
+      this.currentType = 'CIRCULAR';
+    }
+
+    console.log('Circular Creator Type:', this.currentType);
+
+    this.loadEmployeeData();
+  });
+
+
+
+
+
 
   }
-  private loadCircular() {
-    if (this.employee?.id) {
-      this.circularService
-        .getCircularByCreaterId(this.employee.id)
-        .subscribe((circularData: Circular[]) => {
-          console.log('Fetched circulars:', circularData);
-          this.circulars.set(circularData); // <- use .set(), do NOT assign
-        });
-    }
+  // private loadCircular() {
+  //   if (this.employee?.id) {
+  //     this.circularService
+  //       .getCircularByCreaterId(this.employee.id)
+  //       .subscribe((circularData: Circular[]) => {
+  //         console.log('Fetched circulars:', circularData);
+  //         this.circulars.set(circularData); // <- use .set(), do NOT assign
+  //       });
+  //   }
+  // }
+
+private loadCircular() {
+  if (this.employee?.id) {
+    this.circularService
+      .getCircularByCreaterId(this.employee.id)
+      .subscribe((circularData: Circular[]) => {
+
+        console.log('Fetched circulars:', circularData);
+        console.log('Current Type:', this.currentType);
+
+        const filteredData = circularData.filter(
+          item => item.item_type === this.currentType
+        );
+
+        console.log('Filtered data:', filteredData);
+
+        this.circulars.set(filteredData);
+      });
   }
+}
+
 
   private loadEmployeeData(): void {
     if (typeof window !== 'undefined') {
@@ -143,15 +190,34 @@ toggleDarkMode() {
   };
 
   // Statistics
+  // get stats() {
+  //   const circs = this.circulars();
+  //   return {
+  //     total: circs.length,
+  //     pending: circs.filter((c) => c.status === 'PENDING_APPROVAL').length,
+  //     approved: circs.filter((c) => c.status === 'APPROVED').length,
+  //     rejected: circs.filter((c) => c.status === 'REJECTED').length,
+  //   };
+  // } 
   get stats() {
-    const circs = this.circulars();
+  const circs = this.circulars();
+
+  if (this.currentType === 'HO_ASSIGNMENT') {
     return {
       total: circs.length,
-      pending: circs.filter((c) => c.status === 'PENDING_APPROVAL').length,
-      approved: circs.filter((c) => c.status === 'APPROVED').length,
-      rejected: circs.filter((c) => c.status === 'REJECTED').length,
+      pending: circs.filter((c) => c.status === 'DRAFT').length,
+      approved: circs.filter((c) => c.status === 'PUBLISHED').length,
+      rejected: circs.filter((c) => c.status === 'COMPLETED').length,
     };
   }
+
+  return {
+    total: circs.length,
+    pending: circs.filter((c) => c.status === 'PENDING_APPROVAL').length,
+    approved: circs.filter((c) => c.status === 'APPROVED').length,
+    rejected: circs.filter((c) => c.status === 'REJECTED').length,
+  };
+}
 
   // Filter state
   filterStatus = signal<string>('all');
@@ -185,7 +251,13 @@ toggleDarkMode() {
 
   createNewCircular() {
     this.router.navigate(['/employee/create-circular']);
-  }
+  } 
+
+  createNewHOAssignment() {
+  this.router.navigate(['/employee/create-circular'], {
+    queryParams: { mode: 'HO_ASSIGNMENT' }
+  });
+}
 
   // closeModal() {
   //   this.selectedCircular.set(null);
@@ -361,15 +433,33 @@ toggleDarkMode() {
     return colors[status as keyof typeof colors] || colors.PENDING;
   }
 
-  getStatusColor(status: string): string {
-    const colors = {
-      DRAFT: 'bg-gray-100 text-gray-800',
-      PENDING_APPROVAL: 'bg-yellow-100 text-yellow-800',
-      APPROVED: 'bg-green-100 text-green-800',
-      REJECTED: 'bg-red-100 text-red-800',
-    };
-    return colors[status as keyof typeof colors] || colors.DRAFT;
-  }
+  // getStatusColor(status: string): string {
+  //   const colors = {
+  //     DRAFT: 'bg-gray-100 text-gray-800',
+  //     PENDING_APPROVAL: 'bg-yellow-100 text-yellow-800',
+  //     APPROVED: 'bg-green-100 text-green-800',
+  //     REJECTED: 'bg-red-100 text-red-800',
+  //   };
+  //   return colors[status as keyof typeof colors] || colors.DRAFT;
+  // }
+
+
+
+getStatusColor(status: string): string {
+  const colors = {
+    DRAFT: 'bg-gray-100 text-gray-800',
+    PENDING_APPROVAL: 'bg-yellow-100 text-yellow-800',
+    APPROVED: 'bg-green-100 text-green-800',
+    REJECTED: 'bg-red-100 text-red-800',
+    PUBLISHED: 'bg-blue-100 text-blue-800',
+    COMPLETED: 'bg-green-100 text-green-800',
+  };
+
+  return colors[status as keyof typeof colors] || colors.DRAFT;
+}
+
+
+
 
   getPriorityColor(priority: string): string {
     const colors = {
